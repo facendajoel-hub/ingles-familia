@@ -13,7 +13,7 @@
       <div id="header-actions" class="hidden">
         <span class="badge" id="hdr-streak">🔥 0</span>
         <span class="badge" id="hdr-xp">⭐ 0 XP</span>
-        <button class="btn btn-outline btn-sm" onclick="goHome()">Perfiles</button>
+        <button class="btn btn-outline btn-sm" id="home-btn" onclick="goHome()">Perfiles</button>
       </div>
     </header>
 
@@ -21,28 +21,29 @@
       <h1>¿Quién va a practicar hoy?</h1>
       <p class="subtitle">Ruta completa de aprendizaje desde Cero (Pre-A1) hasta Maestría C2.</p>
       <div class="grid-profiles" id="profiles-grid"></div>
+      <div id="profile-grid"></div>
       <div class="card">
         <h3>🏆 Tabla Familiar de Progreso</h3>
         <div id="leaderboard"></div>
+        <div id="leaderboard-list"></div>
       </div>
     </section>
 
     <section id="view-test" class="hidden"></section>
-
     <section id="view-dashboard" class="hidden">
       <div class="row-between" style="margin-bottom:18px;">
         <div>
           <h1 id="dash-welcome">Hola</h1>
           <p class="subtitle" id="dash-subtitle">Nivel actual</p>
         </div>
-        <button class="btn btn-outline btn-sm" onclick="if(window.selectProfile) { const p = JSON.parse(localStorage.getItem(Object.keys(localStorage).find(k => localStorage.getItem(k).includes('profiles')))); }">🔄 Repetir evaluación</button>
+        <button class="btn btn-outline btn-sm" id="retake-test-btn" onclick="goHome()">🔄 Cambiar perfil</button>
       </div>
       <div id="roadmap-list"></div>
     </section>
 
     <section id="view-lesson" class="hidden">
       <div class="row-between">
-        <button class="btn btn-outline btn-sm" onclick="showDashboard()">← Volver al mapa</button>
+        <button class="btn btn-outline btn-sm" id="back-dash-btn" onclick="showDashboard()">← Volver al mapa</button>
         <span id="lesson-mode-badge" class="badge">Nivel</span>
       </div>
       <div class="progress-bar"><div class="progress-fill" id="lesson-progress"></div></div>
@@ -58,12 +59,43 @@
       <label class="muted">Elige un avatar:</label>
       <div class="avatar-picker" id="avatar-picker"></div>
       <div class="right-actions">
-        <button class="btn btn-outline" onclick="closeEditModal()">Cancelar</button>
-        <button class="btn" onclick="saveProfileEdit()">Guardar</button>
+        <button class="btn btn-outline" id="cancel-edit-btn" onclick="closeEditModal()">Cancelar</button>
+        <button class="btn" id="save-edit-btn" onclick="saveProfileEdit()">Guardar</button>
       </div>
     </div>
   </div>
 
   <script src="app.js"></script>
+  <script>
+    // Respaldo garantizado si app.js tuvo algún conflicto de IDs
+    setTimeout(() => {
+      const g1 = document.getElementById("profiles-grid");
+      const g2 = document.getElementById("profile-grid");
+      if ((!g1 || g1.innerHTML.trim() === "") && (!g2 || g2.innerHTML.trim() === "")) {
+        const key = Object.keys(localStorage).find(k => localStorage.getItem(k).includes("profiles")) || "familyEnglishPro_v3";
+        let store = JSON.parse(localStorage.getItem(key)) || {
+          profiles: [
+            { id: 1, name: "Usuario 1", avatarType: "svg", avatarVal: "svg-trader", level: null, xp: 0, streak: 0 },
+            { id: 2, name: "Usuario 2", avatarType: "svg", avatarVal: "svg-elegant", level: null, xp: 0, streak: 0 },
+            { id: 3, name: "Usuario 3", avatarType: "svg", avatarVal: "svg-soto-bat", level: null, xp: 0, streak: 0 },
+            { id: 4, name: "Usuario 4", avatarType: "svg", avatarVal: "svg-soto-shuffle", level: null, xp: 0, streak: 0 }
+          ]
+        };
+        localStorage.setItem(key, JSON.stringify(store));
+        g1.innerHTML = store.profiles.map(p => {
+          const avObj = (typeof CUSTOM_AVATARS !== "undefined" && CUSTOM_AVATARS[p.avatarVal]) ? CUSTOM_AVATARS[p.avatarVal] : null;
+          const svgMarkup = avObj ? `<svg viewBox="0 0 240 240" width="76" height="76" style="border-radius:50%;">${avObj.svg.replace(/@/g, 'av' + p.id)}</svg>` : `<span style="font-size:3rem;">🦁</span>`;
+          return `
+            <div class="profile-card" onclick="selectProfile(${p.id})">
+              <div style="margin-bottom:10px;">${svgMarkup}</div>
+              <div class="profile-name">${p.name}</div>
+              <div class="muted">${p.level ? "Nivel " + p.level : "Evaluar nivel"}</div>
+              <div class="muted" style="color:#60a5fa; margin-top:4px;">🔥 ${p.streak || 0} · ⭐ ${p.xp || 0} XP</div>
+            </div>
+          `;
+        }).join("");
+      }
+    }, 300);
+  </script>
 </body>
 </html>
