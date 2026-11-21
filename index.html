@@ -1,281 +1,600 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Family English Pro | Pre-A1 - C2</title>
-  <link rel="stylesheet" href="style.css">
+  <style>
+    :root {
+      --bg: #0b1120;
+      --card: #131c31;
+      --card-hover: #1b2744;
+      --border: #263554;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --accent: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 40px; }
+    header {
+      background: rgba(19, 28, 49, 0.95);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .brand { font-size: 1.25rem; font-weight: 800; color: #60a5fa; letter-spacing: 0.3px; }
+    .stats-bar { display: flex; gap: 14px; align-items: center; font-weight: 700; font-size: 0.95rem; }
+    .badge { background: #1e293b; border: 1px solid var(--border); padding: 6px 12px; border-radius: 999px; }
+    .container { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
+    .hidden { display: none !important; }
+    h1 { font-size: 1.8rem; margin-bottom: 6px; }
+    .subtitle { color: var(--muted); margin-bottom: 24px; font-size: 0.95rem; }
+
+    /* Grid de Perfiles */
+    .profiles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .profile-card {
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      padding: 20px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .profile-card:hover {
+      background: var(--card-hover);
+      border-color: var(--primary);
+      transform: translateY(-3px);
+    }
+    .avatar-box {
+      width: 96px;
+      height: 96px;
+      margin: 0 auto 12px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 3px solid var(--primary);
+      background: #1e293b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .profile-name { font-size: 1.2rem; font-weight: 700; margin-bottom: 4px; }
+    .profile-role { font-size: 0.8rem; color: var(--muted); margin-bottom: 10px; }
+    .profile-lvl {
+      display: inline-block;
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.4);
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    /* Tabla Familiar */
+    .card-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .card-box h3 { margin-bottom: 14px; font-size: 1.1rem; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th, td { padding: 12px 10px; border-bottom: 1px solid var(--border); font-size: 0.92rem; }
+    th { color: var(--muted); font-weight: 600; }
+    tr:last-child td { border-bottom: none; }
+
+    /* Botones */
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.92rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn:hover { background: var(--primary-hover); }
+    .btn-secondary { background: #1e293b; border: 1px solid var(--border); color: var(--text); }
+    .btn-secondary:hover { background: #334155; }
+    .btn-accent { background: var(--accent); color: #062c1e; }
+    .btn-accent:hover { background: #059669; color: white; }
+    .btn-warning { background: var(--warning); color: #271700; }
+
+    /* Mapa de Niveles */
+    .user-banner {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+    }
+    .user-info { display: flex; align-items: center; gap: 14px; }
+    .user-info .avatar-box { width: 60px; height: 60px; margin: 0; }
+    .levels-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .level-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      position: relative;
+    }
+    .level-card.locked { opacity: 0.55; }
+    .level-card.completed { border-color: var(--accent); }
+    .level-tag {
+      font-size: 0.78rem;
+      font-weight: 800;
+      padding: 3px 9px;
+      border-radius: 6px;
+      background: #1e293b;
+      color: #60a5fa;
+      display: inline-block;
+      margin-bottom: 8px;
+    }
+    .level-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 6px; }
+    .level-desc { font-size: 0.85rem; color: var(--muted); margin-bottom: 14px; line-height: 1.4; }
+    .level-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    /* Lección y Examen */
+    .vocab-item {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .en-word { font-size: 1.1rem; font-weight: 700; color: #60a5fa; }
+    .es-word { font-size: 0.92rem; color: var(--muted); margin-top: 2px; }
+    .quiz-option {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: #0f172a;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 16px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    .quiz-option:hover { border-color: var(--primary); background: #17233c; }
+    .quiz-option.selected { border-color: var(--primary); background: rgba(59, 130, 246, 0.2); font-weight: 700; }
+    .alert { padding: 14px; border-radius: 10px; margin-top: 14px; font-weight: 600; }
+    .alert-error { background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger); color: #fca5a5; }
+    .alert-success { background: rgba(16, 185, 129, 0.15); border: 1px solid var(--accent); color: #6ee7b7; }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <div class="logo">Family English Pro</div>
-      <div id="header-actions" class="hidden" style="display:flex; gap:8px; align-items:center;">
-        <span class="badge" id="hdr-streak">🔥 0</span>
-        <span class="badge" id="hdr-xp">⭐ 0 XP</span>
-        <button class="btn btn-outline btn-sm" onclick="renderHome()">Perfiles</button>
-      </div>
-    </header>
-    <section id="view-profiles">
-      <h1>¿Quién va a practicar hoy?</h1>
-      <p class="subtitle">Ruta completa desde Cero (Pre-A1) hasta Maestría C2.</p>
-      <div class="grid-profiles" id="profiles-grid"></div>
-      <div class="card"><h3>🏆 Tabla Familiar</h3><div id="leaderboard"></div></div>
-    </section>
-    <section id="view-test" class="hidden"></section>
-    <section id="view-dashboard" class="hidden">
-      <div class="row-between" style="margin-bottom:18px;">
-        <div><h1 id="dash-welcome">Hola</h1><p class="subtitle" id="dash-subtitle">Nivel actual</p></div>
-        <button class="btn btn-outline btn-sm" onclick="renderHome()">🔄 Cambiar perfil</button>
-      </div>
-      <div id="roadmap-list"></div>
-    </section>
-    <section id="view-lesson" class="hidden">
-      <div class="row-between">
-        <button class="btn btn-outline btn-sm" onclick="showRoadmap()">← Volver al mapa</button>
-        <span id="lesson-mode-badge" class="badge">Nivel</span>
-      </div>
-      <div class="progress-bar"><div class="progress-fill" id="lesson-progress"></div></div>
-      <div class="card" id="lesson-container"></div>
-    </section>
+
+<header>
+  <div class="brand">Family English Pro</div>
+  <div class="stats-bar">
+    <span class="badge" id="hdr-streak">🔥 0</span>
+    <span class="badge" id="hdr-xp">⭐ 0 XP</span>
+    <button class="btn btn-secondary" id="hdr-profiles-btn" onclick="showProfiles()">Perfiles</button>
   </div>
+</header>
+
+<div class="container">
+  <!-- VISTA 1: SELECCIÓN DE PERFILES -->
+  <section id="view-profiles">
+    <h1>¿Quién va a practicar hoy?</h1>
+    <p class="subtitle">Ruta completa desde Cero (Pre-A1) hasta Maestría C2 con exámenes obligatorios al 100 %.</p>
+
+    <div class="profiles-grid" id="profiles-container"></div>
+
+    <div class="card-box">
+      <h3>🏆 Tabla Familiar</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Usuario</th>
+            <th>Nivel Actual</th>
+            <th>Racha</th>
+            <th>XP Total</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- VISTA 2: MAPA DE RUTA DEL USUARIO -->
+  <section id="view-map" class="hidden">
+    <div class="user-banner">
+      <div class="user-info">
+        <div class="avatar-box" id="map-avatar"></div>
+        <div>
+          <h2 id="map-greeting">Hola</h2>
+          <p style="color: var(--muted); font-size: 0.9rem;">Nivel actual: <strong id="map-current-lvl" style="color: #60a5fa;">Pre-A1</strong></p>
+        </div>
+      </div>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <button class="btn btn-warning" onclick="startDiagnostic()">🎯 Examen Diagnóstico</button>
+        <button class="btn btn-secondary" onclick="showProfiles()">🔄 Cambiar perfil</button>
+      </div>
+    </div>
+
+    <div class="levels-grid" id="levels-container"></div>
+  </section>
+
+  <!-- VISTA 3: LECCIÓN DE PRÁCTICA -->
+  <section id="view-lesson" class="hidden">
+    <button class="btn btn-secondary" style="margin-bottom: 16px;" onclick="openMap()">← Volver al mapa</button>
+    <div class="card-box">
+      <span class="level-tag" id="lesson-lvl-tag">Pre-A1</span>
+      <h2 id="lesson-title" style="margin-bottom: 6px;">Lección</h2>
+      <p class="subtitle" id="lesson-grammar">Explicación clave del nivel.</p>
+      <div id="lesson-vocab-list"></div>
+      <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+        <button class="btn btn-accent" onclick="startLevelExam(currentViewingLevel)">📝 Tomar Examen Obligatorio (100 % para aprobar)</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- VISTA 4: EXAMEN OBLIGATORIO / DIAGNÓSTICO -->
+  <section id="view-exam" class="hidden">
+    <button class="btn btn-secondary" style="margin-bottom: 16px;" onclick="openMap()">← Volver al mapa</button>
+    <div class="card-box">
+      <span class="level-tag" id="exam-tag">EXAMEN</span>
+      <h2 id="exam-title" style="margin-bottom: 6px;">Evaluación</h2>
+      <p class="subtitle" id="exam-subtitle">Debes responder el 100 % correctamente para desbloquear el siguiente nivel.</p>
+      <div id="exam-questions"></div>
+      <button class="btn btn-primary" style="margin-top: 12px;" onclick="submitExam()">✅ Verificar Respuestas</button>
+      <div id="exam-feedback"></div>
+    </div>
+  </section>
+</div>
 
 <script>
-const SVGS = {
-  trader: '<svg viewBox="0 0 100 100" width="74" height="74"><circle cx="50" cy="50" r="48" fill="#0f172a" stroke="#38bdf8" stroke-width="3"/><path d="M14 68 L30 55 L46 62 L66 36 L86 24" fill="none" stroke="#10b981" stroke-width="3"/><rect x="25" y="58" width="4" height="14" fill="#10b981"/><rect x="64" y="32" width="4" height="22" fill="#10b981"/><circle cx="50" cy="38" r="14" fill="#f1c27d"/><path d="M36 35 Q50 20 64 35" fill="#1e293b"/><path d="M26 88 Q50 64 74 88" fill="#1e3a8a"/><polygon points="50,54 46,72 50,78 54,72" fill="#38bdf8"/></svg>',
-  korean: '<svg viewBox="0 0 100 100" width="74" height="74"><circle cx="50" cy="50" r="48" fill="#1e1b4b" stroke="#f472b6" stroke-width="3"/><path d="M28 45 Q28 18 50 18 Q72 18 72 45 L75 78 L25 78 Z" fill="#0f172a"/><circle cx="50" cy="42" r="15" fill="#fde68a"/><path d="M35 38 Q50 26 65 38" fill="#0f172a"/><circle cx="44" cy="42" r="1.8" fill="#0f172a"/><circle cx="56" cy="42" r="1.8" fill="#0f172a"/><path d="M46 49 Q50 52 54 49" fill="none" stroke="#e11d48" stroke-width="2"/><path d="M26 88 Q50 64 74 88" fill="#f8fafc"/></svg>',
-  soto1: '<svg viewBox="0 0 100 100" width="74" height="74"><circle cx="50" cy="50" r="48" fill="#0c4a6e" stroke="#facc15" stroke-width="3"/><line x1="70" y1="14" x2="44" y2="55" stroke="#d97706" stroke-width="5" stroke-linecap="round"/><circle cx="48" cy="40" r="13" fill="#c68642"/><path d="M35 34 Q48 22 61 34 Z" fill="#1d4ed8"/><rect x="48" y="31" width="18" height="4" rx="2" fill="#1e40af"/><path d="M26 88 Q48 62 72 88" fill="#f8fafc"/><text x="41" y="80" font-size="14" font-weight="bold" fill="#1d4ed8">22</text></svg>',
-  soto2: '<svg viewBox="0 0 100 100" width="74" height="74"><circle cx="50" cy="50" r="48" fill="#064e3b" stroke="#34d399" stroke-width="3"/><circle cx="50" cy="36" r="13" fill="#c68642"/><path d="M37 32 Q50 18 63 32 Z" fill="#1e3a8a"/><path d="M22 86 Q50 56 78 86" fill="#1e3a8a"/><text x="41" y="78" font-size="15" font-weight="bold" fill="#facc15">22</text><path d="M24 68 L36 58 M76 68 L64 58" stroke="#c68642" stroke-width="4" stroke-linecap="round"/></svg>'
-};
+  // 1. AVATARES SVG PERSONALIZADOS (Trader, Mujer Coreana, 2x Juan Soto #22)
+  const AVATARS = {
+Usa el código con precaución.
+trader: <svg viewBox="0 0 100 100" width="100%" height="100%"> <rect width="100" height="100" fill="#0f172a"/> <polyline points="8,75 28,60 45,68 68,38 92,22" fill="none" stroke="#10b981" stroke-width="4"/> <circle cx="50" cy="42" r="16" fill="#f1c27d"/> <path d="M34,38 Q50,20 66,38" fill="#1e293b"/> <rect x="37" y="38" width="11" height="6" rx="1" fill="#020617" stroke="#38bdf8" stroke-width="1.2"/> <rect x="52" y="38" width="11" height="6" rx="1" fill="#020617" stroke="#38bdf8" stroke-width="1.2"/> <path d="M26,95 C26,68 74,68 74,95" fill="#1e3a8a"/> <polygon points="50,66 46,85 50,92 54,85" fill="#ef4444"/> </svg>,
+korean: <svg viewBox="0 0 100 100" width="100%" height="100%"> <rect width="100" height="100" fill="#31102f"/> <path d="M26,45 C26,20 74,20 74,45 L78,88 L22,88 Z" fill="#111827"/> <circle cx="50" cy="44" r="16" fill="#fde6d8"/> <path d="M34,40 Q50,24 66,40" fill="#111827"/> <circle cx="44" cy="44" r="2" fill="#111827"/> <circle cx="56" cy="44" r="2" fill="#111827"/> <path d="M46,51 Q50,55 54,51" fill="none" stroke="#e11d48" stroke-width="2" stroke-linecap="round"/> <path d="M28,95 C28,68 72,68 72,95" fill="#f472b6"/> </svg>,
+soto1: `
 
-const LVLS = ["Pre-A1", "A1", "A2", "B1", "B2", "C1", "C2"];
-const DESC = {
-  "Pre-A1": "Desde Cero: Sonidos, saludos y primeras palabras.",
-  "A1": "Principiante: Presente simple y supervivencia diaria.",
-  "A2": "Elemental: Pasado simple, rutinas y planes futuros.",
-  "B1": "Intermedio: Phrasal verbs, condicionales y fluidez.",
-  "B2": "Upper-Intermediate (100% English): Natural phrasing.",
-  "C1": "Advanced (100% English): Idioms & executive nuance.",
-  "C2": "Mastery (100% English): Near-native precision."
-};
 
-const DIAG = [
-  { skill: "Gramática", lvl: "A1", q: "Completa: 'My brother ___ twenty years old.'", opts: ["am", "is", "are", "have"], ans: 1, exp: "La edad usa 'to be' ('is')." },
-  { skill: "Oído/Dictado", lvl: "A1", audio: "I go to work every morning", dict: true, q: "Escucha y escribe exactamente en inglés:", ans: "i go to work every morning", exp: "Frase: 'I go to work every morning'." },
-  { skill: "Lectura", lvl: "A2", q: "'I am running late. Please start without me.' ¿Qué pide?", opts: ["Cancelar", "Que empiecen sin esa persona", "Moverlo", "Llamar"], ans: 1, exp: "'Start without me' = empiecen sin mí." },
-  { skill: "Gramática", lvl: "B1", q: "'If I ___ fluent in English, I would apply today.'", opts: ["am", "was", "were", "will be"], ans: 2, exp: "Segundo condicional formal: 'If I were...'." },
-  { skill: "Oído/Dictado", lvl: "B2", audio: "Consistency beats intensity in the long run", dict: true, q: "Dictation - Type what you hear:", ans: "consistency beats intensity in the long run", exp: "Exact: 'Consistency beats intensity in the long run'." },
-  { skill: "Lectura", lvl: "C1", q: "'The sample is too narrow to warrant sweeping policy changes.'", opts: ["Data is fake", "Sample is too small for major changes", "Change now", "Too many people"], ans: 1, exp: "'Too narrow to warrant' = muestra muy pequeña." },
-  { skill: "Gramática", lvl: "C2", q: "'___ had the market calmed than another shock hit.'", opts: ["Hardly", "No sooner", "Scarcely", "Barely"], ans: 1, exp: "'No sooner ... than' es la estructura exacta." }
+
+, soto2: 
+
+
+
+
+`
+};
+// 2. DATOS DE LOS 4 USUARIOS
+const DEFAULT_USERS = [
+{ id: 'diojan', name: 'Diojan', role: 'Trader Pro', avatar: 'trader', levelIdx: 0, xp: 0, streak: 0, lastDate: null },
+{ id: 'angie', name: 'Angie', role: 'K-Style Learner', avatar: 'korean', levelIdx: 0, xp: 0, streak: 0, lastDate: null },
+{ id: 'engel', name: 'Engel', role: 'Soto #22 MVP', avatar: 'soto1', levelIdx: 0, xp: 0, streak: 0, lastDate: null },
+{ id: 'dionangel', name: 'Dionangel', role: 'Soto #22 Slugger', avatar: 'soto2', levelIdx: 0, xp: 0, streak: 0, lastDate: null }
 ];
-
-const EXAMS = {
-  "Pre-A1": [
-    { q: "¿Cómo se dice 'Mucho gusto en conocerte'?", opts: ["See you later", "Nice to meet you", "Good night"], ans: 1, exp: "'Nice to meet you'." },
-    { q: "Completa: 'I ___ from Dominican Republic.'", opts: ["is", "are", "am"], ans: 2, exp: "Con 'I' siempre usamos 'am'." },
-    { q: "¿Qué número es 'Seven'?", opts: ["5", "7", "9"], ans: 1, exp: "Seven = 7." }
-  ],
-  "A1": [
-    { q: "Completa: 'She ___ coffee every morning.'", opts: ["drink", "drinks", "drinking"], ans: 1, exp: "Tercera persona singular lleva '-s'." },
-    { q: "Negativo: 'We ___ eat fast food.'", opts: ["doesn't", "don't", "not"], ans: 1, exp: "Con 'We' usamos 'don't'." },
-    { q: "Plural de 'Child':", opts: ["Childs", "Children", "Childrens"], ans: 1, exp: "Plural irregular: 'Children'." }
-  ],
-  "A2": [
-    { q: "Pasado de 'drive': 'Yesterday they ___ to Santiago.'", opts: ["drive", "drove", "driven"], ans: 1, exp: "Pasado simple: 'drove'." },
-    { q: "Comparativo: 'Today is ___ than yesterday.'", opts: ["hot", "more hot", "hotter"], ans: 2, exp: "Duplica consonante: 'hotter'." },
-    { q: "Obligación: 'You ___ wear a seatbelt.'", opts: ["must", "can't", "mustn't"], ans: 0, exp: "'Must' expresa obligación." }
-  ],
-  "B1": [
-    { q: "'If I ___ you, I would accept.'", opts: ["am", "was", "were"], ans: 2, exp: "'If I were you...'." },
-    { q: "¿Qué significa 'call off'?", opts: ["Llamar", "Cancelar", "Posponer"], ans: 1, exp: "'Call off' = cancelar." },
-    { q: "'She is used to ___ early.'", opts: ["wake up", "waking up", "woke up"], ans: 1, exp: "'Be used to' + '-ing'." }
-  ],
-  "B2": [
-    { q: "'I would rather you ___ anyone yet.'", opts: ["don't tell", "didn't tell", "not tell"], ans: 1, exp: "'Would rather + subject + past simple'." },
-    { q: "Collocation: 'The policy will ___ a major impact.'", opts: ["do", "make", "have"], ans: 2, exp: "'To have an impact'." },
-    { q: "Meaning of 'cut corners':", opts: ["Drive fast", "Do something poorly to save time/money", "Increase budget"], ans: 1, exp: "Sacrifice quality to save effort." }
-  ],
-  "C1": [
-    { q: "'___ had he spoken than shares surged.'", opts: ["Hardly", "No sooner", "Scarcely"], ans: 1, exp: "'No sooner ... than'." },
-    { q: "Meaning of 'bite the bullet':", opts: ["Reject offer", "Face a difficult situation bravely", "Quit"], ans: 1, exp: "Endure an unavoidable hardship." },
-    { q: "'The board insisted that he ___ present.'", opts: ["is", "be", "was"], ans: 1, exp: "Mandative subjunctive uses base 'be'." }
-  ],
-  "C2": [
-    { q: "'He claims to be an expert, ___ his analysis misses the point.'", opts: ["albeit", "yet", "moreover"], ans: 1, exp: "'Yet' introduces a sharp contrast." },
-    { q: "Meaning of 'to equivocate':", opts: ["Speak bluntly", "Use ambiguous language to avoid commitment", "Apologize"], ans: 1, exp: "Deliberate ambiguity." },
-    { q: "'A ___ victory; legal fees exceeded the settlement.'", opts: ["pyrrhic", "resounding", "unanimous"], ans: 0, exp: "Won at too great a cost." }
-  ]
-};
-
-let db = JSON.parse(localStorage.getItem("famEngPro_v6")) || [
-  { id: 1, name: "Usuario 1", svg: "trader", level: null, done: "", xp: 0, streak: 0 },
-  { id: 2, name: "Usuario 2", svg: "korean", level: null, done: "", xp: 0, streak: 0 },
-  { id: 3, name: "Usuario 3", svg: "soto1", level: null, done: "", xp: 0, streak: 0 },
-  { id: 4, name: "Usuario 4", svg: "soto2", level: null, done: "", xp: 0, streak: 0 }
+// 3. RUTA COMPLETA PRE-A1 HASTA C2
+const CURRICULUM = [
+{
+code: 'Pre-A1',
+title: 'Desde Cero: Primeros Pasos',
+desc: 'Saludos básicos, pronombres personales, números y verbo To Be esencial.',
+grammar: 'Usa "I am" (Yo soy/estoy), "You are" (Tú eres/estás) y saludos cotidianos.',
+vocab: [
+{ en: 'Hello, how are you?', es: 'Hola, ¿cómo estás?' },
+{ en: 'I am ready to learn.', es: 'Estoy listo para aprender.' },
+{ en: 'Thank you very much.', es: 'Muchas gracias.' },
+{ en: 'Good morning / Good night', es: 'Buenos días / Buenas noches' }
+],
+quiz: [
+{ q: '¿Cómo se dice "Yo soy / Yo estoy" en inglés?', opts: ['You is', 'I am', 'He are'], ans: 1 },
+{ q: '¿Qué significa "Thank you very much"?', opts: ['Por favor', 'Muchas gracias', 'Hasta luego'], ans: 1 },
+{ q: 'Completa: "Hello, ___ are you?"', opts: ['how', 'what', 'who'], ans: 0 }
+]
+},
+{
+code: 'A1',
+title: 'Principiante: Vida Cotidiana',
+desc: 'Presente simple, rutinas diarias, familia, horas y preguntas básicas.',
+grammar: 'En presente simple con He/She/It agrega "-s" al verbo (ej. She works).',
+vocab: [
+{ en: 'She works every morning.', es: 'Ella trabaja cada mañana.' },
+{ en: 'Where do you live?', es: '¿Dónde vives?' },
+{ en: 'I have two brothers.', es: 'Tengo dos hermanos.' },
+{ en: 'What time is it?', es: '¿Qué hora es?' }
+],
+quiz: [
+{ q: 'Elige la oración correcta en Presente Simple:', opts: ['She work here', 'She works here', 'She working here'], ans: 1 },
+{ q: '¿Cómo preguntas "¿Dónde vives?"?', opts: ['Where do you live?', 'Where you lives?', 'What do you live?'], ans: 0 },
+{ q: 'Traduce: "I have two brothers"', opts: ['Tengo dos primos', 'Tengo dos hermanos', 'Soy dos hermanos'], ans: 1 }
+]
+},
+{
+code: 'A2',
+title: 'Elemental: Pasado y Experiencias',
+desc: 'Pasado simple (verbos regulares e irregulares), planes con "going to" y comparativos.',
+grammar: 'Usa "did" para preguntas en pasado y el verbo en su forma base (Did you go?).',
+vocab: [
+{ en: 'Yesterday I went to the gym.', es: 'Ayer fui al gimnasio.' },
+{ en: 'We are going to travel soon.', es: 'Vamos a viajar pronto.' },
+{ en: 'This book is better than that one.', es: 'Este libro es mejor que ese.' },
+{ en: 'Did you finish your homework?', es: '¿Terminaste tu tarea?' }
+],
+quiz: [
+{ q: '¿Cuál es el pasado correcto de "go"?', opts: ['goed', 'went', 'gone'], ans: 1 },
+{ q: 'Completa la pregunta en pasado: "___ you finish?"', opts: ['Do', 'Did', 'Was'], ans: 1 },
+{ q: '¿Qué expresa "We are going to travel"?', opts: ['Un plan futuro', 'Una acción pasada', 'Una duda'], ans: 0 }
+]
+},
+{
+code: 'B1',
+title: 'Intermedio: Fluidez Conversacional',
+desc: 'Presente perfecto (have/has + participio), modales (should, must) y condicional 1.',
+grammar: 'Usa "Have you ever..." para preguntar sobre experiencias de vida sin fecha exacta.',
+vocab: [
+{ en: 'I have lived here for five years.', es: 'He vivido aquí por cinco años.' },
+{ en: 'You should practice every day.', es: 'Deberías practicar todos los días.' },
+{ en: 'If it rains, we will stay home.', es: 'Si llueve, nos quedaremos en casa.' },
+{ en: 'She has already finished the project.', es: 'Ella ya ha terminado el proyecto.' }
+],
+quiz: [
+{ q: 'Completa: "I ___ lived here for five years."', opts: ['has', 'have', 'am'], ans: 1 },
+{ q: '¿Qué verbo modal usamos para dar un consejo?', opts: ['should', 'mustn’t', 'would'], ans: 0 },
+{ q: 'Primer condicional: "If it rains, we ___ stay home."', opts: ['will', 'would', 'did'], ans: 0 }
+]
+},
+{
+code: 'B2',
+title: 'Intermedio Alto: Argumentación y Matices',
+desc: 'Condicional 2 y 3, voz pasiva, phrasal verbs clave y conectores avanzados.',
+grammar: 'Segundo condicional (hipótesis): If + Past Simple, ... would + verbo base.',
+vocab: [
+{ en: 'If I had more time, I would learn Korean.', es: 'Si tuviera más tiempo, aprendería coreano.' },
+{ en: 'The report was written by the manager.', es: 'El informe fue escrito por el gerente.' },
+{ en: 'Never give up on your goals.', es: 'Nunca te rindas con tus metas.' },
+{ en: 'Despite the rain, the game continued.', es: 'A pesar de la lluvia, el juego continuó.' }
+],
+quiz: [
+{ q: 'Segundo condicional: "If I had time, I ___ learn Korean."', opts: ['will', 'would', 'have'], ans: 1 },
+{ q: '¿Qué significa el phrasal verb "give up"?', opts: ['Rendirse', 'Subir', 'Regalar'], ans: 0 },
+{ q: 'Identifica la voz pasiva correcta:', opts: ['The manager wrote it', 'It was written by the manager', 'It writing by manager'], ans: 1 }
+]
+},
+{
+code: 'C1',
+title: 'Avanzado: Dominio Profesional y Académico',
+desc: 'Inversión enfática, subjuntivo en inglés, expresiones idiomáticas y precisión léxica.',
+grammar: 'Tras adverbios negativos al inicio (Seldom, Rarely, Never), invierte auxiliar y sujeto.',
+vocab: [
+{ en: 'Rarely have I seen such dedication.', es: 'Rara vez he visto tanta dedicación.' },
+{ en: 'It is essential that he be present.', es: 'Es esencial que él esté presente.' },
+{ en: 'Let’s get straight to the point.', es: 'Vayamos directo al grano.' },
+{ en: 'The market fluctuated dramatically.', es: 'El mercado fluctuó drásticamente.' }
+],
+quiz: [
+{ q: 'Inversión enfática: "Rarely ___ I seen such dedication."', opts: ['have', 'had been', 'am'], ans: 0 },
+{ q: '¿Qué significa "get straight to the point"?', opts: ['Ir directo al grano', 'Perder el tiempo', 'Cambiar de tema'], ans: 0 },
+{ q: 'Subjuntivo formal: "It is essential that he ___ present."', opts: ['is', 'be', 'was'], ans: 1 }
+]
+},
+{
+code: 'C2',
+title: 'Maestría: Nivel Nativo Culto',
+desc: 'Retórica sofisticada, modismos complejos, ambigüedad controlada y estilo ejecutivo.',
+grammar: 'Dominio total de registros formales/informales, cláusulas reducidas y matices.',
+vocab: [
+{ en: 'Had I known earlier, I would have acted differently.', es: 'De haberlo sabido antes, habría actuado distinto.' },
+{ en: 'His argument was cogent and unassailable.', es: 'Su argumento fue convincente e irrefutable.' },
+{ en: 'We must tread carefully in these negotiations.', es: 'Debemos andar con pies de plomo en estas negociaciones.' },
+{ en: 'Ubiquitous technology shapes modern cognition.', es: 'La tecnología omnipresente moldea la cognición moderna.' }
+],
+quiz: [
+{ q: 'Inversión condicional C2: "___ I known earlier, I would have acted."', opts: ['Have', 'Had', 'Were'], ans: 1 },
+{ q: '¿Qué significa "ubiquitous"?', opts: ['Omnipresente / en todas partes', 'Escaso', 'Antiguo'], ans: 0 },
+{ q: '¿Qué significa el modismo "tread carefully"?', opts: ['Actuar con suma cautela', 'Correr rápido', 'Ignorar el peligro'], ans: 0 }
+]
+}
 ];
-let curUser = null;
-
-function saveDB() { localStorage.setItem("famEngPro_v6", JSON.stringify(db)); }
-function say(t, r) { if ("speechSynthesis" in window) { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang = "en-US"; u.rate = r || 0.95; speechSynthesis.speak(u); } }
-
-function renderHome() {
-  curUser = null;
-  document.getElementById("header-actions").classList.add("hidden");
-  ["view-test", "view-dashboard", "view-lesson"].forEach(id => document.getElementById(id).classList.add("hidden"));
-document.getElementById("view-profiles").classList.remove("hidden");
-document.getElementById("profiles-grid").innerHTML = db.map(u =>
-'' +
-'✏️ Nombre' +
-'' + SVGS[u.svg] + '' +
-'' + u.name + '' +
-'' + (u.level ? "Nivel " + u.level : "Evaluar nivel") + '' +
-'🔥 ' + u.streak + ' · ⭐ ' + u.xp + ' XP'
-).join("");
-const sorted = [...db].sort((a, b) => b.xp - a.xp);
-document.getElementById("leaderboard").innerHTML = sorted.map((u, i) =>
-'#' + (i + 1) + ' ' + u.name + ' (' + (u.level || "Nuevo") + ')🔥 ' + u.streak + ' | ' + u.xp + ' XP'
-).join("");
+// ESTADO Y ALMACENAMIENTO LOCAL
+let users = JSON.parse(localStorage.getItem('fep_users_v2')) || DEFAULT_USERS;
+let currentUserId = null;
+let currentViewingLevel = 0;
+let activeExam = null; // { mode: 'level'|'diagnostic', levelIdx, questions: [] }
+let userAnswers = {};
+function saveState() {
+localStorage.setItem('fep_users_v2', JSON.stringify(users));
 }
-function renameUser(id) {
-const u = db.find(x => x.id === id);
-const n = prompt("Nuevo nombre para " + u.name + ":", u.name);
-if (n && n.trim()) { u.name = n.trim(); saveDB(); renderHome(); }
+function getActiveUser() {
+return users.find(u => u.id === currentUserId);
 }
-function openUser(id) {
-curUser = db.find(x => x.id === id);
-document.getElementById("header-actions").classList.remove("hidden");
-document.getElementById("hdr-streak").textContent = "🔥 " + curUser.streak;
-document.getElementById("hdr-xp").textContent = "⭐ " + curUser.xp + " XP";
-if (!curUser.level) showIntroChoice();
-else showRoadmap();
+function speak(text) {
+if ('speechSynthesis' in window) {
+window.speechSynthesis.cancel();
+const u = new SpeechSynthesisUtterance(text);
+u.lang = 'en-US';
+u.rate = 0.92;
+window.speechSynthesis.speak(u);
 }
-function showIntroChoice() {
-["view-profiles", "view-dashboard", "view-lesson"].forEach(id => document.getElementById(id).classList.add("hidden"));
-const v = document.getElementById("view-test");
-v.classList.remove("hidden");
-v.innerHTML = '' + SVGS[curUser.svg] +
-'¡Bienvenido, ' + curUser.name + '!' +
-'Elige cómo comenzar tu ruta hasta Maestría C2:' +
-'' +
-'🎯 Hacer Examen Diagnóstico (Gramática, Oído con Dictado y Lectura)' +
-'🌱 Empiezo desde CERO absoluto (Pre-A1)';
 }
-function setZeroLevel() { curUser.level = "Pre-A1"; curUser.done = ""; saveDB(); showRoadmap(); }
-function startDiag() {
-let idx = 0, score = 0;
-const v = document.getElementById("view-test");
-function drawQ() {
-const q = DIAG[idx];
-const audioHtml = q.audio ? '🔊 Escuchar🐢 Lento' : '';
-const areaHtml = q.dict ? 'Comprobar'
-: q.opts.map((o, i) => '' + o + '').join("");
-v.innerHTML = '' + q.skill + ' · Nivel ' + q.lvl + '' + (idx + 1) + ' de ' + DIAG.length + '' +
-'' + q.q + '' + audioHtml + '' + areaHtml + '' +
-'Siguiente →';
-if (q.audio) {
-document.getElementById("btn-s1").onclick = () => say(q.audio, 0.95);
-document.getElementById("btn-s2").onclick = () => say(q.audio, 0.65);
-say(q.audio, 0.95);
+function updateHeader() {
+const u = getActiveUser();
+document.getElementById('hdr-streak').textContent = 🔥 ${u ? u.streak : 0};
+document.getElementById('hdr-xp').textContent = ⭐ ${u ? u.xp : 0} XP;
 }
-const doneQ = (ok) => {
-if (ok) score++;
-const fb = document.getElementById("dq-fb");
-fb.className = "feedback-box " + (ok ? "feedback-ok" : "feedback-err");
-fb.innerHTML = '' + (ok ? "¡Correcto!" : "Detalle:") + ' ' + q.exp;
-fb.classList.remove("hidden");
-document.getElementById("dq-next").disabled = false;
-};
-if (q.dict) {
-document.getElementById("dq-chk").onclick = () => {
-const val = document.getElementById("dq-in").value.trim().toLowerCase().replace(/[.,!?']/g, "");
-if (!val) return;
-document.getElementById("dq-in").disabled = true; document.getElementById("dq-chk").disabled = true;
-doneQ(val === q.ans);
-};
-} else {
-document.querySelectorAll("#dq-area .option-btn").forEach(b => b.onclick = () => {
-const c = Number(b.dataset.i);
-document.querySelectorAll("#dq-area .option-btn").forEach((x, i) => { x.disabled = true; if (i === q.ans) x.classList.add("correct"); else if (i === c) x.classList.add("wrong"); });
-doneQ(c === q.ans);
+function switchView(viewId) {
+['view-profiles', 'view-map', 'view-lesson', 'view-exam'].forEach(id => {
+document.getElementById(id).classList.add('hidden');
 });
+document.getElementById(viewId).classList.remove('hidden');
+updateHeader();
 }
-document.getElementById("dq-next").onclick = () => {
-idx++;
-if (idx < DIAG.length) drawQ();
-else {
-const assigned = LVLS[Math.min(score, LVLS.length - 1)];
-curUser.level = assigned;
-curUser.done = LVLS.slice(0, LVLS.indexOf(assigned)).join(",");
-curUser.xp += 50; curUser.streak++; saveDB();
-v.innerHTML = '📊 Diagnóstico CompletadoNivel Asignado: ' + assigned + ' (' + score + '/' + DIAG.length + ')Ir a mi Mapa →';
+// RENDERIZAR PERFILES Y TABLA FAMILIAR
+function showProfiles() {
+currentUserId = null;
+const container = document.getElementById('profiles-container');
+container.innerHTML = users.map(u => <div class="profile-card" onclick="selectUser('${u.id}')"> <div class="avatar-box">${AVATARS[u.avatar]}</div> <div class="profile-name">${u.name}</div> <div class="profile-role">${u.role}</div> <span class="profile-lvl">Nivel ${CURRICULUM[u.levelIdx].code}</span> </div>).join('');
+const sorted = [...users].sort((a, b) => b.xp - a.xp || b.levelIdx - a.levelIdx);
+document.getElementById('leaderboard-body').innerHTML = sorted.map((u, idx) => `
+{idx === 0 && u.xp > 0 ? '👑 ' : ''}{u.name}
+${CURRICULUM[u.levelIdx].code}🔥 ${u.streak}⭐ ${u.xp} XP`).join('');
+switchView('view-profiles');
 }
+function selectUser(id) {
+currentUserId = id;
+openMap();
+}
+// MAPA DE NIVELES
+function openMap() {
+const u = getActiveUser();
+if (!u) return showProfiles();
+document.getElementById('map-avatar').innerHTML = AVATARS[u.avatar];
+document.getElementById('map-greeting').textContent = Hola, ${u.name};
+document.getElementById('map-current-lvl').textContent = ${CURRICULUM[u.levelIdx].code} — ${CURRICULUM[u.levelIdx].title};
+const grid = document.getElementById('levels-container');
+grid.innerHTML = CURRICULUM.map((lvl, idx) => {
+const isLocked = idx > u.levelIdx;
+const isCompleted = idx < u.levelIdx;
+return <div class="level-card ${isLocked ? 'locked' : ''} ${isCompleted ? 'completed' : ''}"> <span class="level-tag">${lvl.code} ${isCompleted ? '✅ Superado' : isLocked ? '🔒 Bloqueado' : '📍 Actual'}</span> <div class="level-title">${lvl.title}</div> <div class="level-desc">${lvl.desc}</div> <div class="level-actions"> ${isLocked ?Aprueba ${CURRICULUM[idx - 1].code} al 100 %:📖 Practicar
+📝 Examen} </div> </div>;
+}).join('');
+switchView('view-map');
+}
+// LECCIÓN
+function openLesson(idx) {
+currentViewingLevel = idx;
+const lvl = CURRICULUM[idx];
+document.getElementById('lesson-lvl-tag').textContent = lvl.code;
+document.getElementById('lesson-title').textContent = lvl.title;
+document.getElementById('lesson-grammar').textContent = 💡 Regla clave: ${lvl.grammar};
+document.getElementById('lesson-vocab-list').innerHTML = lvl.vocab.map(item => <div class="vocab-item"> <div> <div class="en-word">${item.en}</div> <div class="es-word">${item.es}</div> </div> <button class="btn btn-secondary" onclick="speak('${item.en.replace(/'/g, "\\'")}')">🔊 Escuchar</button> </div>).join('');
+switchView('view-lesson');
+}
+// EXAMEN OBLIGATORIO (100 %) O DIAGNÓSTICO
+function startLevelExam(idx) {
+activeExam = {
+mode: 'level',
+levelIdx: idx,
+questions: CURRICULUM[idx].quiz
 };
+renderExam(
+EXAMEN ${CURRICULUM[idx].code},
+Examen Obligatorio: ${CURRICULUM[idx].title},
+'Necesitas el 100 % de aciertos para aprobar y desbloquear el siguiente nivel.'
+);
 }
-drawQ();
+function startDiagnostic() {
+// Toma 1 pregunta clave de cada nivel (Pre-A1 a C1) para ubicar al usuario
+const diagQuestions = CURRICULUM.slice(0, 6).map((lvl, idx) => ({
+...lvl.quiz[0],
+targetLevel: idx + 1,
+levelCode: lvl.code
+}));
+activeExam = {
+mode: 'diagnostic',
+questions: diagQuestions
+};
+renderExam(
+'DIAGNÓSTICO GENERAL',
+'Examen de Nivelación (Pre-A1 a C2)',
+'Responde hasta donde sepas. Te ubicaremos automáticamente en tu nivel real.'
+);
 }
-function showRoadmap() {
-["view-profiles", "view-test", "view-lesson"].forEach(id => document.getElementById(id).classList.add("hidden"));
-document.getElementById("view-dashboard").classList.remove("hidden");
-document.getElementById("dash-welcome").textContent = "Hola, " + curUser.name;
-document.getElementById("dash-subtitle").textContent = "Nivel actual: " + curUser.level + " · Regla: Aprobar examen al 100% para avanzar";
-const doneList = curUser.done ? curUser.done.split(",") : [];
-const curIdx = LVLS.indexOf(curUser.level);
-document.getElementById("roadmap-list").innerHTML = LVLS.map((lvl, idx) => {
-const isDone = doneList.includes(lvl);
-const isCur = lvl === curUser.level;
-const locked = idx > curIdx && !isDone;
-const btn = locked ? '🔒' : '🎓 Examen 100%';
-return '<div class="level-card ' + (isDone ? "completed" : isCur ? "current" : locked ? "locked" : "") + '">' +
-'' + lvl + '' +
-'' + lvl + (isDone ? " ✅" : "") + '' + DESC[lvl] + '' + btn + '';
-}).join("");
+function renderExam(tag, title, subtitle) {
+userAnswers = {};
+document.getElementById('exam-tag').textContent = tag;
+document.getElementById('exam-title').textContent = title;
+document.getElementById('exam-subtitle').textContent = subtitle;
+document.getElementById('exam-feedback').innerHTML = '';
+document.getElementById('exam-questions').innerHTML = activeExam.questions.map((q, qIdx) => <div style="margin-bottom: 18px;"> <p style="font-weight: 700; margin-bottom: 8px;">${qIdx + 1}. ${q.q}</p> ${q.opts.map((opt, oIdx) =>
+${opt}
+).join('')} </div> ).join('');
+switchView('view-exam');
 }
-function startExam100(lvl) {
-["view-profiles", "view-test", "view-dashboard"].forEach(id => document.getElementById(id).classList.add("hidden"));
-document.getElementById("view-lesson").classList.remove("hidden");
-const qs = EXAMS[lvl];
-let step = 0, okCount = 0, fails = [];
-function draw() {
-const q = qs[step];
-document.getElementById("lesson-mode-badge").textContent = "🎓 Examen " + lvl + " (Obligatorio 100%)";
-document.getElementById("lesson-progress").style.width = (((step + 1) / qs.length) * 100) + "%";
-document.getElementById("lesson-container").innerHTML = 'Pregunta ' + (step + 1) + ' de ' + qs.length + '' +
-'' + q.q + '' +
-'' + q.opts.map((o, i) => '' + o + '').join("") + '' +
-'Siguiente →';
-document.querySelectorAll("#ex-o .option-btn").forEach(b => b.onclick = () => {
-const c = Number(b.dataset.i);
-const ok = c === q.ans;
-document.querySelectorAll("#ex-o .option-btn").forEach((x, i) => { x.disabled = true; if (i === q.ans) x.classList.add("correct"); else if (i === c) x.classList.add("wrong"); });
-if (ok) okCount++; else fails.push(q);
-const fb = document.getElementById("ex-f");
-fb.className = "feedback-box " + (ok ? "feedback-ok" : "feedback-err");
-fb.innerHTML = '' + (ok ? "¡Correcto!" : "Error:") + ' ' + q.exp;
-fb.classList.remove("hidden");
-document.getElementById("ex-n").disabled = false;
-});
-document.getElementById("ex-n").onclick = () => {
-step++;
-if (step < qs.length) draw();
-else {
-const box = document.getElementById("lesson-container");
-if (okCount === qs.length) {
-const doneList = curUser.done ? curUser.done.split(",") : [];
-if (!doneList.includes(lvl)) doneList.push(lvl);
-curUser.done = doneList.join(",");
-const nextIdx = LVLS.indexOf(lvl) + 1;
-if (nextIdx < LVLS.length && LVLS.indexOf(curUser.level) < nextIdx) curUser.level = LVLS[nextIdx];
-curUser.xp += 100; curUser.streak++; saveDB();
-box.innerHTML = '🏆 ¡100% APROBADO!Subiste al nivel ' + curUser.level + ' (+100 XP).Continuar →';
+function selectOption(qIdx, oIdx) {
+userAnswers[qIdx] = oIdx;
+const totalOpts = activeExam.questions[qIdx].opts.length;
+for (let i = 0; i < totalOpts; i++) {
+const el = document.getElementById(q-${qIdx}-opt-${i});
+el.classList.toggle('selected', i === oIdx);
+}
+}
+function recordPractice(user, earnedXp) {
+const today = new Date().toISOString().slice(0, 10);
+if (user.lastDate !== today) {
+user.streak += 1;
+user.lastDate = today;
+}
+user.xp += earnedXp;
+}
+function submitExam() {
+const u = getActiveUser();
+const qs = activeExam.questions;
+const fb = document.getElementById('exam-feedback');
+if (Object.keys(userAnswers).length < qs.length) {
+fb.innerHTML = <div class="alert alert-error">⚠️ Por favor responde todas las preguntas antes de verificar.</div>;
+return;
+}
+if (activeExam.mode === 'level') {
+let correct = 0;
+qs.forEach((q, idx) => { if (userAnswers[idx] === q.ans) correct++; });
+if (correct === qs.length) {
+recordPractice(u, 100);
+if (activeExam.levelIdx === u.levelIdx && u.levelIdx < CURRICULUM.length - 1) {
+u.levelIdx += 1;
+}
+saveState();
+updateHeader();
+fb.innerHTML = <div class="alert alert-success">🎉 ¡100 % Perfecto! Has aprobado el nivel ${CURRICULUM[activeExam.levelIdx].code} (+100 XP).</div>;
 } else {
-box.innerHTML = '❌ No alcanzaste el 100% (' + okCount + '/' + qs.length + ')Debes responder todas sin fallos para avanzar:' +
-fails.map(f => '' + f.q + '
-💡 ' + f.exp + '').join("") +
-'🔄 Repetir Examen';
+fb.innerHTML = <div class="alert alert-error">❌ Obtuviste ${correct}/${qs.length}. Necesitas el 100 % para avanzar. ¡Repasa e inténtalo de nuevo!</div>;
+}
+} else {
+// Diagnóstico: avanza mientras acierte consecutivamente
+let placedIdx = 0;
+for (let i = 0; i < qs.length; i++) {
+if (userAnswers[i] === qs[i].ans) {
+placedIdx = qs[i].targetLevel;
+} else {
+break;
 }
 }
-};
+u.levelIdx = Math.max(u.levelIdx, placedIdx);
+recordPractice(u, 50);
+saveState();
+updateHeader();
+fb.innerHTML = <div class="alert alert-success">🎯 Diagnóstico completado: Tu nivel asignado es <strong>${CURRICULUM[u.levelIdx].code}</strong> (+50 XP).</div>;
 }
-draw();
 }
-renderHome();
+// INICIAR APP
+showProfiles();
