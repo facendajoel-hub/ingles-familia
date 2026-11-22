@@ -300,20 +300,3 @@ dialogue: { speakerA: 'Having completed all eighty-four units, how does it feel?
 ];
 
 ---
-
-### ✅ Lista de verificación final de tu carpeta:
-Asegúrate de tener estos **5 archivos** en la misma carpeta:
-1. `index.html`
-2. `app.js`
-3. `data_basico.js`
-4. `data_intermedio.js`
-5. `data_avanzado.js`
-
-Con eso ya puedes abrir `index.html` en tu navegador para probarlo localmente o subir la carpeta completa a GitHub / Cloudflare Pages.
-
-<FollowUp>
-Cuando subas los archivos o los pruebes en tu navegador, dime si deseas:
-* **Ajustar algún detalle visual** o de tamaño de letra
-* Agregar **exportación/respaldo del progreso familiar** entre dispositivos
-* Revisar cómo subir los 5 archivos a tu repositorio de **GitHub / Cloudflare Pages**
-</FollowUp>
