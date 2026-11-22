@@ -3,15 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Family English Pro | Ruta Pre-A1 a C2</title>
+  <title>Family English Pro | 84 Unidades (Pre-A1 a C2)</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0; }
+    .tab-btn { background: var(--card); border: 1px solid var(--border); color: var(--muted); padding: 7px 13px; border-radius: 999px; cursor: pointer; font-weight: 600; font-size: 0.85rem; }
+    .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .units-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+    .unit-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; }
+    .unit-card.completed { border-color: var(--accent); }
+    .unit-card.locked { opacity: 0.5; }
+    .theory-box { background: var(--bg); border-left: 4px solid var(--primary); padding: 14px; border-radius: 8px; margin: 12px 0 18px; line-height: 1.5; }
+    .chunk-item { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .answer-zone { display: flex; flex-wrap: wrap; gap: 8px; min-height: 46px; padding: 10px; background: var(--bg); border-radius: 10px; border: 2px solid var(--primary); margin: 10px 0; }
+  </style>
 </head>
 <body>
   <div class="container">
     <header>
       <div>
         <div class="logo">🌍 Family English Pro</div>
-        <div class="subtitle">Plan Familiar • Pre-A1 a C2 • Audio Nativo & Diagnóstico MCER</div>
+        <div class="subtitle">Plan Anual • 84 Unidades (Pre-A1 a C2) • Avatares & Diagnóstico MCER</div>
       </div>
       <div id="header-actions" class="hidden" style="display:flex; align-items:center; gap:10px;">
         <span class="badge" id="hdr-streak">🔥 0</span>
@@ -32,12 +44,12 @@
       </div>
     </section>
 
-    <!-- VISTA 2: EXAMEN DIAGNÓSTICO (CONECTADO A exam.js) -->
+    <!-- VISTA 2: EXAMEN DIAGNÓSTICO (exam.js) -->
     <section id="view-test" class="hidden">
       <div id="diag-mount"></div>
     </section>
 
-    <!-- VISTA 3: PANEL PRINCIPAL DEL USUARIO -->
+    <!-- VISTA 3: PANEL PRINCIPAL + 84 UNIDADES -->
     <section id="view-dashboard" class="hidden">
       <div class="card">
         <div class="row-between">
@@ -52,20 +64,30 @@
         </div>
         <div class="progress-bar"><div class="progress-fill" id="dash-progress"></div></div>
         <div class="row-between muted" style="font-size:0.85rem;">
-          <span id="dash-progress-text">0 / 7 niveles dominados</span>
+          <span id="dash-progress-text">0 / 84 unidades completadas</span>
           <span id="dash-xp-total">0 XP acumulados</span>
         </div>
       </div>
 
-      <h3 style="margin:18px 0 12px;">📚 Ruta de Niveles MCER (Pre-A1 → C2)</h3>
-      <div id="levels-list"></div>
+      <div class="tabs" id="level-tabs">
+        <button class="tab-btn active" onclick="filterUnits('ALL', this)">Todas (84)</button>
+        <button class="tab-btn" onclick="filterUnits('Pre-A1', this)">Pre-A1</button>
+        <button class="tab-btn" onclick="filterUnits('A1', this)">A1</button>
+        <button class="tab-btn" onclick="filterUnits('A2', this)">A2</button>
+        <button class="tab-btn" onclick="filterUnits('B1', this)">B1</button>
+        <button class="tab-btn" onclick="filterUnits('B2', this)">B2</button>
+        <button class="tab-btn" onclick="filterUnits('C1', this)">C1</button>
+        <button class="tab-btn" onclick="filterUnits('C2', this)">C2</button>
+      </div>
+
+      <div id="units-grid" class="units-grid"></div>
     </section>
 
-    <!-- VISTA 4: LECCIÓN / EVALUACIÓN DE NIVEL -->
+    <!-- VISTA 4: LECCIÓN DE LA UNIDAD (TEORÍA + EJERCICIOS) -->
     <section id="view-lesson" class="hidden">
       <div class="row-between" style="margin-bottom:14px;">
-        <button class="btn btn-outline btn-sm" onclick="openUser(curUser.id)">⬅ Volver al Panel</button>
-        <span class="badge" id="lesson-tag">Nivel</span>
+        <button class="btn btn-outline btn-sm" onclick="openUser(curUser.id)">⬅ Volver a Unidades</button>
+        <span class="badge" id="lesson-tag">Unidad</span>
       </div>
       <div class="card" id="lesson-mount"></div>
     </section>
@@ -73,6 +95,9 @@
 
   <script src="avatars.js"></script>
   <script src="exam.js"></script>
+  <script src="data_basico.js"></script>
+  <script src="data_intermedio.js"></script>
+  <script src="data_avanzado.js"></script>
   <script src="engine.js"></script>
 </body>
 </html>
