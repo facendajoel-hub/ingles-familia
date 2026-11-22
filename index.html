@@ -6,498 +6,129 @@
   <title>Family English Pro | Ruta Completa Pre-A1 a C2</title>
   <style>
     :root {
-      --bg: #0f172a;
-      --card: #1e293b;
-      --card-light: #334155;
-      --primary: #38bdf8;
-      --primary-dark: #0284c7;
-      --accent: #22c55e;
-      --danger: #ef4444;
-      --warning: #f59e0b;
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --border: #334155;
+      --bg: #0f172a; --card: #1e293b; --hover: #334155;
+      --primary: #3b82f6; --accent: #10b981; --danger: #ef4444;
+      --text: #f8fafc; --muted: #94a3b8; --border: #334155;
     }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    }
-
-    body {
-      background-color: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 16px;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 960px;
-    }
-
-    /* Header */
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: var(--card);
-      padding: 16px 24px;
-      border-radius: 16px;
-      border: 1px solid var(--border);
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .brand h1 {
-      font-size: 1.4rem;
-      color: var(--primary);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .brand p {
-      font-size: 0.85rem;
-      color: var(--muted);
-    }
-
-    .user-badge {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: var(--bg);
-      padding: 8px 16px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-    }
-
-    .btn {
-      background: var(--primary);
-      color: #0f172a;
-      border: none;
-      padding: 10px 18px;
-      border-radius: 10px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-size: 0.95rem;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-
-    .btn:hover {
-      background: #7dd3fc;
-      transform: translateY(-1px);
-    }
-
-    .btn-secondary {
-      background: var(--card-light);
-      color: var(--text);
-    }
-
-    .btn-secondary:hover {
-      background: #475569;
-    }
-
-    .btn-success {
-      background: var(--accent);
-      color: #052e16;
-    }
-
-    .btn-danger {
-      background: var(--danger);
-      color: white;
-    }
-
-    .btn-sm {
-      padding: 6px 12px;
-      font-size: 0.82rem;
-    }
-
-    /* Views */
-    .view {
-      display: none;
-      animation: fadeIn 0.25s ease-in-out;
-    }
-
-    .view.active {
-      display: block;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Profiles Grid */
-    .profiles-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-      margin-top: 20px;
-    }
-
-    .profile-card {
-      background: var(--card);
-      border: 2px solid var(--border);
-      border-radius: 16px;
-      padding: 24px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .profile-card:hover {
-      border-color: var(--primary);
-      transform: translateY(-4px);
-    }
-
-    .avatar {
-      width: 64px;
-      height: 64px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--primary), #818cf8);
-      color: #0f172a;
-      font-size: 1.6rem;
-      font-weight: 800;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 12px;
-    }
-
-    .level-pill {
-      display: inline-block;
-      background: rgba(56, 189, 248, 0.15);
-      color: var(--primary);
-      padding: 4px 12px;
-      border-radius: 999px;
-      font-size: 0.8rem;
-      font-weight: 700;
-      margin-top: 8px;
-    }
-
-    /* Dashboard */
-    .stats-bar {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 14px;
-      margin-bottom: 20px;
-    }
-
-    .stat-box {
-      background: var(--card);
-      padding: 16px;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-    }
-
-    .stat-box span {
-      font-size: 0.8rem;
-      color: var(--muted);
-      display: block;
-    }
-
-    .stat-box strong {
-      font-size: 1.4rem;
-      color: var(--text);
-    }
-
-    .progress-container {
-      background: var(--card);
-      padding: 18px;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      margin-bottom: 20px;
-    }
-
-    .progress-track {
-      width: 100%;
-      height: 12px;
-      background: var(--bg);
-      border-radius: 999px;
-      overflow: hidden;
-      margin-top: 10px;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--primary), var(--accent));
-      width: 0%;
-      transition: width 0.4s ease;
-    }
-
-    /* Units List */
-    .level-tabs {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 16px;
-    }
-
-    .tab-btn {
-      background: var(--card);
-      color: var(--muted);
-      border: 1px solid var(--border);
-      padding: 8px 16px;
-      border-radius: 999px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-
-    .tab-btn.active {
-      background: var(--primary);
-      color: #0f172a;
-      border-color: var(--primary);
-    }
-
-    .units-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 14px;
-    }
-
-    .unit-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .unit-card.locked {
-      opacity: 0.55;
-    }
-
-    .unit-card.completed {
-      border-color: var(--accent);
-    }
-
-    .unit-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.8rem;
-      color: var(--primary);
-      font-weight: 700;
-    }
-
-    .unit-title {
-      font-size: 1.05rem;
-      font-weight: 700;
-      margin: 4px 0;
-    }
-
-    .unit-desc {
-      font-size: 0.85rem;
-      color: var(--muted);
-    }
-
-    /* Lesson / Exam Box */
-    .card-panel {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 24px;
-      margin-bottom: 20px;
-    }
-
-    .theory-box {
-      background: var(--bg);
-      border-left: 4px solid var(--primary);
-      padding: 16px;
-      border-radius: 10px;
-      margin: 16px 0;
-      line-height: 1.6;
-    }
-
-    .chunks-list {
-      display: grid;
-      gap: 10px;
-      margin-top: 12px;
-    }
-
-    .chunk-item {
-      background: var(--card-light);
-      padding: 12px 16px;
-      border-radius: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .options-grid {
-      display: grid;
-      gap: 10px;
-      margin-top: 16px;
-    }
-
-    .option-btn {
-      background: var(--bg);
-      color: var(--text);
-      border: 1px solid var(--border);
-      padding: 14px 18px;
-      border-radius: 12px;
-      text-align: left;
-      cursor: pointer;
-      font-size: 1rem;
-      transition: all 0.15s;
-    }
-
-    .option-btn:hover {
-      border-color: var(--primary);
-      background: rgba(56, 189, 248, 0.08);
-    }
-
-    .word-bank, .answer-zone {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      min-height: 52px;
-      padding: 12px;
-      background: var(--bg);
-      border-radius: 12px;
-      border: 1px dashed var(--border);
-      margin: 12px 0;
-    }
-
-    .word-chip {
-      background: var(--card-light);
-      color: var(--text);
-      padding: 8px 14px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 600;
-      user-select: none;
-    }
-
-    input[type="text"] {
-      width: 100%;
-      padding: 14px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: var(--bg);
-      color: var(--text);
-      font-size: 1rem;
-      margin-top: 12px;
-    }
-
-    .feedback-banner {
-      margin-top: 16px;
-      padding: 14px;
-      border-radius: 12px;
-      font-weight: 600;
-      display: none;
-    }
-
-    .feedback-banner.ok {
-      display: block;
-      background: rgba(34, 197, 94, 0.15);
-      border: 1px solid var(--accent);
-      color: #86efac;
-    }
-
-    .feedback-banner.err {
-      display: block;
-      background: rgba(239, 68, 68, 0.15);
-      border: 1px solid var(--danger);
-      color: #fca5a5;
-    }
-
-    .audio-controls {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin: 12px 0;
-    }
-
-    .mic-status {
-      font-size: 0.9rem;
-      color: var(--warning);
-      margin-top: 8px;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; }
+    .container { max-width: 920px; margin: 0 auto; padding: 20px; }
+    header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid var(--border); margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+    .logo { font-size: 1.4rem; font-weight: 800; color: #60a5fa; }
+    .subtitle { color: var(--muted); font-size: 0.85rem; }
+    .view { display: none; }
+    .view.active { display: block; }
+    .btn { background: var(--primary); color: #fff; border: none; padding: 10px 16px; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 0.92rem; display: inline-flex; align-items: center; gap: 6px; }
+    .btn:hover:not(:disabled) { filter: brightness(1.1); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-secondary { background: var(--card); border: 1px solid var(--border); color: var(--text); }
+    .btn-success { background: var(--accent); color: #064e3b; }
+    .btn-sm { padding: 6px 11px; font-size: 0.82rem; }
+    .profiles-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-top: 20px; }
+    .profile-card { background: var(--card); border: 2px solid var(--border); border-radius: 16px; padding: 24px 16px; text-align: center; cursor: pointer; transition: 0.2s; }
+    .profile-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+    .avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--primary); color: white; font-size: 1.5rem; font-weight: 800; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; }
+    .level-pill { display: inline-block; background: rgba(59,130,246,0.18); color: #60a5fa; padding: 4px 12px; border-radius: 999px; font-size: 0.82rem; font-weight: 700; margin-top: 6px; }
+    .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .stat-box { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
+    .stat-label { font-size: 0.8rem; color: var(--muted); }
+    .stat-val { font-size: 1.35rem; font-weight: 800; margin-top: 4px; }
+    .progress-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 20px; }
+    .progress-bar { height: 10px; background: var(--bg); border-radius: 999px; overflow: hidden; margin-top: 10px; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); width: 0%; transition: width 0.3s; }
+    .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+    .tab-btn { background: var(--card); border: 1px solid var(--border); color: var(--muted); padding: 7px 14px; border-radius: 999px; cursor: pointer; font-weight: 600; font-size: 0.85rem; }
+    .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .units-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+    .unit-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; }
+    .unit-card.completed { border-color: var(--accent); }
+    .unit-card.locked { opacity: 0.55; }
+    .unit-header { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--muted); font-weight: 700; margin-bottom: 6px; }
+    .unit-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+    .unit-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.4; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 22px; }
+    .theory-box { background: var(--bg); border-left: 4px solid var(--primary); padding: 14px 16px; border-radius: 8px; margin: 14px 0 20px; line-height: 1.55; }
+    .chunk-item { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .options-grid { display: grid; gap: 10px; margin: 14px 0; }
+    .option-btn { width: 100%; text-align: left; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 13px 16px; border-radius: 10px; cursor: pointer; font-size: 0.95rem; }
+    .option-btn:hover:not(:disabled) { border-color: var(--primary); background: var(--hover); }
+    .word-bank, .answer-zone { display: flex; flex-wrap: wrap; gap: 8px; min-height: 48px; padding: 10px; background: var(--bg); border-radius: 10px; border: 1px dashed var(--border); margin: 10px 0; }
+    .word-chip { background: var(--hover); padding: 7px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    input[type="text"] { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: white; font-size: 1rem; margin-top: 8px; }
+    .feedback-banner { padding: 12px 14px; border-radius: 10px; margin-top: 14px; font-size: 0.92rem; display: none; }
+    .feedback-banner.ok { background: rgba(16,185,129,0.16); border: 1px solid var(--accent); color: #a7f3d0; }
+    .feedback-banner.err { background: rgba(239,68,68,0.16); border: 1px solid var(--danger); color: #fecaca; }
+    .mic-status { margin-top: 10px; font-size: 0.88rem; color: var(--muted); }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- HEADER -->
     <header>
-      <div class="brand">
-        <h1>🌍 Family English Pro</h1>
-        <p>Plan Anual • 84 Unidades (Pre-A1 a C2) • Chunks, Listening & Speaking</p>
+      <div>
+        <div class="logo">🌍 Family English Pro</div>
+        <div class="subtitle">Plan Anual • 84 Unidades (Pre-A1 a C2) • Chunks, Listening & Speaking</div>
       </div>
-      <div id="headerUserControls" style="display:none;" class="user-badge">
+      <div id="headerUserControls" style="display:none; align-items:center; gap:10px;">
         <span id="activeUserName" style="font-weight:700;">Usuario</span>
-        <span id="activeUserLevel" class="level-pill" style="margin:0;">B1</span>
+        <span class="level-pill" id="activeUserLevel">B1</span>
         <button class="btn btn-secondary btn-sm" onclick="app.switchProfile()">Cambiar Perfil</button>
       </div>
     </header>
 
-    <!-- VISTA 1: SELECCIÓN DE PERFIL -->
+    <!-- VISTA 1: PERFILES -->
     <section id="viewProfiles" class="view active">
-      <div class="card-panel" style="text-align:center;">
-        <h2>¿Quién va a practicar hoy?</h2>
-        <p style="color:var(--muted); margin-top:6px;">Selecciona tu perfil familiar para cargar tu nivel, racha y progreso.</p>
-        <div class="profiles-grid" id="profilesContainer"></div>
+      <h2>¿Quién va a practicar hoy?</h2>
+      <p class="subtitle" style="margin-top:4px;">Selecciona tu perfil familiar para cargar tu nivel, racha y progreso.</p>
+      <div id="profilesContainer" class="profiles-grid"></div>
+    </section>
+
+    <!-- VISTA 2: EXAMEN DIAGNÓSTICO -->
+    <section id="viewPlacement" class="view">
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+          <span class="level-pill" id="placementTag">Examen Diagnóstico Adaptativo</span>
+          <span id="placementCounter" class="subtitle">Pregunta 1</span>
+        </div>
+        <h3 id="placementQuestion" style="margin-bottom:14px;">Cargando pregunta...</h3>
+        <div id="placementAudioArea" style="display:none; gap:8px; margin-bottom:12px;"></div>
+        <div id="placementOptions" class="options-grid"></div>
+        <div id="placementInputArea" style="display:none;">
+          <input type="text" id="placementTextInput" placeholder="Escribe lo que escuchas..." />
+          <button class="btn" style="margin-top:10px;" onclick="app.submitPlacementInput()">Comprobar Respuesta</button>
+        </div>
+        <div id="placementFeedback" class="feedback-banner"></div>
+        <div style="display:flex; justify-content:space-between; margin-top:16px;">
+          <button class="btn btn-secondary" onclick="app.showDashboard()">Saltar al Panel</button>
+          <button class="btn" id="btnNextPlacement" style="display:none;" onclick="app.nextPlacementQuestion()">Siguiente ➔</button>
+        </div>
       </div>
     </section>
 
-    <!-- VISTA 2: EXAMEN ADAPTATIVO DE NIVELACIÓN -->
-    <section id="viewPlacement" class="view">
-      <div class="card-panel">
-Examen Diagnóstico Adaptativo
-Pregunta 1
+    <!-- VISTA 3: PANEL PRINCIPAL -->
+    <section id="viewDashboard" class="view">
+      <div class="stats-bar">
+        <div class="stat-box"><div class="stat-label">Nivel Actual</div><div class="stat-val" id="statLevel">B1</div></div>
+        <div class="stat-box"><div class="stat-label">Unidades Completadas</div><div class="stat-val" id="statUnits">0 / 84</div></div>
+        <div class="stat-box"><div class="stat-label">Racha Diaria</div><div class="stat-val" id="statStreak">0 días 🔥</div></div>
+        <div class="stat-box" style="display:flex; align-items:center; justify-content:center;">
+          <button class="btn" style="width:100%; justify-content:center;" onclick="app.startPlacementTest()">🎯 Hacer Examen de Nivel</button>
+        </div>
+      </div>
 
-Cargando pregunta...
+      <div class="progress-wrap">
+        <div style="display:flex; justify-content:space-between; font-size:0.9rem; font-weight:700;">
+          <span>Progreso Anual hacia Maestría C2</span>
+          <span id="progressPercent">0%</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progressBarFill"></div></div>
+      </div>
 
-
-
-
-Comprobar Respuesta
-
-
-
-Saltar al Panel
-Siguiente ➔
-
-Nivel Actual
-B1
-
-
-Unidades Completadas
-0 / 84
-
-
-Racha Diaria
-0 días 🔥
-
-
-🎯 Hacer Examen de Nivel
-
-Progreso Anual hacia Maestría C2
-0%
-
-
-
-
-Todas (84)
-Pre-A1
-A1
-A2
-B1
+      <div class="tabs">
+        <button class="tab-btn active" onclick="app.filterUnits('ALL', this)">Todas (84)</button>
+        <button class="tab-btn" onclick="app.filterUnits('Pre-A1', this)">Pre-A1</button>
+        <button class="tab-btn" onclick="app.filterUnits('A1', this)">A1</button>
+        <button class="tab-btn" onclick="app.filterUnits('A2', this)">A2</button>
+        <button class="tab-btn" onclick="app.filterUnits('B1', this)">B1</button>
 B2
 C1
 C2
@@ -506,7 +137,7 @@ Teoría de la Unidad
 UNIDAD 1
 Título de la Unidad
 
-🗣️ Chunks Clave (Escucha y Repite)
+🗣 Chunks Clave (Escucha y Repite)
 
 
 Comenzar Sesión Práctica (12 Ejercicios) ➔
@@ -515,5 +146,6 @@ Ejercicio
 ❤️❤️❤️❤️❤️
 
 Pregunta del ejercicio
+
 🔊 Normal (0.95x)
 🐢 Lento (0.45x)
