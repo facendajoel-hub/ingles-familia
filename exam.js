@@ -110,14 +110,13 @@ const CEFR_PROFILES = {
 };
 
 window.ProDiagnosticExam = {
-  lvlIdx: 1,
+  lvlIdx: 0,
   step: 0,
   maxSteps: 35,
   mistakes: 0,
   maxMistakes: 5,
   correctCount: 0,
-  highestPassedIdx: -1,
-  scores: { grammar: [0, 0], listening: [0, 0], reading: [0, 0] },
+  bandStats: {},
   used: new Set(),
 
   openIntro(containerEl, onFinishCallback, profileName = "Estudiante") {
@@ -126,42 +125,31 @@ window.ProDiagnosticExam = {
     containerEl.innerHTML = `
       <div class="card" style="text-align:center; padding:28px 20px;">
         <span class="badge">Evaluación Diagnóstica Obligatoria · Perfil: ${profileName}</span>
-        <h2 style="margin:14px 0 10px;">Calibración Oficial de Nivel (Pre-A1 → C2)</h2>
-        <p class="muted" style="margin-bottom:10px; max-width:560px; margin-left:auto; margin-right:auto;">
-          Para personalizar tu currículo anual de 84 unidades y desbloquear exactamente la lección que te corresponde, selecciona tu punto de partida:
+        <h2 style="margin:14px 0 10px;">Examen Adaptativo Oficial (Pre-A1 → C2)</h2>
+        <p class="muted" style="margin-bottom:12px; max-width:560px; margin-left:auto; margin-right:auto;">
+          Para desbloquear tus 84 unidades y ubicarte en tu nivel real, es obligatorio completar esta calibración inicial.
         </p>
-        <p style="font-size:0.85rem; color:#fbbf24; margin-bottom:22px;">
-          ⚠️ El examen adaptativo consta de hasta 35 preguntas y <strong>finaliza automáticamente al acumular 5 fallos</strong> para determinar tu techo real con precisión científica.
+        <p style="font-size:0.88rem; color:#fbbf24; margin-bottom:22px;">
+          🎯 Hasta <strong>35 preguntas adaptativas</strong> · Se detiene automáticamente al acumular <strong>5 fallos</strong>.
         </p>
-        <div style="display:flex; flex-direction:column; gap:12px; max-width:440px; margin:0 auto;">
-          <button class="btn btn-outline" onclick="ProDiagnosticExam.assignZero()">
-            🌱 Empiezo desde CERO absoluto (Iniciar en Pre-A1 · Unidad 1)
-          </button>
-          <button class="btn" onclick="ProDiagnosticExam.start(document.getElementById('exam-mount'))">
-            🎯 Realizar Examen Adaptativo (Máx. 5 fallos)
-          </button>
-        </div>
+        <button class="btn" style="padding:13px 24px; font-size:1rem;" onclick="ProDiagnosticExam.start(document.getElementById('exam-mount'))">
+          🚀 Comenzar Examen Obligatorio Ahora
+        </button>
         <div id="exam-mount" style="margin-top:20px; text-align:left;"></div>
       </div>
     `;
   },
 
-  assignZero() {
-    this.onFinish({
-      level: "Pre-A1",
-      report: { grammar: 0, listening: 0, reading: 0, accuracy: 0, answered: 0, mistakes: 0 },
-      summary: "Inicio desde cero absoluto. Ruta iniciada en Pre-A1 (Unidad 1)."
-    });
-  },
-
   start(mountEl) {
     this.mount = mountEl;
-    this.lvlIdx = 1; // Arranca en A2 (índice 1 de lvlKeys)
+    this.lvlIdx = 0; // Inicia en A1 y sube dinámicamente según aciertos
     this.step = 0;
     this.mistakes = 0;
     this.correctCount = 0;
-    this.highestPassedIdx = -1;
-    this.scores = { grammar: [0, 0], listening: [0, 0], reading: [0, 0] };
+    this.bandStats = {
+      A1:, A2:, B1:, B2:, C1:, C2: [0, 0]
+    };
+    this.scores = { grammar:, listening:, reading: [0, 0] };
     this.used.clear();
     this.renderQ();
   },
@@ -171,9 +159,6 @@ window.ProDiagnosticExam = {
     window.speechSynthesis.cancel();
     setTimeout(() => {
       const u = new SpeechSynthesisUtterance(txt);
-      const voices = window.speechSynthesis.getVoices();
-      const enVoice = voices.find(v => v.lang === "en-US") || voices.find(v => v.lang && v.lang.startsWith("en"));
-      if (enVoice) u.voice = enVoice;
       u.lang = "en-US";
       u.rate = rate;
       window.speechSynthesis.speak(u);
@@ -187,7 +172,6 @@ window.ProDiagnosticExam = {
 
     let qIdx = pool.findIndex((_, i) => !this.used.has(lvl + "-" + i));
     if (qIdx === -1) {
-      // Buscar en niveles adyacentes si se agotó el banco del nivel actual
       qIdx = this.step % pool.length;
     }
     this.used.add(lvl + "-" + qIdx);
@@ -228,7 +212,7 @@ window.ProDiagnosticExam = {
         <h3 style="margin:14px 0;">${this.curQ.q}</h3>
         ${this.curQ.audio ? `
           <div class="audio-bar">
-            <button class="btn btn-outline btn-sm" onclick="ProDiagnosticExam.speak('${safeAudio}', 0.95)">🔊 Normal (1.0x)</button>
+            <button class="btn btn-outline btn-sm" onclick="ProDiagnosticExam.speak('${safeAudio}', 0.95)">🔊 Normal (0.95x)</button>
             <button class="btn btn-outline btn-sm" onclick="ProDiagnosticExam.speak('${safeAudio}', 0.45)">🐢 Lento (0.45x)</button>
           </div>` : ""}
         <div>${bodyHtml}</div>
@@ -268,13 +252,12 @@ window.ProDiagnosticExam = {
   recordResult(ok) {
     const sk = this.curQ.skill;
     this.scores[sk][1]++;
+    this.bandStats[this.curLvl][1]++;
 
     if (ok) {
       this.scores[sk][0]++;
+      this.bandStats[this.curLvl][0]++;
       this.correctCount++;
-      if (this.lvlIdx > this.highestPassedIdx) {
-        this.highestPassedIdx = this.lvlIdx;
-      }
       if (this.lvlIdx < 5) this.lvlIdx++;
     } else {
       this.mistakes++;
@@ -286,7 +269,7 @@ window.ProDiagnosticExam = {
     fb.className = "feedback-box " + (ok ? "feedback-ok" : "feedback-err");
     fb.innerHTML = `
       <strong>${ok ? "✅ ¡Correcto!" : `❌ Incorrecto (Fallo ${this.mistakes} de ${this.maxMistakes}):`}</strong> ${this.curQ.exp}
-      ${reachedMistakeLimit ? `<div style="margin-top:8px; font-weight:700; color:#fbbf24;">🛑 Has alcanzado el límite de 5 fallos. La prueba finaliza aquí para generar tu informe profesional de nivel.</div>` : ""}
+      ${reachedMistakeLimit ? `<div style="margin-top:8px; font-weight:700; color:#fbbf24;">🛑 Has alcanzado el límite de 5 fallos. La prueba finaliza aquí para calcular tu nivel real.</div>` : ""}
     `;
     fb.classList.remove("hidden");
 
@@ -310,14 +293,15 @@ window.ProDiagnosticExam = {
     const lvlKeys = ["A1", "A2", "B1", "B2", "C1", "C2"];
     let finalLvl = "Pre-A1";
 
-    if (this.correctCount === 0) {
-      finalLvl = "Pre-A1";
-    } else if (this.highestPassedIdx === -1) {
-      finalLvl = "Pre-A1";
-    } else {
-      // Calibrar nivel consolidado según la banda estabilizada y el techo alcanzado
-      const stabilizedIdx = Math.max(0, Math.min(this.lvlIdx, this.highestPassedIdx));
-      finalLvl = lvlKeys[stabilizedIdx];
+    // Determinar la banda más alta donde el estudiante demostró dominio real (>= 50% de aciertos en esa banda)
+    for (let i = 0; i < lvlKeys.length; i++) {
+      const k = lvlKeys[i];
+      const [hits, total] = this.bandStats[k];
+      if (total > 0 && (hits / total) >= 0.5) {
+        finalLvl = k;
+      } else if (total > 0) {
+        break;
+      }
     }
 
     const pct = s => s[1] === 0 ? 0 : Math.round((s[0] / s[1]) * 100);
@@ -349,60 +333,20 @@ window.ProDiagnosticExam = {
     const weakName = evaluatedSkills.length > 0 ? evaluatedSkills[0].name : "Fundamentos Generales";
     const strongName = evaluatedSkills.length > 0 ? evaluatedSkills[evaluatedSkills.length - 1].name : "Vocabulario Inicial";
     const stopReason = report.mistakes >= this.maxMistakes
-      ? `Finalizado por alcanzar el umbral diagnóstico de ${this.maxMistakes} fallos (${report.answered} preguntas respondidas).`
+      ? `Finalizado al alcanzar el límite de ${this.maxMistakes} fallos (${report.answered} preguntas respondidas).`
       : `Evaluación completa de ${report.answered} preguntas finalizada.`;
 
     this.mount.innerHTML = `
       <div class="card" style="background:var(--bg); border:2px solid var(--accent); padding:22px;">
         <div class="row-between" style="border-bottom:1px solid var(--border); padding-bottom:12px; margin-bottom:14px;">
           <div>
-            <span class="badge" style="background:rgba(16,185,129,0.15); color:#34d399; border-color:#10b981;">INFORME DIAGNÓSTICO PROFESIONAL MCER</span>
+            <span class="badge" style="background:rgba(16,185,129,0.15); color:#34d399; border-color:#10b981;">INFORME DIAGNÓSTICO MCER</span>
             <h3 style="margin:8px 0 2px; font-size:1.25rem;">Participante: ${this.profileName}</h3>
           </div>
           <div style="text-align:right;">
-            <div style="font-size:0.75rem; color:var(--muted);">NIVEL CLASIFICADO</div>
+            <div style="font-size:0.75rem; color:var(--muted);">NIVEL REAL ASIGNADO</div>
             <div style="font-size:1.8rem; font-weight:900; color:#34d399;">${level}</div>
           </div>
         </div>
 
         <p style="font-weight:700; color:#60a5fa; margin-bottom:6px;">${profileMeta.title}</p>
-        <p class="muted" style="line-height:1.5; margin-bottom:14px;">${profileMeta.diagnosticNote}</p>
-
-        <div style="background:var(--card); border-radius:12px; padding:14px; margin-bottom:14px; border:1px solid var(--border);">
-          <div style="font-size:0.8rem; font-weight:700; color:#94a3b8; margin-bottom:10px; text-transform:uppercase;">Desglose Técnico por Competencia</div>
-          <div style="display:grid; gap:8px;">
-            <div class="row-between"><span>• Gramática Aplicada:</span> <strong>${report.grammar}% (${this.scores.grammar[0]}/${this.scores.grammar[1]})</strong></div>
-            <div class="row-between"><span>• Comprensión Auditiva / Dictado:</span> <strong>${report.listening}% (${this.scores.listening[0]}/${this.scores.listening[1]})</strong></div>
-            <div class="row-between"><span>• Comprensión Lectora:</span> <strong>${report.reading}% (${this.scores.reading[0]}/${this.scores.reading[1]})</strong></div>
-            <div class="row-between" style="border-top:1px solid var(--border); padding-top:8px; margin-top:4px;">
-              <span>• Precisión Global (${report.correct} aciertos / ${report.mistakes} fallos):</span>
-              <strong style="color:#60a5fa;">${report.accuracy}%</strong>
-            </div>
-          </div>
-        </div>
-
-        <div style="font-size:0.9rem; display:grid; gap:6px; margin-bottom:14px;">
-          <p>✅ <strong>Fortaleza detectada:</strong> ${strongName} (${profileMeta.strengths})</p>
-          <p>🎯 <strong>Área prioritaria de refuerzo:</strong> ${weakName} — ${profileMeta.focus}</p>
-          <p>🚀 <strong>Ubicación en el Currículo Anual:</strong> Iniciarás directamente en la <strong>Unidad #${profileMeta.unitStart} (${level} · Unidad 1/12)</strong>. Todos los niveles anteriores quedan activos para práctica libre.</p>
-        </div>
-
-        <p class="muted" style="font-size:0.8rem; font-style:italic; margin-bottom:16px;">${stopReason}</p>
-
-        <div class="right-actions">
-          <button class="btn btn-accent" id="ex-finish-btn" style="width:100%; font-size:1rem; padding:13px;">
-            Guardar Informe e Iniciar en ${level} (Unidad #${profileMeta.unitStart}) →
-          </button>
-        </div>
-      </div>
-    `;
-
-    document.getElementById("ex-finish-btn").onclick = () => {
-      this.onFinish({
-        level,
-        report,
-        summary: `Clasificado en ${level}. Prioridad: ${weakName}.`
-      });
-    };
-  }
-};
