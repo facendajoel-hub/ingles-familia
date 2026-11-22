@@ -135,628 +135,546 @@ const app = {
       card.innerHTML =
         '<div class="avatar">' + p.avatar + '</div>' +
         '<h3>' + p.name + '</h3>' +
-        '<div class="level-pill">Nivel ' + p.level + '</div>' +
-        '<p style="font-size:0.8rem; color:var(--muted); margin-top:8px;">' +
-        p.completedUnits.length + ' / ' + totalUnits + ' unidades</p>';
-      card.onclick = function() { self.selectProfile(p.id); };
-      container.appendChild(card);
-    });
-  },
-
-  selectProfile: function(id) {
-    this.currentUser = this.profiles.find(function(p) { return p.id === id; });
-    if (!this.currentUser) return;
-    this.updateStreak();
-    document.getElementById('headerUserControls').style.display = 'flex';
-    document.getElementById('activeUserName').textContent = this.currentUser.name;
-    document.getElementById('activeUserLevel').textContent = this.currentUser.level;
-    this.showDashboard();
-  },
-
-  switchProfile: function() {
-    this.currentUser = null;
-    document.getElementById('headerUserControls').style.display = 'none';
-    this.renderProfiles();
-    this.showView('viewProfiles');
-  },
-
-  updateStreak: function() {
-    const today = new Date().toDateString();
-    if (this.currentUser.lastDate !== today) {
-      this.currentUser.lastDate = today;
-      this.saveProfiles();
-    }
-  },
-
-  showDashboard: function() {
-    this.showView('viewDashboard');
-    const total = this.allUnits.length || 84;
-    const done = this.currentUser.completedUnits.length;
-    const pct = Math.round((done / total) * 100);
-
-    document.getElementById('statLevel').textContent = this.currentUser.level;
-    document.getElementById('statUnits').textContent = done + ' / ' + total;
-    document.getElementById('statStreak').textContent = this.currentUser.streak + ' días 🔥';
-    document.getElementById('progressPercent').textContent = pct + '%';
-    document.getElementById('progressBarFill').style.width = pct + '%';
-    document.getElementById('activeUserLevel').textContent = this.currentUser.level;
-
-    this.renderUnits();
-  },
-
-  filterUnits: function(level, btnEl) {
-    this.currentFilter = level;
-    document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
-    if (btnEl) btnEl.classList.add('active');
-    this.renderUnits();
-  },
-
-  isUnitUnlocked: function(unit) {
-    const userLevelIdx = LEVELS_ORDER.indexOf(this.currentUser.level);
-    const unitLevelIdx = LEVELS_ORDER.indexOf(unit.level);
-    if (unitLevelIdx <= userLevelIdx) return true;
-    if (unit.id === 1) return true;
-    return this.currentUser.completedUnits.includes(unit.id - 1);
-  },
-
-  renderUnits: function() {
-    let grid = document.getElementById('unitsGrid');
-    if (!grid) {
-      grid = document.createElement('div');
-      grid.id = 'unitsGrid';
-      grid.className = 'units-grid';
-      document.getElementById('viewDashboard').appendChild(grid);
-    }
-
-    grid.innerHTML = '';
-    const self = this;
-    const filtered = this.currentFilter === 'ALL'
-      ? this.allUnits
-      : this.allUnits.filter(function(u) { return u.level === self.currentFilter; });
-
-    filtered.forEach(function(unit) {
-      const completed = self.currentUser.completedUnits.includes(unit.id);
-      const unlocked = self.isUnitUnlocked(unit);
-      const card = document.createElement('div');
-      card.className = 'unit-card ' + (completed ? 'completed ' : '') + (!unlocked ? 'locked' : '');
-
-      const statusText = completed ? '✅ Completada' : (unlocked ? '🔓 Disponible' : '🔒 Bloqueada');
-      const btnText = completed ? 'Repasar Unidad' : (unlocked ? 'Estudiar Ahora' : 'Completa el nivel previo');
-
-      card.innerHTML =
-        '<div>' +
-          '<div class="unit-header">' +
-            '<span>UNIDAD ' + unit.id + ' • ' + unit.level + '</span>' +
-            '<span>' + statusText + '</span>' +
-          '</div>' +
-          '<div class="unit-title">' + unit.title + '</div>' +
-          '<div class="unit-desc">' + unit.description + '</div>' +
-        '</div>' +
-        '<button class="btn ' + (completed ? 'btn-secondary' : '') + '" ' + (!unlocked ? 'disabled' : '') + '>' +
-          btnText +
-        '</button>';
-
-      if (unlocked) {
-        card.querySelector('button').onclick = function() { self.openUnit(unit); };
-      }
-      grid.appendChild(card);
-    });
-  },
-
-  startPlacementTest: function() {
-    const startIdx = LEVELS_ORDER.indexOf(this.currentUser.level);
-    this.placementState = {
-      active: true,
-      count: 0,
-      maxQuestions: 35,
-      currentLevelIdx: startIdx >= 0 ? startIdx : 3,
-      streakRight: 0,
-      streakWrong: 0,
-      usedQuestions: new Set(),
-      currentQuestion: null,
-      scoresByLevel: { 'Pre-A1': 0, 'A1': 0, 'A2': 0, 'B1': 0, 'B2': 0, 'C1': 0, 'C2': 0 }
-    };
-    this.showView('viewPlacement');
-    this.nextPlacementQuestion();
-  },
-
-  nextPlacementQuestion: function() {
-    const st = this.placementState;
-    const self = this;
-    if (st.count >= st.maxQuestions) {
-      this.finishPlacementTest();
-      return;
-    }
-
-    st.count++;
-    const lvl = LEVELS_ORDER[st.currentLevelIdx];
-    const bank = PLACEMENT_BANK[lvl] || PLACEMENT_BANK['B1'];
-
-    let available = bank.map(function(q, idx) {
-      return Object.assign({}, q, { key: lvl + '-' + idx });
-    }).filter(function(item) {
-      return !st.usedQuestions.has(item.key);
-    });
-
-    if (available.length === 0) {
-      const altIdx = st.currentLevelIdx < 6 ? st.currentLevelIdx + 1 : st.currentLevelIdx - 1;
-      const altLvl = LEVELS_ORDER[altIdx];
-      available = (PLACEMENT_BANK[altLvl] || []).map(function(q, idx) {
-        return Object.assign({}, q, { key: altLvl + '-' + idx });
-      });
-    }
-
-    const qObj = available[Math.floor(Math.random() * available.length)];
-    st.usedQuestions.add(qObj.key);
-    st.currentQuestion = Object.assign({}, qObj, { level: lvl });
-
-    document.getElementById('placementTag').textContent = 'Nivel Evaluado: ' + lvl;
-    document.getElementById('placementCounter').textContent = 'Pregunta ' + st.count + ' de ' + st.maxQuestions;
-    document.getElementById('placementFeedback').className = 'feedback-banner';
-    document.getElementById('placementFeedback').style.display = 'none';
-    document.getElementById('btnNextPlacement').style.display = 'none';
-
-    const audioArea = document.getElementById('placementAudioArea');
-    const optionsEl = document.getElementById('placementOptions');
-    const inputArea = document.getElementById('placementInputArea');
-
-    optionsEl.innerHTML = '';
-    audioArea.style.display = 'none';
-    inputArea.style.display = 'none';
-
-    if (qObj.type === 'choice') {
-      document.getElementById('placementQuestion').textContent = qObj.q;
-      qObj.options.forEach(function(opt, i) {
-        const btn = document.createElement('button');
-        btn.className = 'option-btn';
-        btn.textContent = opt;
-        btn.onclick = function() { self.evaluatePlacementAnswer(i === qObj.ans); };
-        optionsEl.appendChild(btn);
-      });
-    } else if (qObj.type === 'dictation') {
-      document.getElementById('placementQuestion').textContent = '🎧 Escucha el audio y escribe exactamente lo que oyes:';
-      audioArea.style.display = 'flex';
-      audioArea.innerHTML = '';
-
-      const btnNorm = document.createElement('button');
-      btnNorm.className = 'btn btn-secondary btn-sm';
-      btnNorm.textContent = '🔊 Normal';
-      btnNorm.onclick = function() { self.speak(qObj.audio, 0.95); };
-
-      const btnSlow = document.createElement('button');
-      btnSlow.className = 'btn btn-secondary btn-sm';
-      btnSlow.textContent = '🐢 Lento';
-      btnSlow.onclick = function() { self.speak(qObj.audio, 0.45); };
-
-      audioArea.appendChild(btnNorm);
-      audioArea.appendChild(btnSlow);
-
-      inputArea.style.display = 'block';
-      document.getElementById('placementTextInput').value = '';
-      this.speak(qObj.audio, 0.95);
-    }
-  },
-
-  submitPlacementInput: function() {
-    const val = document.getElementById('placementTextInput').value.trim();
-    const qObj = this.placementState.currentQuestion;
-    const clean = function(str) { return str.toLowerCase().replace(/[.,!?'"’]/g, '').trim(); };
-    const isCorrect = clean(val) === clean(qObj.ans);
-    this.evaluatePlacementAnswer(isCorrect);
-  },
-
-  evaluatePlacementAnswer: function(isCorrect) {
-    const st = this.placementState;
-    const qObj = st.currentQuestion;
-    const fb = document.getElementById('placementFeedback');
-
-    document.querySelectorAll('#placementOptions .option-btn').forEach(function(b) { b.disabled = true; });
-
-    const transHtml = qObj.es ? '<br><small>Traducción: "' + qObj.es + '"</small>' : '';
-
-    if (isCorrect) {
-      st.scoresByLevel[qObj.level] = (st.scoresByLevel[qObj.level] || 0) + 1;
-      st.streakRight++;
-      st.streakWrong = 0;
-      fb.className = 'feedback-banner ok';
-      fb.innerHTML = '✅ ¡Excelente! ' + transHtml;
-      if (st.streakRight >= 2 && st.currentLevelIdx < LEVELS_ORDER.length - 1) {
-        st.currentLevelIdx++;
-        st.streakRight = 0;
-      }
-    } else {
-      st.streakWrong++;
-      st.streakRight = 0;
-      const rightText = qObj.type === 'choice' ? qObj.options[qObj.ans] : qObj.ans;
-      fb.className = 'feedback-banner err';
-      fb.innerHTML = '❌ Respuesta correcta: <strong>' + rightText + '</strong> ' + transHtml;
-      if (st.streakWrong >= 2 && st.currentLevelIdx > 0) {
-        st.currentLevelIdx--;
-        st.streakWrong = 0;
-      }
-    }
-
-    fb.style.display = 'block';
-    document.getElementById('btnNextPlacement').style.display = 'inline-flex';
-  },
-
-  finishPlacementTest: function() {
-    const finalLevel = LEVELS_ORDER[this.placementState.currentLevelIdx];
-    this.currentUser.level = finalLevel;
-    this.saveProfiles();
-    alert('🎉 ¡Examen completado!\n\nTu nivel asignado es: ' + finalLevel + '\nTodas las unidades hasta ' + finalLevel + ' están desbloqueadas.');
-    this.showDashboard();
-  },
-
-  openUnit: function(unit) {
-    const self = this;
-    this.lessonState.unit = unit;
-    this.showView('viewLesson');
-    document.getElementById('lessonTheoryPhase').style.display = 'block';
-    document.getElementById('lessonExercisePhase').style.display = 'none';
-    document.getElementById('lessonProgressTag').textContent = 'Nivel ' + unit.level + ' • Teoría';
-    document.getElementById('lessonUnitBadge').textContent = 'UNIDAD ' + unit.id + ' • ' + unit.level;
-    document.getElementById('lessonTitle').textContent = unit.title;
-    document.getElementById('lessonTheoryText').innerHTML = unit.theory;
-
-    const chunksList = document.getElementById('lessonChunksList');
-    chunksList.innerHTML = '';
-
-    unit.chunks.forEach(function(ch) {
-      const item = document.createElement('div');
-      item.className = 'chunk-item';
-
-      const textDiv = document.createElement('div');
-      textDiv.innerHTML =
-        '<strong style="color:var(--primary); font-size:1.05rem;">' + ch.en + '</strong>' +
-        '<div style="font-size:0.88rem; color:var(--muted);">' + ch.es + '</div>';
-
-      const btnGroup = document.createElement('div');
-      btnGroup.style.display = 'flex';
-      btnGroup.style.gap = '6px';
-
-      const btnNorm = document.createElement('button');
-      btnNorm.className = 'btn btn-secondary btn-sm';
-      btnNorm.textContent = '🔊';
-      btnNorm.onclick = function() { self.speak(ch.en, 0.95); };
-
-      const btnSlow = document.createElement('button');
-      btnSlow.className = 'btn btn-secondary btn-sm';
-      btnSlow.textContent = '🐢';
-      btnSlow.onclick = function() { self.speak(ch.en, 0.45); };
-
-      btnGroup.appendChild(btnNorm);
-      btnGroup.appendChild(btnSlow);
-      item.appendChild(textDiv);
-      item.appendChild(btnGroup);
-      chunksList.appendChild(item);
-    });
-  },
-
-  startUnitExercises: function() {
-    const unit = this.lessonState.unit;
-    this.lessonState.exercises = this.generateUnitExercises(unit);
-    this.lessonState.currentIndex = 0;
-    this.lessonState.lives = 5;
-
-    document.getElementById('lessonTheoryPhase').style.display = 'none';
-    document.getElementById('lessonExercisePhase').style.display = 'block';
-    this.renderCurrentExercise();
-  },
-
-  generateUnitExercises: function(unit) {
-    const list = [];
-    const chunks = unit.chunks;
-
-    chunks.slice(0, 2).forEach(function(ch, idx) {
-      const distractors = chunks.filter(function(_, i) { return i !== idx; }).map(function(c) { return c.es; });
-      while (distractors.length < 3) distractors.push('Expresión informal de despedida');
-      const opts = [ch.es].concat(distractors.slice(0, 3)).sort(function() { return Math.random() - 0.5; });
-      list.push({
-        type: 'chunk_context',
-        badge: '1. Chunks en Contexto',
-        prompt: '¿Cuál es el significado natural de: "' + ch.en + '"?',
-        audio: ch.en,
-        options: opts,
-        answer: ch.es,
-        translation: ch.en + ' → ' + ch.es
-      });
-    });
-
-    chunks.slice(0, 2).forEach(function(ch) {
-      const words = ch.en.replace(/[.,!?]/g, '').split(' ');
-      list.push({
-        type: 'word_builder',
-        badge: '2. Constructor de Oraciones',
-        prompt: 'Ordena las palabras para decir: "' + ch.es + '"',
-        words: words.slice().sort(function() { return Math.random() - 0.5; }),
-        answer: words.join(' '),
-        audio: ch.en,
-        translation: ch.es
-      });
-    });
-
-    chunks.slice(1, 3).forEach(function(ch) {
-      const words = ch.en.split(' ');
-      const targetIdx = words.length > 2 ? Math.floor(words.length / 2) : 0;
-      const missingWord = words[targetIdx].replace(/[.,!?]/g, '');
-      const masked = words.map(function(w, i) { return i === targetIdx ? '______' : w; }).join(' ');
-      const opts = [missingWord, 'though', 'rather', 'whereas']
-        .filter(function(v, i, a) { return a.indexOf(v) === i; })
-        .slice(0, 4)
-        .sort(function() { return Math.random() - 0.5; });
-      list.push({
-        type: 'cloze',
-        badge: '3. Diálogo en Contexto (Cloze)',
-        prompt: 'Completa la frase: "' + masked + '" (' + ch.es + ')',
-        options: opts,
-        answer: missingWord,
-        audio: ch.en,
-        translation: ch.en + ' (' + ch.es + ')'
-      });
-    });
-
-    chunks.slice(0, 2).forEach(function(ch) {
-      list.push({
-        type: 'dictation',
-        badge: '4. Dictado Auditivo',
-        prompt: 'Escucha atentamente y escribe la frase exacta en inglés:',
-        audio: ch.en,
-        answer: ch.en,
-        translation: ch.es
-      });
-    });
-
-    const secondChunkEn = chunks[1] ? chunks[1].en : 'Sounds great to me!';
-    const dlg = unit.dialogue || {
-      speakerA: chunks[0].en,
-      speakerB: secondChunkEn,
-      question: '¿Qué expresa el diálogo?',
-      options: [chunks[0].es, 'Están cancelando una cita', 'Hablan sobre el clima'],
-      answer: chunks[0].es
-    };
-
-    list.push({
-      type: 'listening_comp',
-      badge: '5. Comprensión Auditiva',
-      prompt: 'Escucha el diálogo y responde: ' + dlg.question,
-      audio: dlg.speakerA + ' ... ' + dlg.speakerB,
-      options: dlg.options,
-      answer: dlg.answer,
-      translation: dlg.speakerA + ' / ' + dlg.speakerB
-    });
-
-    const lastChunk = chunks[chunks.length - 1];
-    list.push({
-      type: 'listening_comp',
-      badge: '5. Comprensión Auditiva',
-      prompt: 'Escucha la expresión y elige su uso adecuado:',
-      audio: lastChunk.en,
-      options: [lastChunk.es, 'Para pedir disculpas formales', 'Para expresar desacuerdo total'].sort(function() { return Math.random() - 0.5; }),
-      answer: lastChunk.es,
-      translation: lastChunk.en
-    });
-
-    list.push({
-      type: 'speaking',
-      badge: '6. Speaking • Nivel 1 (Chunk)',
-      prompt: 'Pronuncia en voz alta este chunk clave:',
-      targetText: chunks[0].en,
-      audio: chunks[0].en,
-      translation: chunks[0].es
-    });
-
-    list.push({
-      type: 'speaking',
-      badge: '6. Speaking • Nivel 2 (Oración Completa)',
-      prompt: 'Pronuncia la oración completa con fluidez:',
-      targetText: lastChunk.en,
-      audio: lastChunk.en,
-      translation: lastChunk.es
-    });
-
-    return list.slice(0, 12);
-  },
-
-  renderCurrentExercise: function() {
-    const st = this.lessonState;
-    const ex = st.exercises[st.currentIndex];
-    const self = this;
-    st.currentExercise = ex;
-    st.selectedWords = [];
-
-    document.getElementById('lessonProgressTag').textContent = 'Ejercicio ' + (st.currentIndex + 1) + ' de ' + st.exercises.length;
-    document.getElementById('exTypeBadge').textContent = ex.badge;
-    document.getElementById('exLivesBadge').textContent = '❤️'.repeat(st.lives) + '🖤'.repeat(5 - st.lives);
-    document.getElementById('exPrompt').textContent = ex.prompt;
-
-    const audioBox = document.getElementById('exAudioControls');
-    audioBox.style.display = ex.audio ? 'flex' : 'none';
-
-    const fb = document.getElementById('exFeedback');
-    fb.className = 'feedback-banner';
-    fb.style.display = 'none';
-    document.getElementById('btnNextExercise').style.display = 'none';
-
-    let dynamicArea = document.getElementById('exDynamicArea');
-    if (!dynamicArea) {
-      dynamicArea = document.createElement('div');
-      dynamicArea.id = 'exDynamicArea';
-      audioBox.insertAdjacentElement('afterend', dynamicArea);
-    }
-    dynamicArea.innerHTML = '';
-
-    if (ex.type === 'chunk_context' || ex.type === 'cloze' || ex.type === 'listening_comp') {
-      const grid = document.createElement('div');
-      grid.className = 'options-grid';
-      ex.options.forEach(function(opt) {
-        const btn = document.createElement('button');
-        btn.className = 'option-btn';
-        btn.textContent = opt;
-        btn.onclick = function() { self.checkExerciseResult(opt === ex.answer, ex.answer, ex.translation); };
-        grid.appendChild(btn);
-      });
-      dynamicArea.appendChild(grid);
-      if (ex.type === 'listening_comp') this.playExerciseAudio(0.95);
-    }
-
-    if (ex.type === 'word_builder') {
-      const ansZone = document.createElement('div');
-      ansZone.className = 'answer-zone';
-      ansZone.id = 'wbAnswerZone';
-
-      const bankZone = document.createElement('div');
-      bankZone.className = 'word-bank';
-      bankZone.id = 'wbBankZone';
-
-      ex.words.forEach(function(w) {
-        const chip = document.createElement('span');
-        chip.className = 'word-chip';
-        chip.textContent = w;
-        chip.onclick = function() {
-          if (chip.parentElement === bankZone) {
-            ansZone.appendChild(chip);
-          } else {
-            bankZone.appendChild(chip);
-          }
-        };
-        bankZone.appendChild(chip);
-      });
-
-      const checkBtn = document.createElement('button');
-      checkBtn.className = 'btn';
-      checkBtn.textContent = 'Comprobar Oración';
-      checkBtn.onclick = function() {
-        const built = Array.from(ansZone.children).map(function(c) { return c.textContent; }).join(' ');
-        self.checkExerciseResult(built.toLowerCase() === ex.answer.toLowerCase(), ex.answer, ex.translation);
-      };
-
-      dynamicArea.appendChild(ansZone);
-      dynamicArea.appendChild(bankZone);
-      dynamicArea.appendChild(checkBtn);
-    }
-
-    if (ex.type === 'dictation') {
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.id = 'dictationInput';
-      input.placeholder = 'Escribe exactamente lo que escuchas...';
-
-      const checkBtn = document.createElement('button');
-      checkBtn.className = 'btn';
-      checkBtn.style.marginTop = '12px';
-      checkBtn.textContent = 'Verificar Dictado';
-      checkBtn.onclick = function() {
-        const clean = function(s) { return s.toLowerCase().replace(/[.,!?'"’]/g, '').trim(); };
-        const isOk = clean(input.value) === clean(ex.answer);
-        self.checkExerciseResult(isOk, ex.answer, ex.translation);
-      };
-
-      dynamicArea.appendChild(input);
-      dynamicArea.appendChild(checkBtn);
-      this.playExerciseAudio(0.95);
-    }
-
-    if (ex.type === 'speaking') {
-      dynamicArea.innerHTML =
-        '<div class="theory-box" style="font-size:1.2rem; font-weight:700; color:var(--primary);">"' +
-        ex.targetText +
-        '"</div>' +
-        '<button class="btn btn-success" id="btnRecordSpeech">🎤 Hablar por Micrófono</button>' +
-        '<div class="mic-status" id="micStatus">Presiona el botón y pronuncia la frase en inglés.</div>';
-      document.getElementById('btnRecordSpeech').onclick = function() { self.startSpeechRecognition(ex); };
-    }
-  },
-
-  startSpeechRecognition: function(ex) {
-    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const statusEl = document.getElementById('micStatus');
-    const self = this;
-
-    if (!SpeechRec) {
-      statusEl.textContent = '⚠️ Tu navegador no soporta micrófono directo. Escucha el audio y marca como practicado.';
-      this.checkExerciseResult(true, ex.targetText, ex.translation);
-      return;
-    }
-
-    const recognition = new SpeechRec();
-    recognition.lang = 'en-US';
-    recognition.interimResults = false;
-    statusEl.textContent = '🎙️ Escuchando... habla ahora.';
-
-    recognition.onresult = function(event) {
-      const transcript = event.results[0][0].transcript;
-      statusEl.textContent = 'Escuché: "' + transcript + '"';
-      const clean = function(s) { return s.toLowerCase().replace(/[.,!?'"’]/g, '').trim(); };
-      const targetWords = clean(ex.targetText).split(' ');
-      const spokenWords = clean(transcript).split(' ');
-      const matches = targetWords.filter(function(w) { return spokenWords.includes(w); }).length;
-      const accuracy = matches / targetWords.length;
-
-      self.checkExerciseResult(accuracy >= 0.65, ex.targetText, ex.translation);
-    };
-
-    recognition.onerror = function() {
-      statusEl.textContent = '❌ No se detectó voz clara. Intenta de nuevo.';
-    };
-
-    recognition.start();
-  },
-
-  checkExerciseResult: function(isCorrect, correctAnswer, translation) {
-    const fb = document.getElementById('exFeedback');
-    document.querySelectorAll('#exDynamicArea button').forEach(function(b) { b.disabled = true; });
-
-    if (isCorrect) {
-      fb.className = 'feedback-banner ok';
-      fb.innerHTML = '✅ ¡Correcto!<br><small>Frase: <strong>' + correctAnswer + '</strong><br>Traducción: ' + translation + '</small>';
-      this.speak(this.lessonState.currentExercise.audio || correctAnswer, 0.95);
-    } else {
-      this.lessonState.lives--;
-      document.getElementById('exLivesBadge').textContent = '❤️'.repeat(Math.max(0, this.lessonState.lives)) + '🖤'.repeat(5 - Math.max(0, this.lessonState.lives));
-      fb.className = 'feedback-banner err';
-      fb.innerHTML = '❌ Respuesta correcta: <strong>' + correctAnswer + '</strong><br><small>Traducción: ' + translation + '</small>';
-
-      if (this.lessonState.lives <= 0) {
-        alert('💔 Te quedaste sin vidas (5 fallos). Repasemos la unidad desde el inicio.');
-        this.openUnit(this.lessonState.unit);
-        return;
-      }
-    }
-
-    fb.style.display = 'block';
-    document.getElementById('btnNextExercise').style.display = 'inline-flex';
-  },
-
-  nextExercise: function() {
-    this.lessonState.currentIndex++;
-    if (this.lessonState.currentIndex >= this.lessonState.exercises.length) {
-      const uid = this.lessonState.unit.id;
-      if (!this.currentUser.completedUnits.includes(uid)) {
-        this.currentUser.completedUnits.push(uid);
-        this.currentUser.streak++;
-        this.saveProfiles();
-      }
-      alert('🏆 ¡Unidad ' + uid + ' completada con éxito!');
-      this.showDashboard();
-    } else {
-      this.renderCurrentExercise();
-    }
-  },
-
-  playExerciseAudio: function(rate) {
-    const ex = this.lessonState.currentExercise;
-    if (ex && ex.audio) this.speak(ex.audio, rate);
-  },
-
-  speak: function(text, rate) {
-    if (!('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = 'en-US';
-    utter.rate = rate || 0.95;
-    window.speechSynthesis.speak(utter);
-  }
+'Nivel ' + p.level + '' +
+'' +
+p.completedUnits.length + ' / ' + totalUnits + ' unidades';
+card.onclick = function() { self.selectProfile(p.id); };
+container.appendChild(card);
+});
+},
+selectProfile: function(id) {
+this.currentUser = this.profiles.find(function(p) { return p.id === id; });
+if (!this.currentUser) return;
+this.updateStreak();
+document.getElementById('headerUserControls').style.display = 'flex';
+document.getElementById('activeUserName').textContent = this.currentUser.name;
+document.getElementById('activeUserLevel').textContent = this.currentUser.level;
+this.showDashboard();
+},
+switchProfile: function() {
+this.currentUser = null;
+document.getElementById('headerUserControls').style.display = 'none';
+this.renderProfiles();
+this.showView('viewProfiles');
+},
+updateStreak: function() {
+const today = new Date().toDateString();
+if (this.currentUser.lastDate !== today) {
+this.currentUser.lastDate = today;
+this.saveProfiles();
+}
+},
+showDashboard: function() {
+this.showView('viewDashboard');
+const total = this.allUnits.length || 84;
+const done = this.currentUser.completedUnits.length;
+const pct = Math.round((done / total) * 100);
+document.getElementById('statLevel').textContent = this.currentUser.level;
+document.getElementById('statUnits').textContent = done + ' / ' + total;
+document.getElementById('statStreak').textContent = this.currentUser.streak + ' días 🔥';
+document.getElementById('progressPercent').textContent = pct + '%';
+document.getElementById('progressBarFill').style.width = pct + '%';
+document.getElementById('activeUserLevel').textContent = this.currentUser.level;
+this.renderUnits();
+},
+filterUnits: function(level, btnEl) {
+this.currentFilter = level;
+document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+if (btnEl) btnEl.classList.add('active');
+this.renderUnits();
+},
+isUnitUnlocked: function(unit) {
+const userLevelIdx = LEVELS_ORDER.indexOf(this.currentUser.level);
+const unitLevelIdx = LEVELS_ORDER.indexOf(unit.level);
+if (unitLevelIdx <= userLevelIdx) return true;
+if (unit.id === 1) return true;
+return this.currentUser.completedUnits.includes(unit.id - 1);
+},
+renderUnits: function() {
+let grid = document.getElementById('unitsGrid');
+if (!grid) {
+grid = document.createElement('div');
+grid.id = 'unitsGrid';
+grid.className = 'units-grid';
+document.getElementById('viewDashboard').appendChild(grid);
+}
+grid.innerHTML = '';
+const self = this;
+const filtered = this.currentFilter === 'ALL'
+? this.allUnits
+: this.allUnits.filter(function(u) { return u.level === self.currentFilter; });
+filtered.forEach(function(unit) {
+const completed = self.currentUser.completedUnits.includes(unit.id);
+const unlocked = self.isUnitUnlocked(unit);
+const card = document.createElement('div');
+card.className = 'unit-card ' + (completed ? 'completed ' : '') + (!unlocked ? 'locked' : '');
+const statusText = completed ? '✅ Completada' : (unlocked ? '🔓 Disponible' : '🔒 Bloqueada');
+const btnText = completed ? 'Repasar Unidad' : (unlocked ? 'Estudiar Ahora' : 'Completa el nivel previo');
+card.innerHTML =
+'' +
+'' +
+'UNIDAD ' + unit.id + ' • ' + unit.level + '' +
+'' + statusText + '' +
+'' +
+'' + unit.title + '' +
+'' + unit.description + '' +
+'' +
+'<button class="btn ' + (completed ? 'btn-secondary' : '') + '" ' + (!unlocked ? 'disabled' : '') + '>' +
+btnText +
+'';
+if (unlocked) {
+card.querySelector('button').onclick = function() { self.openUnit(unit); };
+}
+grid.appendChild(card);
+});
+},
+startPlacementTest: function() {
+const startIdx = LEVELS_ORDER.indexOf(this.currentUser.level);
+this.placementState = {
+active: true,
+count: 0,
+maxQuestions: 35,
+currentLevelIdx: startIdx >= 0 ? startIdx : 3,
+streakRight: 0,
+streakWrong: 0,
+usedQuestions: new Set(),
+currentQuestion: null,
+scoresByLevel: { 'Pre-A1': 0, 'A1': 0, 'A2': 0, 'B1': 0, 'B2': 0, 'C1': 0, 'C2': 0 }
 };
-
+this.showView('viewPlacement');
+this.nextPlacementQuestion();
+},
+nextPlacementQuestion: function() {
+const st = this.placementState;
+const self = this;
+if (st.count >= st.maxQuestions) {
+this.finishPlacementTest();
+return;
+}
+st.count++;
+const lvl = LEVELS_ORDER[st.currentLevelIdx];
+const bank = PLACEMENT_BANK[lvl] || PLACEMENT_BANK['B1'];
+let available = bank.map(function(q, idx) {
+return Object.assign({}, q, { key: lvl + '-' + idx });
+}).filter(function(item) {
+return !st.usedQuestions.has(item.key);
+});
+if (available.length === 0) {
+const altIdx = st.currentLevelIdx < 6 ? st.currentLevelIdx + 1 : st.currentLevelIdx - 1;
+const altLvl = LEVELS_ORDER[altIdx];
+available = (PLACEMENT_BANK[altLvl] || []).map(function(q, idx) {
+return Object.assign({}, q, { key: altLvl + '-' + idx });
+});
+}
+const qObj = available[Math.floor(Math.random() * available.length)];
+st.usedQuestions.add(qObj.key);
+st.currentQuestion = Object.assign({}, qObj, { level: lvl });
+document.getElementById('placementTag').textContent = 'Nivel Evaluado: ' + lvl;
+document.getElementById('placementCounter').textContent = 'Pregunta ' + st.count + ' de ' + st.maxQuestions;
+document.getElementById('placementFeedback').className = 'feedback-banner';
+document.getElementById('placementFeedback').style.display = 'none';
+document.getElementById('btnNextPlacement').style.display = 'none';
+const audioArea = document.getElementById('placementAudioArea');
+const optionsEl = document.getElementById('placementOptions');
+const inputArea = document.getElementById('placementInputArea');
+optionsEl.innerHTML = '';
+audioArea.style.display = 'none';
+inputArea.style.display = 'none';
+if (qObj.type === 'choice') {
+document.getElementById('placementQuestion').textContent = qObj.q;
+qObj.options.forEach(function(opt, i) {
+const btn = document.createElement('button');
+btn.className = 'option-btn';
+btn.textContent = opt;
+btn.onclick = function() { self.evaluatePlacementAnswer(i === qObj.ans); };
+optionsEl.appendChild(btn);
+});
+} else if (qObj.type === 'dictation') {
+document.getElementById('placementQuestion').textContent = '🎧 Escucha el audio y escribe exactamente lo que oyes:';
+audioArea.style.display = 'flex';
+audioArea.innerHTML = '';
+const btnNorm = document.createElement('button');
+btnNorm.className = 'btn btn-secondary btn-sm';
+btnNorm.textContent = '🔊 Normal';
+btnNorm.onclick = function() { self.speak(qObj.audio, 0.95); };
+const btnSlow = document.createElement('button');
+btnSlow.className = 'btn btn-secondary btn-sm';
+btnSlow.textContent = '🐢 Lento';
+btnSlow.onclick = function() { self.speak(qObj.audio, 0.45); };
+audioArea.appendChild(btnNorm);
+audioArea.appendChild(btnSlow);
+inputArea.style.display = 'block';
+document.getElementById('placementTextInput').value = '';
+this.speak(qObj.audio, 0.95);
+}
+},
+submitPlacementInput: function() {
+const val = document.getElementById('placementTextInput').value.trim();
+const qObj = this.placementState.currentQuestion;
+const clean = function(str) { return str.toLowerCase().replace(/[.,!?'"’]/g, '').trim(); };
+const isCorrect = clean(val) === clean(qObj.ans);
+this.evaluatePlacementAnswer(isCorrect);
+},
+evaluatePlacementAnswer: function(isCorrect) {
+const st = this.placementState;
+const qObj = st.currentQuestion;
+const fb = document.getElementById('placementFeedback');
+document.querySelectorAll('#placementOptions .option-btn').forEach(function(b) { b.disabled = true; });
+const transHtml = qObj.es ? '
+Traducción: "' + qObj.es + '"' : '';
+if (isCorrect) {
+st.scoresByLevel[qObj.level] = (st.scoresByLevel[qObj.level] || 0) + 1;
+st.streakRight++;
+st.streakWrong = 0;
+fb.className = 'feedback-banner ok';
+fb.innerHTML = '✅ ¡Excelente! ' + transHtml;
+if (st.streakRight >= 2 && st.currentLevelIdx < LEVELS_ORDER.length - 1) {
+st.currentLevelIdx++;
+st.streakRight = 0;
+}
+} else {
+st.streakWrong++;
+st.streakRight = 0;
+const rightText = qObj.type === 'choice' ? qObj.options[qObj.ans] : qObj.ans;
+fb.className = 'feedback-banner err';
+fb.innerHTML = '❌ Respuesta correcta: ' + rightText + ' ' + transHtml;
+if (st.streakWrong >= 2 && st.currentLevelIdx > 0) {
+st.currentLevelIdx--;
+st.streakWrong = 0;
+}
+}
+fb.style.display = 'block';
+document.getElementById('btnNextPlacement').style.display = 'inline-flex';
+},
+finishPlacementTest: function() {
+const finalLevel = LEVELS_ORDER[this.placementState.currentLevelIdx];
+this.currentUser.level = finalLevel;
+this.saveProfiles();
+alert('🎉 ¡Examen completado!\n\nTu nivel asignado es: ' + finalLevel + '\nTodas las unidades hasta ' + finalLevel + ' están desbloqueadas.');
+this.showDashboard();
+},
+openUnit: function(unit) {
+const self = this;
+this.lessonState.unit = unit;
+this.showView('viewLesson');
+document.getElementById('lessonTheoryPhase').style.display = 'block';
+document.getElementById('lessonExercisePhase').style.display = 'none';
+document.getElementById('lessonProgressTag').textContent = 'Nivel ' + unit.level + ' • Teoría';
+document.getElementById('lessonUnitBadge').textContent = 'UNIDAD ' + unit.id + ' • ' + unit.level;
+document.getElementById('lessonTitle').textContent = unit.title;
+document.getElementById('lessonTheoryText').innerHTML = unit.theory;
+const chunksList = document.getElementById('lessonChunksList');
+chunksList.innerHTML = '';
+unit.chunks.forEach(function(ch) {
+const item = document.createElement('div');
+item.className = 'chunk-item';
+const textDiv = document.createElement('div');
+textDiv.innerHTML =
+'' + ch.en + '' +
+'' + ch.es + '';
+const btnGroup = document.createElement('div');
+btnGroup.style.display = 'flex';
+btnGroup.style.gap = '6px';
+const btnNorm = document.createElement('button');
+btnNorm.className = 'btn btn-secondary btn-sm';
+btnNorm.textContent = '🔊';
+btnNorm.onclick = function() { self.speak(ch.en, 0.95); };
+const btnSlow = document.createElement('button');
+btnSlow.className = 'btn btn-secondary btn-sm';
+btnSlow.textContent = '🐢';
+btnSlow.onclick = function() { self.speak(ch.en, 0.45); };
+btnGroup.appendChild(btnNorm);
+btnGroup.appendChild(btnSlow);
+item.appendChild(textDiv);
+item.appendChild(btnGroup);
+chunksList.appendChild(item);
+});
+},
+startUnitExercises: function() {
+const unit = this.lessonState.unit;
+this.lessonState.exercises = this.generateUnitExercises(unit);
+this.lessonState.currentIndex = 0;
+this.lessonState.lives = 5;
+document.getElementById('lessonTheoryPhase').style.display = 'none';
+document.getElementById('lessonExercisePhase').style.display = 'block';
+this.renderCurrentExercise();
+},
+generateUnitExercises: function(unit) {
+const list = [];
+const chunks = unit.chunks;
+chunks.slice(0, 2).forEach(function(ch, idx) {
+const distractors = chunks.filter(function(_, i) { return i !== idx; }).map(function(c) { return c.es; });
+while (distractors.length < 3) distractors.push('Expresión informal de despedida');
+const opts = [ch.es].concat(distractors.slice(0, 3)).sort(function() { return Math.random() - 0.5; });
+list.push({
+type: 'chunk_context',
+badge: '1. Chunks en Contexto',
+prompt: '¿Cuál es el significado natural de: "' + ch.en + '"?',
+audio: ch.en,
+options: opts,
+answer: ch.es,
+translation: ch.en + ' → ' + ch.es
+});
+});
+chunks.slice(0, 2).forEach(function(ch) {
+const words = ch.en.replace(/[.,!?]/g, '').split(' ');
+list.push({
+type: 'word_builder',
+badge: '2. Constructor de Oraciones',
+prompt: 'Ordena las palabras para decir: "' + ch.es + '"',
+words: words.slice().sort(function() { return Math.random() - 0.5; }),
+answer: words.join(' '),
+audio: ch.en,
+translation: ch.es
+});
+});
+chunks.slice(1, 3).forEach(function(ch) {
+const words = ch.en.split(' ');
+const targetIdx = words.length > 2 ? Math.floor(words.length / 2) : 0;
+const missingWord = words[targetIdx].replace(/[.,!?]/g, '');
+const masked = words.map(function(w, i) { return i === targetIdx ? '______' : w; }).join(' ');
+const opts = [missingWord, 'though', 'rather', 'whereas']
+.filter(function(v, i, a) { return a.indexOf(v) === i; })
+.slice(0, 4)
+.sort(function() { return Math.random() - 0.5; });
+list.push({
+type: 'cloze',
+badge: '3. Diálogo en Contexto (Cloze)',
+prompt: 'Completa la frase: "' + masked + '" (' + ch.es + ')',
+options: opts,
+answer: missingWord,
+audio: ch.en,
+translation: ch.en + ' (' + ch.es + ')'
+});
+});
+chunks.slice(0, 2).forEach(function(ch) {
+list.push({
+type: 'dictation',
+badge: '4. Dictado Auditivo',
+prompt: 'Escucha atentamente y escribe la frase exacta en inglés:',
+audio: ch.en,
+answer: ch.en,
+translation: ch.es
+});
+});
+const secondChunkEn = chunks[1] ? chunks[1].en : 'Sounds great to me!';
+const dlg = unit.dialogue || {
+speakerA: chunks[0].en,
+speakerB: secondChunkEn,
+question: '¿Qué expresa el diálogo?',
+options: [chunks[0].es, 'Están cancelando una cita', 'Hablan sobre el clima'],
+answer: chunks[0].es
+};
+list.push({
+type: 'listening_comp',
+badge: '5. Comprensión Auditiva',
+prompt: 'Escucha el diálogo y responde: ' + dlg.question,
+audio: dlg.speakerA + ' ... ' + dlg.speakerB,
+options: dlg.options,
+answer: dlg.answer,
+translation: dlg.speakerA + ' / ' + dlg.speakerB
+});
+const lastChunk = chunks[chunks.length - 1];
+list.push({
+type: 'listening_comp',
+badge: '5. Comprensión Auditiva',
+prompt: 'Escucha la expresión y elige su uso adecuado:',
+audio: lastChunk.en,
+options: [lastChunk.es, 'Para pedir disculpas formales', 'Para expresar desacuerdo total'].sort(function() { return Math.random() - 0.5; }),
+answer: lastChunk.es,
+translation: lastChunk.en
+});
+list.push({
+type: 'speaking',
+badge: '6. Speaking • Nivel 1 (Chunk)',
+prompt: 'Pronuncia en voz alta este chunk clave:',
+targetText: chunks[0].en,
+audio: chunks[0].en,
+translation: chunks[0].es
+});
+list.push({
+type: 'speaking',
+badge: '6. Speaking • Nivel 2 (Oración Completa)',
+prompt: 'Pronuncia la oración completa con fluidez:',
+targetText: lastChunk.en,
+audio: lastChunk.en,
+translation: lastChunk.es
+});
+return list.slice(0, 12);
+},
+renderCurrentExercise: function() {
+const st = this.lessonState;
+const ex = st.exercises[st.currentIndex];
+const self = this;
+st.currentExercise = ex;
+st.selectedWords = [];
+document.getElementById('lessonProgressTag').textContent = 'Ejercicio ' + (st.currentIndex + 1) + ' de ' + st.exercises.length;
+document.getElementById('exTypeBadge').textContent = ex.badge;
+document.getElementById('exLivesBadge').textContent = '❤️'.repeat(st.lives) + '🖤'.repeat(5 - st.lives);
+document.getElementById('exPrompt').textContent = ex.prompt;
+const audioBox = document.getElementById('exAudioControls');
+audioBox.style.display = ex.audio ? 'flex' : 'none';
+const fb = document.getElementById('exFeedback');
+fb.className = 'feedback-banner';
+fb.style.display = 'none';
+document.getElementById('btnNextExercise').style.display = 'none';
+let dynamicArea = document.getElementById('exDynamicArea');
+if (!dynamicArea) {
+dynamicArea = document.createElement('div');
+dynamicArea.id = 'exDynamicArea';
+audioBox.insertAdjacentElement('afterend', dynamicArea);
+}
+dynamicArea.innerHTML = '';
+if (ex.type === 'chunk_context' || ex.type === 'cloze' || ex.type === 'listening_comp') {
+const grid = document.createElement('div');
+grid.className = 'options-grid';
+ex.options.forEach(function(opt) {
+const btn = document.createElement('button');
+btn.className = 'option-btn';
+btn.textContent = opt;
+btn.onclick = function() { self.checkExerciseResult(opt === ex.answer, ex.answer, ex.translation); };
+grid.appendChild(btn);
+});
+dynamicArea.appendChild(grid);
+if (ex.type === 'listening_comp') this.playExerciseAudio(0.95);
+}
+if (ex.type === 'word_builder') {
+const ansZone = document.createElement('div');
+ansZone.className = 'answer-zone';
+ansZone.id = 'wbAnswerZone';
+const bankZone = document.createElement('div');
+bankZone.className = 'word-bank';
+bankZone.id = 'wbBankZone';
+ex.words.forEach(function(w) {
+const chip = document.createElement('span');
+chip.className = 'word-chip';
+chip.textContent = w;
+chip.onclick = function() {
+if (chip.parentElement === bankZone) {
+ansZone.appendChild(chip);
+} else {
+bankZone.appendChild(chip);
+}
+};
+bankZone.appendChild(chip);
+});
+const checkBtn = document.createElement('button');
+checkBtn.className = 'btn';
+checkBtn.textContent = 'Comprobar Oración';
+checkBtn.onclick = function() {
+const built = Array.from(ansZone.children).map(function(c) { return c.textContent; }).join(' ');
+self.checkExerciseResult(built.toLowerCase() === ex.answer.toLowerCase(), ex.answer, ex.translation);
+};
+dynamicArea.appendChild(ansZone);
+dynamicArea.appendChild(bankZone);
+dynamicArea.appendChild(checkBtn);
+}
+if (ex.type === 'dictation') {
+const input = document.createElement('input');
+input.type = 'text';
+input.id = 'dictationInput';
+input.placeholder = 'Escribe exactamente lo que escuchas...';
+const checkBtn = document.createElement('button');
+checkBtn.className = 'btn';
+checkBtn.style.marginTop = '12px';
+checkBtn.textContent = 'Verificar Dictado';
+checkBtn.onclick = function() {
+const clean = function(s) { return s.toLowerCase().replace(/[.,!?'"’]/g, '').trim(); };
+const isOk = clean(input.value) === clean(ex.answer);
+self.checkExerciseResult(isOk, ex.answer, ex.translation);
+};
+dynamicArea.appendChild(input);
+dynamicArea.appendChild(checkBtn);
+this.playExerciseAudio(0.95);
+}
+if (ex.type === 'speaking') {
+dynamicArea.innerHTML =
+'"' +
+ex.targetText +
+'"' +
+'🎤 Hablar por Micrófono' +
+'Presiona el botón y pronuncia la frase en inglés.';
+document.getElementById('btnRecordSpeech').onclick = function() { self.startSpeechRecognition(ex); };
+}
+},
+startSpeechRecognition: function(ex) {
+const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+const statusEl = document.getElementById('micStatus');
+const self = this;
+if (!SpeechRec) {
+statusEl.textContent = '⚠️ Tu navegador no soporta micrófono directo. Escucha el audio y marca como practicado.';
+this.checkExerciseResult(true, ex.targetText, ex.translation);
+return;
+}
+const recognition = new SpeechRec();
+recognition.lang = 'en-US';
+recognition.interimResults = false;
+statusEl.textContent = '🎙️ Escuchando... habla ahora.';
+recognition.onresult = function(event) {
+const transcript = event.results[0][0].transcript;
+statusEl.textContent = 'Escuché: "' + transcript + '"';
+const clean = function(s) { return s.toLowerCase().replace(/[.,!?'"’]/g, '').trim(); };
+const targetWords = clean(ex.targetText).split(' ');
+const spokenWords = clean(transcript).split(' ');
+const matches = targetWords.filter(function(w) { return spokenWords.includes(w); }).length;
+const accuracy = matches / targetWords.length;
+self.checkExerciseResult(accuracy >= 0.65, ex.targetText, ex.translation);
+};
+recognition.onerror = function() {
+statusEl.textContent = '❌ No se detectó voz clara. Intenta de nuevo.';
+};
+recognition.start();
+},
+checkExerciseResult: function(isCorrect, correctAnswer, translation) {
+const fb = document.getElementById('exFeedback');
+document.querySelectorAll('#exDynamicArea button').forEach(function(b) { b.disabled = true; });
+if (isCorrect) {
+fb.className = 'feedback-banner ok';
+fb.innerHTML = '✅ ¡Correcto!
+Frase: ' + correctAnswer + '
+Traducción: ' + translation + '';
+this.speak(this.lessonState.currentExercise.audio || correctAnswer, 0.95);
+} else {
+this.lessonState.lives--;
+document.getElementById('exLivesBadge').textContent = '❤️'.repeat(Math.max(0, this.lessonState.lives)) + '🖤'.repeat(5 - Math.max(0, this.lessonState.lives));
+fb.className = 'feedback-banner err';
+fb.innerHTML = '❌ Respuesta correcta: ' + correctAnswer + '
+Traducción: ' + translation + '';
+if (this.lessonState.lives <= 0) {
+alert('💔 Te quedaste sin vidas (5 fallos). Repasemos la unidad desde el inicio.');
+this.openUnit(this.lessonState.unit);
+return;
+}
+}
+fb.style.display = 'block';
+document.getElementById('btnNextExercise').style.display = 'inline-flex';
+},
+nextExercise: function() {
+this.lessonState.currentIndex++;
+if (this.lessonState.currentIndex >= this.lessonState.exercises.length) {
+const uid = this.lessonState.unit.id;
+if (!this.currentUser.completedUnits.includes(uid)) {
+this.currentUser.completedUnits.push(uid);
+this.currentUser.streak++;
+this.saveProfiles();
+}
+alert('🏆 ¡Unidad ' + uid + ' completada con éxito!');
+this.showDashboard();
+} else {
+this.renderCurrentExercise();
+}
+},
+playExerciseAudio: function(rate) {
+const ex = this.lessonState.currentExercise;
+if (ex && ex.audio) this.speak(ex.audio, rate);
+},
+speak: function(text, rate) {
+if (!('speechSynthesis' in window)) return;
+window.speechSynthesis.cancel();
+const utter = new SpeechSynthesisUtterance(text);
+utter.lang = 'en-US';
+utter.rate = rate || 0.95;
+window.speechSynthesis.speak(utter);
+}
+};
 window.addEventListener('DOMContentLoaded', function() { app.init(); });
