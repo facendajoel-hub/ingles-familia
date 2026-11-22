@@ -9,16 +9,6 @@ const PRO_DESC = {
   "C2": "Mastery (100% English): Near-native precision."
 };
 
-const DIAG_QS = [
-  { skill: "Gramática", lvl: "A1", q: "Completa: 'My brother ___ twenty years old.'", opts: ["am", "is", "are", "have"], ans: 1, exp: "La edad en inglés usa 'to be' ('is')." },
-  { skill: "Oído/Dictado", lvl: "A1", audio: "I go to work every morning", dict: true, q: "Escucha y escribe exactamente en inglés:", ans: "i go to work every morning", exp: "Frase: 'I go to work every morning'." },
-  { skill: "Lectura", lvl: "A2", q: "'I'm running late. Please start the meeting without me.' ¿Qué pide?", opts: ["Cancelar", "Que empiecen sin esa persona", "Moverlo a mañana", "Llamar"], ans: 1, exp: "'Start without me' = empiecen sin mí." },
-  { skill: "Gramática", lvl: "B1", q: "'If I ___ fluent in English, I would apply today.'", opts: ["am", "was", "were", "will be"], ans: 2, exp: "Segundo condicional formal: 'If I were...'." },
-  { skill: "Oído/Dictado", lvl: "B2", audio: "Consistency beats intensity in the long run", dict: true, q: "Dictation - Type exactly what you hear:", ans: "consistency beats intensity in the long run", exp: "Exact: 'Consistency beats intensity in the long run'." },
-  { skill: "Lectura", lvl: "C1", q: "'The sample is too narrow to warrant sweeping policy changes.' Critique?", opts: ["Data is fake", "Sample is too small for major changes", "Change policies now", "Too many people"], ans: 1, exp: "'Too narrow to warrant' = muestra muy pequeña." },
-  { skill: "Gramática", lvl: "C2", q: "'___ had the market calmed than another shock hit.'", opts: ["Hardly", "No sooner", "Scarcely", "Barely"], ans: 1, exp: "'No sooner ... than' es la estructura exacta." }
-];
-
 const LEVEL_EXAMS = {
   "Pre-A1": [
     { q: "¿Cómo se dice 'Mucho gusto en conocerte'?", opts: ["See you later", "Nice to meet you", "Good night"], ans: 1, exp: "'Nice to meet you'." },
@@ -58,10 +48,10 @@ const LEVEL_EXAMS = {
 };
 
 let db = JSON.parse(localStorage.getItem("famEngPro_Final")) || [
-  { id: 1, name: "Usuario 1", svg: "svg-trader", level: null, done: [], xp: 0, streak: 0 },
-  { id: 2, name: "Usuario 2", svg: "svg-elegant", level: null, done: [], xp: 0, streak: 0 },
-  { id: 3, name: "Usuario 3", svg: "svg-soto-bat", level: null, done: [], xp: 0, streak: 0 },
-  { id: 4, name: "Usuario 4", svg: "svg-soto-shuffle", level: null, done: [], xp: 0, streak: 0 }
+  { id: 1, name: "Papá", svg: "svg-trader", level: null, done: [], xp: 0, streak: 0 },
+  { id: 2, name: "Angie", svg: "svg-elegant", level: null, done: [], xp: 0, streak: 0 },
+  { id: 3, name: "Engel", svg: "svg-soto-bat", level: null, done: [], xp: 0, streak: 0 },
+  { id: 4, name: "Dionangel", svg: "svg-soto-shuffle", level: null, done: [], xp: 0, streak: 0 }
 ];
 let curUser = null;
 
@@ -74,7 +64,6 @@ function avatarHTML(svgKey, size = 76) {
   }
   return `<span style="font-size:${size*0.6}px;">🦁</span>`;
 }
-
 function renderHome() {
   curUser = null;
   document.getElementById("header-actions").classList.add("hidden");
@@ -112,103 +101,132 @@ window.openUser = function(id) {
   document.getElementById("header-actions").classList.remove("hidden");
   document.getElementById("hdr-streak").textContent = "🔥 " + curUser.streak;
   document.getElementById("hdr-xp").textContent = "⭐ " + curUser.xp + " XP";
-  if (!curUser.level) showIntroChoice();
-  else showRoadmap();
+
+  if (!curUser.level) {
+    startDiagnostic();
+  } else {
+    renderDashboard();
+  }
 };
 
-function showIntroChoice() {
+window.retestLevel = function() {
+  startDiagnostic();
+};
+
+function startDiagnostic() {
   ["view-profiles", "view-dashboard", "view-lesson"].forEach(id => document.getElementById(id).classList.add("hidden"));
-  const v = document.getElementById("view-test");
-  v.classList.remove("hidden");
-  v.innerHTML = `
-    <div class="card" style="text-align:center; padding:26px;">
-      ${avatarHTML(curUser.svg, 76)}
-      <h2 style="margin:12px 0 8px;">¡Bienvenido, ${curUser.name}!</h2>
-      <p class="muted" style="margin-bottom:20px;">Elige cómo comenzar tu ruta hasta Maestría C2:</p>
-      <div style="display:grid; gap:12px; max-width:420px; margin:0 auto;">
-        <button class="btn" onclick="startDiag()">🎯 Hacer Examen Diagnóstico (Gramática, Oído con Dictado y Lectura)</button>
-        <button class="btn btn-outline" onclick="setZeroLevel()">🌱 Empiezo desde CERO absoluto (Pre-A1)</button>
+  document.getElementById("view-test").classList.remove("hidden");
+  ProDiagnosticExam.openIntro(document.getElementById("diag-mount"), (res) => {
+    curUser.level = res.level;
+    const lvlIdx = PRO_LVLS.indexOf(res.level);
+    curUser.done = PRO_LVLS.slice(0, Math.max(0, lvlIdx));
+    curUser.xp += 50;
+    curUser.streak = Math.max(1, curUser.streak);
+    saveDB();
+    openUser(curUser.id);
+  }, curUser.name);
+}
+
+function renderDashboard() {
+  ["view-profiles", "view-test", "view-lesson"].forEach(id => document.getElementById(id).classList.add("hidden"));
+  document.getElementById("view-dashboard").classList.remove("hidden");
+
+  document.getElementById("dash-avatar").innerHTML = avatarHTML(curUser.svg, 64);
+  document.getElementById("dash-name").textContent = curUser.name;
+  document.getElementById("dash-lvl-desc").textContent = "Nivel " + curUser.level + " • " + PRO_DESC[curUser.level];
+
+  const pct = Math.round((curUser.done.length / PRO_LVLS.length) * 100);
+  document.getElementById("dash-progress").style.width = pct + "%";
+  document.getElementById("dash-progress-text").textContent = curUser.done.length + " / " + PRO_LVLS.length + " niveles completados";
+  document.getElementById("dash-xp-total").textContent = curUser.xp + " XP acumulados";
+
+  const curIdx = PRO_LVLS.indexOf(curUser.level);
+  document.getElementById("levels-list").innerHTML = PRO_LVLS.map((lvl, idx) => {
+    const isDone = curUser.done.includes(lvl);
+    const isCurrent = lvl === curUser.level;
+    const isLocked = idx > curIdx && !isDone;
+    return `
+      <div class="level-card ${isDone ? "completed" : ""} ${isCurrent ? "current" : ""} ${isLocked ? "locked" : ""}">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span class="level-tag">${lvl}</span>
+          <div>
+            <div style="font-weight:700;">${PRO_DESC[lvl]}</div>
+            <div class="muted" style="font-size:0.82rem;">${isDone ? "✅ Dominado" : (isCurrent ? "🎯 Nivel Actual" : "🔒 Completa el nivel anterior")}</div>
+          </div>
+        </div>
+        <button class="btn btn-sm" ${isLocked ? "disabled" : ""} onclick="startLevelExam('${lvl}')">
+          ${isDone ? "Repasar" : (isLocked ? "Bloqueado" : "Practicar")}
+        </button>
       </div>
-    </div>
-  `;
+    `;
+  }).join("");
 }
 
-window.setZeroLevel = function() {
-  curUser.level = "Pre-A1"; curUser.done = []; saveDB(); showRoadmap();
+window.startLevelExam = function(lvl) {
+  ["view-profiles", "view-test", "view-dashboard"].forEach(id => document.getElementById(id).classList.add("hidden"));
+  document.getElementById("view-lesson").classList.remove("hidden");
+  document.getElementById("lesson-tag").textContent = "Evaluación de Nivel " + lvl;
+
+  const qs = LEVEL_EXAMS[lvl] || LEVEL_EXAMS["Pre-A1"];
+  let qIdx = 0;
+  let score = 0;
+
+  function showQ() {
+    const q = qs[qIdx];
+    const mount = document.getElementById("lesson-mount");
+    mount.innerHTML = `
+      <div class="muted" style="margin-bottom:8px;">Pregunta ${qIdx + 1} de ${qs.length}</div>
+      <h3 class="q-title">${q.q}</h3>
+      <div>
+        ${q.opts.map((o, i) => `<button class="option-btn" id="lvl-opt-${i}" onclick="checkLvlOpt(${i})">${o}</button>`).join("")}
+      </div>
+      <div id="lvl-fb" class="hidden"></div>
+      <div class="right-actions">
+        <button class="btn hidden" id="lvl-next" onclick="nextLvlQ()">Continuar →</button>
+      </div>
+    `;
+  }
+
+  window.checkLvlOpt = function(chosen) {
+    const q = qs[qIdx];
+    const ok = chosen === q.ans;
+    if (ok) { score++; say(q.opts[q.ans]); }
+    document.querySelectorAll("[id^='lvl-opt-']").forEach((b, i) => {
+      b.disabled = true;
+      if (i === q.ans) b.classList.add("correct");
+      else if (i === chosen) b.classList.add("wrong");
+    });
+    const fb = document.getElementById("lvl-fb");
+    fb.className = "feedback-box " + (ok ? "feedback-ok" : "feedback-err");
+    fb.innerHTML = `<strong>${ok ? "✅ ¡Correcto!" : "❌ Incorrecto:"}</strong> ${q.exp}`;
+    fb.classList.remove("hidden");
+    document.getElementById("lvl-next").classList.remove("hidden");
+  };
+
+  window.nextLvlQ = function() {
+    qIdx++;
+    if (qIdx < qs.length) {
+      showQ();
+    } else {
+      const passed = score >= Math.ceil(qs.length * 0.66);
+      if (passed) {
+        if (!curUser.done.includes(lvl)) curUser.done.push(lvl);
+        const nextIdx = PRO_LVLS.indexOf(lvl) + 1;
+        if (nextIdx < PRO_LVLS.length && curUser.level === lvl) {
+          curUser.level = PRO_LVLS[nextIdx];
+        }
+        curUser.xp += 100;
+        curUser.streak++;
+        saveDB();
+        alert(`🏆 ¡Nivel ${lvl} superado! (${score}/${qs.length} aciertos)\n+100 XP y racha aumentada.`);
+      } else {
+        alert(`📚 Obtuviste ${score}/${qs.length}. Repasa e inténtalo de nuevo para desbloquear el siguiente nivel.`);
+      }
+      openUser(curUser.id);
+    }
+  };
+
+  showQ();
 };
 
-window.startDiag = function() {
-  let idx = 0, score = 0;
-  const v = document.getElementById("view-test");
-  function drawQ() {
-    const q = DIAG_QS[idx];
-    v.innerHTML = `
-      <div class="card">
-        <div class="row-between"><span class="badge">${q.skill} · Nivel ${q.lvl}</span><span class="muted">${idx+1} de ${DIAG_QS.length}</span></div>
-        <h3 style="margin:14px 0;">${q.q}</h3>
-        ${q.audio ? `<div class="audio-bar"><button class="btn btn-sm" onclick="say('${q.audio}',0.95)">🔊 Escuchar</button><button class="btn btn-outline btn-sm" onclick="say('${q.audio}',0.65)">🐢 Lento</button></div>` : ""}
-        <div id="dq-area">
-${q.dict ? <input id="dq-in" class="text-input" placeholder="Escribe en inglés..."><button class="btn btn-sm" id="dq-chk">Comprobar</button>
-: q.opts.map((o, i) => <button class="option-btn" data-i="${i}">${o}</button>).join("")}
-; if (q.audio) say(q.audio, 0.95); const doneQ = (ok) => { if (ok) score++; const fb = document.getElementById("dq-fb"); fb.className = "feedback-box " + (ok ? "feedback-ok" : "feedback-err"); fb.innerHTML = ${ok ? "¡Correcto!" : "Detalle:"} ${q.exp}; fb.classList.remove("hidden"); document.getElementById("dq-next").disabled = false; }; if (q.dict) { document.getElementById("dq-chk").onclick = () => { const val = document.getElementById("dq-in").value.trim().toLowerCase().replace(/[.,!?']/g, ""); if (!val) return; document.getElementById("dq-in").disabled = true; document.getElementById("dq-chk").disabled = true; doneQ(val === q.ans); }; } else { document.querySelectorAll("#dq-area .option-btn").forEach(b => b.onclick = () => { const c = Number(b.dataset.i); document.querySelectorAll("#dq-area .option-btn").forEach((x, i) => { x.disabled = true; if (i === q.ans) x.classList.add("correct"); else if (i === c) x.classList.add("wrong"); }); doneQ(c === q.ans); }); } document.getElementById("dq-next").onclick = () => { idx++; if (idx < DIAG_QS.length) drawQ(); else { const assigned = PRO_LVLS[Math.min(score, PRO_LVLS.length - 1)]; curUser.level = assigned; curUser.done = PRO_LVLS.slice(0, PRO_LVLS.indexOf(assigned)); curUser.xp += 50; curUser.streak++; saveDB(); v.innerHTML = 📊 Diagnóstico CompletadoNivel Asignado: ${assigned} (${score}/${DIAG_QS.length})Ir a mi Mapa →`;
-}
-};
-}
-drawQ();
-};
-window.showRoadmap = function() {
-["view-profiles", "view-test", "view-lesson"].forEach(id => document.getElementById(id).classList.add("hidden"));
-document.getElementById("view-dashboard").classList.remove("hidden");
-document.getElementById("dash-welcome").innerHTML = ${avatarHTML(curUser.svg, 34)} Hola, ${curUser.name};
-document.getElementById("dash-subtitle").textContent = Nivel actual: ${curUser.level} · Regla: Aprobar examen al 100% para avanzar;
-const curIdx = PRO_LVLS.indexOf(curUser.level);
-document.getElementById("roadmap-list").innerHTML = PRO_LVLS.map((lvl, idx) => {
-const isDone = curUser.done.includes(lvl);
-const isCur = lvl === curUser.level;
-const locked = idx > curIdx && !isDone;
-return <div class="level-card ${isDone ? "completed" : isCur ? "current" : locked ? "locked" : ""}"> <div style="display:flex; align-items:center; gap:12px;"> <div class="level-tag">${lvl}</div> <div><strong>${lvl} ${isDone ? "✅" : ""}</strong><div class="muted">${PRO_DESC[lvl]}</div></div> </div> ${locked ?🔒:🎓 Examen 100%} </div> ;
-}).join("");
-};
-window.showDashboard = window.showRoadmap;
-window.startExam100 = function(lvl) {
-["view-profiles", "view-test", "view-dashboard"].forEach(id => document.getElementById(id).classList.add("hidden"));
-document.getElementById("view-lesson").classList.remove("hidden");
-const qs = LEVEL_EXAMS[lvl];
-let step = 0, okCount = 0, fails = [];
-function draw() {
-const q = qs[step];
-document.getElementById("lesson-mode-badge").textContent = 🎓 Examen ${lvl} (Obligatorio 100%);
-document.getElementById("lesson-progress").style.width = ${((step+1)/qs.length)*100}%;
-document.getElementById("lesson-container").innerHTML = <p class="muted" style="margin-bottom:8px;">Pregunta ${step+1} de ${qs.length}</p> <h3 style="margin-bottom:14px;">${q.q}</h3> <div id="ex-o">${q.opts.map((o, i) =>${o}).join("")}</div> <div id="ex-f" class="hidden"></div> <div class="right-actions"><button class="btn" id="ex-n" disabled>Siguiente →</button></div> ;
-document.querySelectorAll("#ex-o .option-btn").forEach(b => b.onclick = () => {
-const c = Number(b.dataset.i);
-const ok = c === q.ans;
-document.querySelectorAll("#ex-o .option-btn").forEach((x, i) => { x.disabled = true; if (i === q.ans) x.classList.add("correct"); else if (i === c) x.classList.add("wrong"); });
-if (ok) okCount++; else fails.push(q);
-const fb = document.getElementById("ex-f");
-fb.className = "feedback-box " + (ok ? "feedback-ok" : "feedback-err");
-fb.innerHTML = <strong>${ok ? "¡Correcto!" : "Error:"}</strong> ${q.exp};
-fb.classList.remove("hidden");
-document.getElementById("ex-n").disabled = false;
-});
-document.getElementById("ex-n").onclick = () => {
-step++;
-if (step < qs.length) draw();
-else {
-const box = document.getElementById("lesson-container");
-if (okCount === qs.length) {
-if (!curUser.done.includes(lvl)) curUser.done.push(lvl);
-const nextIdx = PRO_LVLS.indexOf(lvl) + 1;
-if (nextIdx < PRO_LVLS.length && PRO_LVLS.indexOf(curUser.level) < nextIdx) curUser.level = PRO_LVLS[nextIdx];
-curUser.xp += 100; curUser.streak++; saveDB();
-box.innerHTML = <div style="text-align:center;"><h2>🏆 ¡100% APROBADO!</h2><p style="margin:12px 0;">Subiste al nivel <strong>${curUser.level}</strong> (+100 XP).</p><button class="btn" onclick="showRoadmap()">Continuar →</button></div>;
-} else {
-box.innerHTML = <div><h2 style="color:#ef4444;">❌ No alcanzaste el 100% (${okCount}/${qs.length})</h2><p class="muted" style="margin:8px 0 14px;">Debes responder todas sin fallos para avanzar:</p>${fails.map(f => ${f.q}
-💡 ${f.exp}).join("")}<button class="btn" style="margin-top:12px;" onclick="startExam100('${lvl}')">🔄 Repetir Examen</button></div>;
-}
-}
-};
-}
-draw();
-};
-renderHome();
+document.addEventListener("DOMContentLoaded", renderHome);
