@@ -147,9 +147,10 @@ window.ProDiagnosticExam = {
     this.mistakes = 0;
     this.correctCount = 0;
     this.bandStats = {
-      A1:, A2:, B1:, B2:, C1:, C2: [0, 0]
+      A1: new Array(0, 0), A2: new Array(0, 0), B1: new Array(0, 0),
+      B2: new Array(0, 0), C1: new Array(0, 0), C2: new Array(0, 0)
     };
-    this.scores = { grammar:, listening:, reading: [0, 0] };
+    this.scores = { grammar: new Array(0, 0), listening: new Array(0, 0), reading: new Array(0, 0) };
     this.used.clear();
     this.renderQ();
   },
