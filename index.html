@@ -3,598 +3,517 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Family English Pro | Pre-A1 - C2</title>
+  <title>Family English Pro | Ruta Completa Pre-A1 a C2</title>
   <style>
     :root {
-      --bg: #0b1120;
-      --card: #131c31;
-      --card-hover: #1b2744;
-      --border: #263554;
-      --primary: #3b82f6;
-      --primary-hover: #2563eb;
-      --accent: #10b981;
-      --warning: #f59e0b;
+      --bg: #0f172a;
+      --card: #1e293b;
+      --card-light: #334155;
+      --primary: #38bdf8;
+      --primary-dark: #0284c7;
+      --accent: #22c55e;
       --danger: #ef4444;
+      --warning: #f59e0b;
       --text: #f8fafc;
       --muted: #94a3b8;
+      --border: #334155;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
-    body { background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 40px; }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 960px;
+    }
+
+    /* Header */
     header {
-      background: rgba(19, 28, 49, 0.95);
-      border-bottom: 1px solid var(--border);
-      padding: 14px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 50;
-    }
-    .brand { font-size: 1.25rem; font-weight: 800; color: #60a5fa; letter-spacing: 0.3px; }
-    .stats-bar { display: flex; gap: 14px; align-items: center; font-weight: 700; font-size: 0.95rem; }
-    .badge { background: #1e293b; border: 1px solid var(--border); padding: 6px 12px; border-radius: 999px; }
-    .container { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
-    .hidden { display: none !important; }
-    h1 { font-size: 1.8rem; margin-bottom: 6px; }
-    .subtitle { color: var(--muted); margin-bottom: 24px; font-size: 0.95rem; }
-
-    /* Grid de Perfiles */
-    .profiles-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-      margin-bottom: 32px;
-    }
-    .profile-card {
       background: var(--card);
-      border: 2px solid var(--border);
+      padding: 16px 24px;
       border-radius: 16px;
-      padding: 20px 16px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.2s ease;
+      border: 1px solid var(--border);
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
     }
-    .profile-card:hover {
-      background: var(--card-hover);
-      border-color: var(--primary);
-      transform: translateY(-3px);
-    }
-    .avatar-box {
-      width: 96px;
-      height: 96px;
-      margin: 0 auto 12px;
-      border-radius: 50%;
-      overflow: hidden;
-      border: 3px solid var(--primary);
-      background: #1e293b;
+
+    .brand h1 {
+      font-size: 1.4rem;
+      color: var(--primary);
       display: flex;
       align-items: center;
-      justify-content: center;
+      gap: 8px;
     }
-    .profile-name { font-size: 1.2rem; font-weight: 700; margin-bottom: 4px; }
-    .profile-role { font-size: 0.8rem; color: var(--muted); margin-bottom: 10px; }
-    .profile-lvl {
-      display: inline-block;
-      background: rgba(59, 130, 246, 0.15);
-      color: #60a5fa;
-      border: 1px solid rgba(59, 130, 246, 0.4);
-      padding: 3px 10px;
+
+    .brand p {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg);
+      padding: 8px 16px;
       border-radius: 999px;
-      font-size: 0.8rem;
-      font-weight: 700;
-    }
-
-    /* Tabla Familiar */
-    .card-box {
-      background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 20px;
-      margin-bottom: 20px;
     }
-    .card-box h3 { margin-bottom: 14px; font-size: 1.1rem; }
-    table { width: 100%; border-collapse: collapse; text-align: left; }
-    th, td { padding: 12px 10px; border-bottom: 1px solid var(--border); font-size: 0.92rem; }
-    th { color: var(--muted); font-weight: 600; }
-    tr:last-child td { border-bottom: none; }
 
-    /* Botones */
     .btn {
       background: var(--primary);
-      color: white;
+      color: #0f172a;
       border: none;
       padding: 10px 18px;
       border-radius: 10px;
       font-weight: 700;
-      font-size: 0.92rem;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: all 0.2s;
+      font-size: 0.95rem;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      justify-content: center;
+      gap: 8px;
     }
-    .btn:hover { background: var(--primary-hover); }
-    .btn-secondary { background: #1e293b; border: 1px solid var(--border); color: var(--text); }
-    .btn-secondary:hover { background: #334155; }
-    .btn-accent { background: var(--accent); color: #062c1e; }
-    .btn-accent:hover { background: #059669; color: white; }
-    .btn-warning { background: var(--warning); color: #271700; }
 
-    /* Mapa de Niveles */
-    .user-banner {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      gap: 14px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 16px 20px;
-      margin-bottom: 24px;
+    .btn:hover {
+      background: #7dd3fc;
+      transform: translateY(-1px);
     }
-    .user-info { display: flex; align-items: center; gap: 14px; }
-    .user-info .avatar-box { width: 60px; height: 60px; margin: 0; }
-    .levels-grid {
+
+    .btn-secondary {
+      background: var(--card-light);
+      color: var(--text);
+    }
+
+    .btn-secondary:hover {
+      background: #475569;
+    }
+
+    .btn-success {
+      background: var(--accent);
+      color: #052e16;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 0.82rem;
+    }
+
+    /* Views */
+    .view {
+      display: none;
+      animation: fadeIn 0.25s ease-in-out;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Profiles Grid */
+    .profiles-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 16px;
+      margin-top: 20px;
     }
-    .level-card {
+
+    .profile-card {
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .profile-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-4px);
+    }
+
+    .avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), #818cf8);
+      color: #0f172a;
+      font-size: 1.6rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 12px;
+    }
+
+    .level-pill {
+      display: inline-block;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--primary);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-top: 8px;
+    }
+
+    /* Dashboard */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .stat-box {
+      background: var(--card);
+      padding: 16px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+    }
+
+    .stat-box span {
+      font-size: 0.8rem;
+      color: var(--muted);
+      display: block;
+    }
+
+    .stat-box strong {
+      font-size: 1.4rem;
+      color: var(--text);
+    }
+
+    .progress-container {
+      background: var(--card);
+      padding: 18px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 12px;
+      background: var(--bg);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+
+    /* Units List */
+    .level-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .tab-btn {
+      background: var(--card);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .tab-btn.active {
+      background: var(--primary);
+      color: #0f172a;
+      border-color: var(--primary);
+    }
+
+    .units-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+    }
+
+    .unit-card {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 14px;
-      padding: 18px;
-      position: relative;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
     }
-    .level-card.locked { opacity: 0.55; }
-    .level-card.completed { border-color: var(--accent); }
-    .level-tag {
-      font-size: 0.78rem;
-      font-weight: 800;
-      padding: 3px 9px;
-      border-radius: 6px;
-      background: #1e293b;
-      color: #60a5fa;
-      display: inline-block;
-      margin-bottom: 8px;
-    }
-    .level-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 6px; }
-    .level-desc { font-size: 0.85rem; color: var(--muted); margin-bottom: 14px; line-height: 1.4; }
-    .level-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-    /* Lección y Examen */
-    .vocab-item {
-      background: #0f172a;
+    .unit-card.locked {
+      opacity: 0.55;
+    }
+
+    .unit-card.completed {
+      border-color: var(--accent);
+    }
+
+    .unit-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .unit-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin: 4px 0;
+    }
+
+    .unit-desc {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    /* Lesson / Exam Box */
+    .card-panel {
+      background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px;
-      margin-bottom: 10px;
+      border-radius: 18px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .theory-box {
+      background: var(--bg);
+      border-left: 4px solid var(--primary);
+      padding: 16px;
+      border-radius: 10px;
+      margin: 16px 0;
+      line-height: 1.6;
+    }
+
+    .chunks-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .chunk-item {
+      background: var(--card-light);
+      padding: 12px 16px;
+      border-radius: 10px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 12px;
     }
-    .en-word { font-size: 1.1rem; font-weight: 700; color: #60a5fa; }
-    .es-word { font-size: 0.92rem; color: var(--muted); margin-top: 2px; }
-    .quiz-option {
-      display: block;
-      width: 100%;
-      text-align: left;
-      background: #0f172a;
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 12px 16px;
-      border-radius: 10px;
-      margin-bottom: 10px;
-      cursor: pointer;
-      font-size: 0.95rem;
+
+    .options-grid {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
     }
-    .quiz-option:hover { border-color: var(--primary); background: #17233c; }
-    .quiz-option.selected { border-color: var(--primary); background: rgba(59, 130, 246, 0.2); font-weight: 700; }
-    .alert { padding: 14px; border-radius: 10px; margin-top: 14px; font-weight: 600; }
-    .alert-error { background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger); color: #fca5a5; }
-    .alert-success { background: rgba(16, 185, 129, 0.15); border: 1px solid var(--accent); color: #6ee7b7; }
+
+    .option-btn {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 14px 18px;
+      border-radius: 12px;
+      text-align: left;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.15s;
+    }
+
+    .option-btn:hover {
+      border-color: var(--primary);
+      background: rgba(56, 189, 248, 0.08);
+    }
+
+    .word-bank, .answer-zone {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 52px;
+      padding: 12px;
+      background: var(--bg);
+      border-radius: 12px;
+      border: 1px dashed var(--border);
+      margin: 12px 0;
+    }
+
+    .word-chip {
+      background: var(--card-light);
+      color: var(--text);
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      user-select: none;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 1rem;
+      margin-top: 12px;
+    }
+
+    .feedback-banner {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 12px;
+      font-weight: 600;
+      display: none;
+    }
+
+    .feedback-banner.ok {
+      display: block;
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid var(--accent);
+      color: #86efac;
+    }
+
+    .feedback-banner.err {
+      display: block;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid var(--danger);
+      color: #fca5a5;
+    }
+
+    .audio-controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 12px 0;
+    }
+
+    .mic-status {
+      font-size: 0.9rem;
+      color: var(--warning);
+      margin-top: 8px;
+    }
   </style>
 </head>
 <body>
-
-<header>
-  <div class="brand">Family English Pro</div>
-  <div class="stats-bar">
-    <span class="badge" id="hdr-streak">🔥 0</span>
-    <span class="badge" id="hdr-xp">⭐ 0 XP</span>
-    <button class="btn btn-secondary" id="hdr-profiles-btn" onclick="showProfiles()">Perfiles</button>
-  </div>
-</header>
-
-<div class="container">
-  <!-- VISTA 1: SELECCIÓN DE PERFILES -->
-  <section id="view-profiles">
-    <h1>¿Quién va a practicar hoy?</h1>
-    <p class="subtitle">Ruta completa desde Cero (Pre-A1) hasta Maestría C2 con exámenes obligatorios al 100 %.</p>
-
-    <div class="profiles-grid" id="profiles-container"></div>
-
-    <div class="card-box">
-      <h3>🏆 Tabla Familiar</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Usuario</th>
-            <th>Nivel Actual</th>
-            <th>Racha</th>
-            <th>XP Total</th>
-          </tr>
-        </thead>
-        <tbody id="leaderboard-body"></tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- VISTA 2: MAPA DE RUTA DEL USUARIO -->
-  <section id="view-map" class="hidden">
-    <div class="user-banner">
-      <div class="user-info">
-        <div class="avatar-box" id="map-avatar"></div>
-        <div>
-          <h2 id="map-greeting">Hola</h2>
-          <p style="color: var(--muted); font-size: 0.9rem;">Nivel actual: <strong id="map-current-lvl" style="color: #60a5fa;">Pre-A1</strong></p>
-        </div>
+  <div class="container">
+    <!-- HEADER -->
+    <header>
+      <div class="brand">
+        <h1>🌍 Family English Pro</h1>
+        <p>Plan Anual • 84 Unidades (Pre-A1 a C2) • Chunks, Listening & Speaking</p>
       </div>
-      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-        <button class="btn btn-warning" onclick="startDiagnostic()">🎯 Examen Diagnóstico</button>
-        <button class="btn btn-secondary" onclick="showProfiles()">🔄 Cambiar perfil</button>
+      <div id="headerUserControls" style="display:none;" class="user-badge">
+        <span id="activeUserName" style="font-weight:700;">Usuario</span>
+        <span id="activeUserLevel" class="level-pill" style="margin:0;">B1</span>
+        <button class="btn btn-secondary btn-sm" onclick="app.switchProfile()">Cambiar Perfil</button>
       </div>
-    </div>
+    </header>
 
-    <div class="levels-grid" id="levels-container"></div>
-  </section>
-
-  <!-- VISTA 3: LECCIÓN DE PRÁCTICA -->
-  <section id="view-lesson" class="hidden">
-    <button class="btn btn-secondary" style="margin-bottom: 16px;" onclick="openMap()">← Volver al mapa</button>
-    <div class="card-box">
-      <span class="level-tag" id="lesson-lvl-tag">Pre-A1</span>
-      <h2 id="lesson-title" style="margin-bottom: 6px;">Lección</h2>
-      <p class="subtitle" id="lesson-grammar">Explicación clave del nivel.</p>
-      <div id="lesson-vocab-list"></div>
-      <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
-        <button class="btn btn-accent" onclick="startLevelExam(currentViewingLevel)">📝 Tomar Examen Obligatorio (100 % para aprobar)</button>
+    <!-- VISTA 1: SELECCIÓN DE PERFIL -->
+    <section id="viewProfiles" class="view active">
+      <div class="card-panel" style="text-align:center;">
+        <h2>¿Quién va a practicar hoy?</h2>
+        <p style="color:var(--muted); margin-top:6px;">Selecciona tu perfil familiar para cargar tu nivel, racha y progreso.</p>
+        <div class="profiles-grid" id="profilesContainer"></div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- VISTA 4: EXAMEN OBLIGATORIO / DIAGNÓSTICO -->
-  <section id="view-exam" class="hidden">
-    <button class="btn btn-secondary" style="margin-bottom: 16px;" onclick="openMap()">← Volver al mapa</button>
-    <div class="card-box">
-      <span class="level-tag" id="exam-tag">EXAMEN</span>
-      <h2 id="exam-title" style="margin-bottom: 6px;">Evaluación</h2>
-      <p class="subtitle" id="exam-subtitle">Debes responder el 100 % correctamente para desbloquear el siguiente nivel.</p>
-      <div id="exam-questions"></div>
-      <button class="btn btn-primary" style="margin-top: 12px;" onclick="submitExam()">✅ Verificar Respuestas</button>
-      <div id="exam-feedback"></div>
-    </div>
-  </section>
-</div>
+    <!-- VISTA 2: EXAMEN ADAPTATIVO DE NIVELACIÓN -->
+    <section id="viewPlacement" class="view">
+      <div class="card-panel">
+Examen Diagnóstico Adaptativo
+Pregunta 1
 
-<script>
-  // 1. AVATARES SVG PERSONALIZADOS (Trader, Mujer Coreana, 2x Juan Soto #22)
-  const AVATARS = {
-Usa el código con precaución.
-trader: <svg viewBox="0 0 100 100" width="100%" height="100%"> <rect width="100" height="100" fill="#0f172a"/> <polyline points="8,75 28,60 45,68 68,38 92,22" fill="none" stroke="#10b981" stroke-width="4"/> <circle cx="50" cy="42" r="16" fill="#f1c27d"/> <path d="M34,38 Q50,20 66,38" fill="#1e293b"/> <rect x="37" y="38" width="11" height="6" rx="1" fill="#020617" stroke="#38bdf8" stroke-width="1.2"/> <rect x="52" y="38" width="11" height="6" rx="1" fill="#020617" stroke="#38bdf8" stroke-width="1.2"/> <path d="M26,95 C26,68 74,68 74,95" fill="#1e3a8a"/> <polygon points="50,66 46,85 50,92 54,85" fill="#ef4444"/> </svg>,
-korean: <svg viewBox="0 0 100 100" width="100%" height="100%"> <rect width="100" height="100" fill="#31102f"/> <path d="M26,45 C26,20 74,20 74,45 L78,88 L22,88 Z" fill="#111827"/> <circle cx="50" cy="44" r="16" fill="#fde6d8"/> <path d="M34,40 Q50,24 66,40" fill="#111827"/> <circle cx="44" cy="44" r="2" fill="#111827"/> <circle cx="56" cy="44" r="2" fill="#111827"/> <path d="M46,51 Q50,55 54,51" fill="none" stroke="#e11d48" stroke-width="2" stroke-linecap="round"/> <path d="M28,95 C28,68 72,68 72,95" fill="#f472b6"/> </svg>,
-soto1: `
-
-
-
-, soto2: 
+Cargando pregunta...
 
 
 
 
-`
-};
-// 2. DATOS DE LOS 4 USUARIOS
-const DEFAULT_USERS = [
-{ id: 'diojan', name: 'Diojan', role: 'Trader Pro', avatar: 'trader', levelIdx: 0, xp: 0, streak: 0, lastDate: null },
-{ id: 'angie', name: 'Angie', role: 'K-Style Learner', avatar: 'korean', levelIdx: 0, xp: 0, streak: 0, lastDate: null },
-{ id: 'engel', name: 'Engel', role: 'Soto #22 MVP', avatar: 'soto1', levelIdx: 0, xp: 0, streak: 0, lastDate: null },
-{ id: 'dionangel', name: 'Dionangel', role: 'Soto #22 Slugger', avatar: 'soto2', levelIdx: 0, xp: 0, streak: 0, lastDate: null }
-];
-// 3. RUTA COMPLETA PRE-A1 HASTA C2
-const CURRICULUM = [
-{
-code: 'Pre-A1',
-title: 'Desde Cero: Primeros Pasos',
-desc: 'Saludos básicos, pronombres personales, números y verbo To Be esencial.',
-grammar: 'Usa "I am" (Yo soy/estoy), "You are" (Tú eres/estás) y saludos cotidianos.',
-vocab: [
-{ en: 'Hello, how are you?', es: 'Hola, ¿cómo estás?' },
-{ en: 'I am ready to learn.', es: 'Estoy listo para aprender.' },
-{ en: 'Thank you very much.', es: 'Muchas gracias.' },
-{ en: 'Good morning / Good night', es: 'Buenos días / Buenas noches' }
-],
-quiz: [
-{ q: '¿Cómo se dice "Yo soy / Yo estoy" en inglés?', opts: ['You is', 'I am', 'He are'], ans: 1 },
-{ q: '¿Qué significa "Thank you very much"?', opts: ['Por favor', 'Muchas gracias', 'Hasta luego'], ans: 1 },
-{ q: 'Completa: "Hello, ___ are you?"', opts: ['how', 'what', 'who'], ans: 0 }
-]
-},
-{
-code: 'A1',
-title: 'Principiante: Vida Cotidiana',
-desc: 'Presente simple, rutinas diarias, familia, horas y preguntas básicas.',
-grammar: 'En presente simple con He/She/It agrega "-s" al verbo (ej. She works).',
-vocab: [
-{ en: 'She works every morning.', es: 'Ella trabaja cada mañana.' },
-{ en: 'Where do you live?', es: '¿Dónde vives?' },
-{ en: 'I have two brothers.', es: 'Tengo dos hermanos.' },
-{ en: 'What time is it?', es: '¿Qué hora es?' }
-],
-quiz: [
-{ q: 'Elige la oración correcta en Presente Simple:', opts: ['She work here', 'She works here', 'She working here'], ans: 1 },
-{ q: '¿Cómo preguntas "¿Dónde vives?"?', opts: ['Where do you live?', 'Where you lives?', 'What do you live?'], ans: 0 },
-{ q: 'Traduce: "I have two brothers"', opts: ['Tengo dos primos', 'Tengo dos hermanos', 'Soy dos hermanos'], ans: 1 }
-]
-},
-{
-code: 'A2',
-title: 'Elemental: Pasado y Experiencias',
-desc: 'Pasado simple (verbos regulares e irregulares), planes con "going to" y comparativos.',
-grammar: 'Usa "did" para preguntas en pasado y el verbo en su forma base (Did you go?).',
-vocab: [
-{ en: 'Yesterday I went to the gym.', es: 'Ayer fui al gimnasio.' },
-{ en: 'We are going to travel soon.', es: 'Vamos a viajar pronto.' },
-{ en: 'This book is better than that one.', es: 'Este libro es mejor que ese.' },
-{ en: 'Did you finish your homework?', es: '¿Terminaste tu tarea?' }
-],
-quiz: [
-{ q: '¿Cuál es el pasado correcto de "go"?', opts: ['goed', 'went', 'gone'], ans: 1 },
-{ q: 'Completa la pregunta en pasado: "___ you finish?"', opts: ['Do', 'Did', 'Was'], ans: 1 },
-{ q: '¿Qué expresa "We are going to travel"?', opts: ['Un plan futuro', 'Una acción pasada', 'Una duda'], ans: 0 }
-]
-},
-{
-code: 'B1',
-title: 'Intermedio: Fluidez Conversacional',
-desc: 'Presente perfecto (have/has + participio), modales (should, must) y condicional 1.',
-grammar: 'Usa "Have you ever..." para preguntar sobre experiencias de vida sin fecha exacta.',
-vocab: [
-{ en: 'I have lived here for five years.', es: 'He vivido aquí por cinco años.' },
-{ en: 'You should practice every day.', es: 'Deberías practicar todos los días.' },
-{ en: 'If it rains, we will stay home.', es: 'Si llueve, nos quedaremos en casa.' },
-{ en: 'She has already finished the project.', es: 'Ella ya ha terminado el proyecto.' }
-],
-quiz: [
-{ q: 'Completa: "I ___ lived here for five years."', opts: ['has', 'have', 'am'], ans: 1 },
-{ q: '¿Qué verbo modal usamos para dar un consejo?', opts: ['should', 'mustn’t', 'would'], ans: 0 },
-{ q: 'Primer condicional: "If it rains, we ___ stay home."', opts: ['will', 'would', 'did'], ans: 0 }
-]
-},
-{
-code: 'B2',
-title: 'Intermedio Alto: Argumentación y Matices',
-desc: 'Condicional 2 y 3, voz pasiva, phrasal verbs clave y conectores avanzados.',
-grammar: 'Segundo condicional (hipótesis): If + Past Simple, ... would + verbo base.',
-vocab: [
-{ en: 'If I had more time, I would learn Korean.', es: 'Si tuviera más tiempo, aprendería coreano.' },
-{ en: 'The report was written by the manager.', es: 'El informe fue escrito por el gerente.' },
-{ en: 'Never give up on your goals.', es: 'Nunca te rindas con tus metas.' },
-{ en: 'Despite the rain, the game continued.', es: 'A pesar de la lluvia, el juego continuó.' }
-],
-quiz: [
-{ q: 'Segundo condicional: "If I had time, I ___ learn Korean."', opts: ['will', 'would', 'have'], ans: 1 },
-{ q: '¿Qué significa el phrasal verb "give up"?', opts: ['Rendirse', 'Subir', 'Regalar'], ans: 0 },
-{ q: 'Identifica la voz pasiva correcta:', opts: ['The manager wrote it', 'It was written by the manager', 'It writing by manager'], ans: 1 }
-]
-},
-{
-code: 'C1',
-title: 'Avanzado: Dominio Profesional y Académico',
-desc: 'Inversión enfática, subjuntivo en inglés, expresiones idiomáticas y precisión léxica.',
-grammar: 'Tras adverbios negativos al inicio (Seldom, Rarely, Never), invierte auxiliar y sujeto.',
-vocab: [
-{ en: 'Rarely have I seen such dedication.', es: 'Rara vez he visto tanta dedicación.' },
-{ en: 'It is essential that he be present.', es: 'Es esencial que él esté presente.' },
-{ en: 'Let’s get straight to the point.', es: 'Vayamos directo al grano.' },
-{ en: 'The market fluctuated dramatically.', es: 'El mercado fluctuó drásticamente.' }
-],
-quiz: [
-{ q: 'Inversión enfática: "Rarely ___ I seen such dedication."', opts: ['have', 'had been', 'am'], ans: 0 },
-{ q: '¿Qué significa "get straight to the point"?', opts: ['Ir directo al grano', 'Perder el tiempo', 'Cambiar de tema'], ans: 0 },
-{ q: 'Subjuntivo formal: "It is essential that he ___ present."', opts: ['is', 'be', 'was'], ans: 1 }
-]
-},
-{
-code: 'C2',
-title: 'Maestría: Nivel Nativo Culto',
-desc: 'Retórica sofisticada, modismos complejos, ambigüedad controlada y estilo ejecutivo.',
-grammar: 'Dominio total de registros formales/informales, cláusulas reducidas y matices.',
-vocab: [
-{ en: 'Had I known earlier, I would have acted differently.', es: 'De haberlo sabido antes, habría actuado distinto.' },
-{ en: 'His argument was cogent and unassailable.', es: 'Su argumento fue convincente e irrefutable.' },
-{ en: 'We must tread carefully in these negotiations.', es: 'Debemos andar con pies de plomo en estas negociaciones.' },
-{ en: 'Ubiquitous technology shapes modern cognition.', es: 'La tecnología omnipresente moldea la cognición moderna.' }
-],
-quiz: [
-{ q: 'Inversión condicional C2: "___ I known earlier, I would have acted."', opts: ['Have', 'Had', 'Were'], ans: 1 },
-{ q: '¿Qué significa "ubiquitous"?', opts: ['Omnipresente / en todas partes', 'Escaso', 'Antiguo'], ans: 0 },
-{ q: '¿Qué significa el modismo "tread carefully"?', opts: ['Actuar con suma cautela', 'Correr rápido', 'Ignorar el peligro'], ans: 0 }
-]
-}
-];
-// ESTADO Y ALMACENAMIENTO LOCAL
-let users = JSON.parse(localStorage.getItem('fep_users_v2')) || DEFAULT_USERS;
-let currentUserId = null;
-let currentViewingLevel = 0;
-let activeExam = null; // { mode: 'level'|'diagnostic', levelIdx, questions: [] }
-let userAnswers = {};
-function saveState() {
-localStorage.setItem('fep_users_v2', JSON.stringify(users));
-}
-function getActiveUser() {
-return users.find(u => u.id === currentUserId);
-}
-function speak(text) {
-if ('speechSynthesis' in window) {
-window.speechSynthesis.cancel();
-const u = new SpeechSynthesisUtterance(text);
-u.lang = 'en-US';
-u.rate = 0.92;
-window.speechSynthesis.speak(u);
-}
-}
-function updateHeader() {
-const u = getActiveUser();
-document.getElementById('hdr-streak').textContent = 🔥 ${u ? u.streak : 0};
-document.getElementById('hdr-xp').textContent = ⭐ ${u ? u.xp : 0} XP;
-}
-function switchView(viewId) {
-['view-profiles', 'view-map', 'view-lesson', 'view-exam'].forEach(id => {
-document.getElementById(id).classList.add('hidden');
-});
-document.getElementById(viewId).classList.remove('hidden');
-updateHeader();
-}
-// RENDERIZAR PERFILES Y TABLA FAMILIAR
-function showProfiles() {
-currentUserId = null;
-const container = document.getElementById('profiles-container');
-container.innerHTML = users.map(u => <div class="profile-card" onclick="selectUser('${u.id}')"> <div class="avatar-box">${AVATARS[u.avatar]}</div> <div class="profile-name">${u.name}</div> <div class="profile-role">${u.role}</div> <span class="profile-lvl">Nivel ${CURRICULUM[u.levelIdx].code}</span> </div>).join('');
-const sorted = [...users].sort((a, b) => b.xp - a.xp || b.levelIdx - a.levelIdx);
-document.getElementById('leaderboard-body').innerHTML = sorted.map((u, idx) => `
-{idx === 0 && u.xp > 0 ? '👑 ' : ''}{u.name}
-${CURRICULUM[u.levelIdx].code}🔥 ${u.streak}⭐ ${u.xp} XP`).join('');
-switchView('view-profiles');
-}
-function selectUser(id) {
-currentUserId = id;
-openMap();
-}
-// MAPA DE NIVELES
-function openMap() {
-const u = getActiveUser();
-if (!u) return showProfiles();
-document.getElementById('map-avatar').innerHTML = AVATARS[u.avatar];
-document.getElementById('map-greeting').textContent = Hola, ${u.name};
-document.getElementById('map-current-lvl').textContent = ${CURRICULUM[u.levelIdx].code} — ${CURRICULUM[u.levelIdx].title};
-const grid = document.getElementById('levels-container');
-grid.innerHTML = CURRICULUM.map((lvl, idx) => {
-const isLocked = idx > u.levelIdx;
-const isCompleted = idx < u.levelIdx;
-return <div class="level-card ${isLocked ? 'locked' : ''} ${isCompleted ? 'completed' : ''}"> <span class="level-tag">${lvl.code} ${isCompleted ? '✅ Superado' : isLocked ? '🔒 Bloqueado' : '📍 Actual'}</span> <div class="level-title">${lvl.title}</div> <div class="level-desc">${lvl.desc}</div> <div class="level-actions"> ${isLocked ?Aprueba ${CURRICULUM[idx - 1].code} al 100 %:📖 Practicar
-📝 Examen} </div> </div>;
-}).join('');
-switchView('view-map');
-}
-// LECCIÓN
-function openLesson(idx) {
-currentViewingLevel = idx;
-const lvl = CURRICULUM[idx];
-document.getElementById('lesson-lvl-tag').textContent = lvl.code;
-document.getElementById('lesson-title').textContent = lvl.title;
-document.getElementById('lesson-grammar').textContent = 💡 Regla clave: ${lvl.grammar};
-document.getElementById('lesson-vocab-list').innerHTML = lvl.vocab.map(item => <div class="vocab-item"> <div> <div class="en-word">${item.en}</div> <div class="es-word">${item.es}</div> </div> <button class="btn btn-secondary" onclick="speak('${item.en.replace(/'/g, "\\'")}')">🔊 Escuchar</button> </div>).join('');
-switchView('view-lesson');
-}
-// EXAMEN OBLIGATORIO (100 %) O DIAGNÓSTICO
-function startLevelExam(idx) {
-activeExam = {
-mode: 'level',
-levelIdx: idx,
-questions: CURRICULUM[idx].quiz
-};
-renderExam(
-EXAMEN ${CURRICULUM[idx].code},
-Examen Obligatorio: ${CURRICULUM[idx].title},
-'Necesitas el 100 % de aciertos para aprobar y desbloquear el siguiente nivel.'
-);
-}
-function startDiagnostic() {
-// Toma 1 pregunta clave de cada nivel (Pre-A1 a C1) para ubicar al usuario
-const diagQuestions = CURRICULUM.slice(0, 6).map((lvl, idx) => ({
-...lvl.quiz[0],
-targetLevel: idx + 1,
-levelCode: lvl.code
-}));
-activeExam = {
-mode: 'diagnostic',
-questions: diagQuestions
-};
-renderExam(
-'DIAGNÓSTICO GENERAL',
-'Examen de Nivelación (Pre-A1 a C2)',
-'Responde hasta donde sepas. Te ubicaremos automáticamente en tu nivel real.'
-);
-}
-function renderExam(tag, title, subtitle) {
-userAnswers = {};
-document.getElementById('exam-tag').textContent = tag;
-document.getElementById('exam-title').textContent = title;
-document.getElementById('exam-subtitle').textContent = subtitle;
-document.getElementById('exam-feedback').innerHTML = '';
-document.getElementById('exam-questions').innerHTML = activeExam.questions.map((q, qIdx) => <div style="margin-bottom: 18px;"> <p style="font-weight: 700; margin-bottom: 8px;">${qIdx + 1}. ${q.q}</p> ${q.opts.map((opt, oIdx) =>
-${opt}
-).join('')} </div> ).join('');
-switchView('view-exam');
-}
-function selectOption(qIdx, oIdx) {
-userAnswers[qIdx] = oIdx;
-const totalOpts = activeExam.questions[qIdx].opts.length;
-for (let i = 0; i < totalOpts; i++) {
-const el = document.getElementById(q-${qIdx}-opt-${i});
-el.classList.toggle('selected', i === oIdx);
-}
-}
-function recordPractice(user, earnedXp) {
-const today = new Date().toISOString().slice(0, 10);
-if (user.lastDate !== today) {
-user.streak += 1;
-user.lastDate = today;
-}
-user.xp += earnedXp;
-}
-function submitExam() {
-const u = getActiveUser();
-const qs = activeExam.questions;
-const fb = document.getElementById('exam-feedback');
-if (Object.keys(userAnswers).length < qs.length) {
-fb.innerHTML = <div class="alert alert-error">⚠️ Por favor responde todas las preguntas antes de verificar.</div>;
-return;
-}
-if (activeExam.mode === 'level') {
-let correct = 0;
-qs.forEach((q, idx) => { if (userAnswers[idx] === q.ans) correct++; });
-if (correct === qs.length) {
-recordPractice(u, 100);
-if (activeExam.levelIdx === u.levelIdx && u.levelIdx < CURRICULUM.length - 1) {
-u.levelIdx += 1;
-}
-saveState();
-updateHeader();
-fb.innerHTML = <div class="alert alert-success">🎉 ¡100 % Perfecto! Has aprobado el nivel ${CURRICULUM[activeExam.levelIdx].code} (+100 XP).</div>;
-} else {
-fb.innerHTML = <div class="alert alert-error">❌ Obtuviste ${correct}/${qs.length}. Necesitas el 100 % para avanzar. ¡Repasa e inténtalo de nuevo!</div>;
-}
-} else {
-// Diagnóstico: avanza mientras acierte consecutivamente
-let placedIdx = 0;
-for (let i = 0; i < qs.length; i++) {
-if (userAnswers[i] === qs[i].ans) {
-placedIdx = qs[i].targetLevel;
-} else {
-break;
-}
-}
-u.levelIdx = Math.max(u.levelIdx, placedIdx);
-recordPractice(u, 50);
-saveState();
-updateHeader();
-fb.innerHTML = <div class="alert alert-success">🎯 Diagnóstico completado: Tu nivel asignado es <strong>${CURRICULUM[u.levelIdx].code}</strong> (+50 XP).</div>;
-}
-}
-// INICIAR APP
-showProfiles();
+Comprobar Respuesta
+
+
+
+Saltar al Panel
+Siguiente ➔
+
+Nivel Actual
+B1
+
+
+Unidades Completadas
+0 / 84
+
+
+Racha Diaria
+0 días 🔥
+
+
+🎯 Hacer Examen de Nivel
+
+Progreso Anual hacia Maestría C2
+0%
+
+
+
+
+Todas (84)
+Pre-A1
+A1
+A2
+B1
+B2
+C1
+C2
+⬅ Volver a Unidades
+Teoría de la Unidad
+UNIDAD 1
+Título de la Unidad
+
+🗣️ Chunks Clave (Escucha y Repite)
+
+
+Comenzar Sesión Práctica (12 Ejercicios) ➔
+
+Ejercicio
+❤️❤️❤️❤️❤️
+
+Pregunta del ejercicio
+🔊 Normal (0.95x)
+🐢 Lento (0.45x)
