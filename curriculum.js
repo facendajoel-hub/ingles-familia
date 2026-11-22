@@ -1,9 +1,5 @@
-// ============================================================================
-// UNIDAD 1 PROFUNDA (PRE-A1: SALUDOS Y PRESENTACIONES) - TROZO 1 DE 3
-// ============================================================================
-
 window.UNIT_CONTENT_BANK = window.UNIT_CONTENT_BANK || {};
-window.UNIT_CONTENT_BANK[1] = {
+window.UNIT_CONTENT_BANK['1'] = {
   chunks: [
     { chunk: 'Nice to meet you!', meaning: '¡Mucho gusto en conocerte!', example: 'Hi, I am Diojan. Nice to meet you!', options: ['¡Mucho gusto en conocerte!', '¿Dónde vives?', 'Nos vemos mañana'], answer: 0 },
     { chunk: 'Where are you from?', meaning: '¿De dónde eres?', example: 'Hello! Where are you from?', options: ['¿Cuántos años tienes?', '¿De dónde eres?', '¿Cómo te llamas?'], answer: 1 },
