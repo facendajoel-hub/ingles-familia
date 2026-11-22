@@ -1,8 +1,3 @@
-// ============================================================================
-// MOTOR DE EXAMEN DIAGNÓSTICO ADAPTATIVO ALEATORIO (PRE-A1 A C2)
-// Regla de parada: 5 fallos (o 35 preguntas máximas) • Cero repeticiones
-// ============================================================================
-
 const EXAM_LEVELS = ["Pre-A1", "A1", "A2", "B1", "B2", "C1", "C2"];
 
 const EXAM_QUESTIONS = {
@@ -29,6 +24,30 @@ const EXAM_QUESTIONS = {
     { skill: "listening", type: "dictation", audio: "Could you please speak a little slower", q: "Escucha y escribe exactamente lo que oyes:", ans: "could you please speak a little slower", exp: "Frase correcta: 'Could you please speak a little slower'." },
     { skill: "reading", type: "choice", q: "Lee: 'Passengers must fasten their seatbelts before takeoff.' ¿Qué deben hacer los pasajeros?", opts: ["Apagar las luces", "Abrocharse el cinturón", "Abrir las ventanas", "Guardar su equipaje"], ans: 1, exp: "'Fasten their seatbelts' = abrocharse los cinturones de seguridad." },
     { skill: "grammar", type: "choice", q: "Elige la opción correcta: 'She didn't ___ to the party yesterday.'", opts: ["went", "go", "going", "gone"], ans: 1, exp: "Después de 'didn't' el verbo principal va en forma base ('go')." }
+  ],
+  B1: [
+    { skill: "grammar", type: "choice", q: "Completa: 'She has worked here ___ 2021.'", opts: ["for", "since", "during", "from"], ans: 1, exp: "Usamos 'since' para puntos exactos en el tiempo (2021) y 'for' para duración." },
+    { skill: "listening", type: "choice", audio: "If you don't hurry up, we're going to miss the flight.", q: "Escucha el audio y elige la idea principal:", opts: ["El vuelo fue cancelado.", "Deben darse prisa para no perder el avión.", "Llegaron muy temprano al aeropuerto.", "Van a comprar otro boleto."], ans: 1, exp: "'Hurry up' = darse prisa; 'miss the flight' = perder el vuelo." },
+    { skill: "reading", type: "choice", q: "Lee: 'Although the salary is lower, the flexible schedule makes up for it.' ¿Qué significa 'makes up for it'?", opts: ["Lo empeora", "Lo compensa", "Lo cancela", "Lo duplica"], ans: 1, exp: "'Make up for something' significa compensar una desventaja." },
+    { skill: "grammar", type: "choice", q: "Elige la forma natural: 'If I ___ you, I would accept that offer.'", opts: ["am", "was", "were", "be"], ans: 2, exp: "En el Second Conditional se utiliza 'If I were you' para dar consejos." },
+    { skill: "listening", type: "dictation", audio: "We used to play basketball every afternoon", q: "Dictado auditivo (escribe la frase en inglés):", ans: "we used to play basketball every afternoon", exp: "'Used to' expresa hábitos pasados que ya no ocurren." },
+    { skill: "reading", type: "choice", q: "Lee: 'The meeting was called off due to the storm.' ¿Qué pasó con la reunión?", opts: ["Se adelantó", "Se canceló", "Se alargó", "Se grabó"], ans: 1, exp: "'Call off' es un phrasal verb que significa cancelar." },
+    { skill: "grammar", type: "choice", q: "Completa: 'He is used to ___ under tight deadlines.'", opts: ["work", "worked", "working", "works"], ans: 2, exp: "'Be used to' va seguido de gerundio ('-ing')." },
+    { skill: "listening", type: "dictation", audio: "I look forward to hearing from you soon", q: "Escucha y escribe la frase profesional en inglés:", ans: "i look forward to hearing from you soon", exp: "'Look forward to + -ing' es una fórmula clave en correos y conversaciones." },
+    { skill: "reading", type: "choice", q: "Lee: 'We ran out of fuel halfway through the trip.' ¿Qué ocurrió en el viaje?", opts: ["Se quedaron sin combustible", "Pincharon una llanta", "Llegaron antes de tiempo", "Cambiaron de vehículo"], ans: 0, exp: "'Run out of' significa quedarse sin existencias de algo." },
+    { skill: "grammar", type: "choice", q: "Elige el conector adecuado: '___ it was raining heavily, we went for a walk.'", opts: ["Despite", "Although", "However", "Because of"], ans: 1, exp: "'Although' introduce una cláusula completa (sujeto + verbo) de contraste." }
+  ],
+  B2: [
+    { skill: "grammar", type: "choice", q: "Select the natural phrasing: 'I wish I ___ more attention during the meeting.'", opts: ["paid", "had paid", "would pay", "have paid"], ans: 1, exp: "'Wish + Past Perfect (had paid)' expresses regret about a past action." },
+    { skill: "listening", type: "dictation", audio: "We need to wrap up this project by Friday", q: "Listen carefully and type what you hear:", ans: "we need to wrap up this project by friday", exp: "'Wrap up' is a common phrasal verb meaning to finish or complete." },
+    { skill: "reading", type: "choice", q: "Read: 'The data suggests a correlation, yet causation remains unproven.' What is the author's stance?", opts: ["The data proves direct cause.", "There is a link, but direct cause is not confirmed.", "The data is completely false.", "No correlation exists."], ans: 1, exp: "The author distinguishes correlation (link) from proven causation." },
+    { skill: "grammar", type: "choice", q: "Complete: 'By the time we arrived at the theater, the play ___.'", opts: ["already started", "had already started", "has already started", "was already start"], ans: 1, exp: "Past Perfect ('had already started') shows an action completed before another past event." },
+    { skill: "listening", type: "choice", audio: "Had we known about the traffic jam, we would have taken the subway.", q: "What did they do?", opts: ["They took the subway.", "They got stuck in traffic because they didn't know.", "They stayed home.", "They arrived early."], ans: 1, exp: "Inverted Third Conditional expressing a past regret." },
+    { skill: "reading", type: "choice", q: "Read: 'Despite initial pushback, the new policy proved remarkably effective.' What does 'pushback' mean here?", opts: ["Enthusiastic support", "Resistance or opposition", "Financial profit", "Immediate approval"], ans: 1, exp: "'Pushback' refers to resistance or negative reaction to a change." },
+    { skill: "grammar", type: "choice", q: "Complete: 'I'd rather you ___ anyone about the merger until Monday.'", opts: ["don't tell", "didn't tell", "not tell", "haven't told"], ans: 1, exp: "'Would rather + subject + past simple' expresses a preference about someone else's action." },
+    { skill: "listening", type: "dictation", audio: "You should take his promises with a grain of salt", q: "Type the exact idiomatic expression you hear:", ans: "you should take his promises with a grain of salt", exp: "'Take something with a grain of salt' = view with skepticism." },
+    { skill: "reading", type: "choice", q: "Read: 'Cutting corners on quality control inevitably backfires.' What does 'backfires' mean?", opts: ["Produces the opposite, undesirable result", "Saves money permanently", "Accelerates production", "Improves customer trust"], ans: 0, exp: "'Backfire' means a plan has the opposite effect to what was intended." },
+    { skill: "grammar", type: "choice", q: "Choose the accurate collocation: 'The new regulations will ___ a profound impact on trade.'", opts: ["do", "make", "have", "take"], ans: 2, exp: "The natural collocation in English is 'to have an impact on'." }
   ],
   B1: [
     { skill: "grammar", type: "choice", q: "Completa: 'She has worked here ___ 2021.'", opts: ["for", "since", "during", "from"], ans: 1, exp: "Usamos 'since' para puntos exactos en el tiempo (2021) y 'for' para duración." },
@@ -86,7 +105,9 @@ const CEFR_PROFILES = {
   "A2": { title: "A2 · Plataforma / Supervivencia Comunicativa", unitStart: 25, diagnosticNote: "Te desenvuelves en situaciones predecibles y manejas tiempos pasados básicos, aunque pierdes precisión ante habla rápida o estructuras compuestas." },
   "B1": { title: "B1 · Umbral / Independencia Funcional", unitStart: 37, diagnosticNote: "Comprendes las ideas principales de conversaciones claras y puedes expresar opiniones, pero aún dudas al usar condicionales, voz pasiva o conectores complejos." },
   "B2": { title: "B2 · Avanzado / Dominio Operativo Eficaz", unitStart: 49, diagnosticNote: "Posees un comando sólido del idioma para interactuar con nativos con naturalidad, aunque el techo aparece en matices idiomáticos e inversiones complejas." },
-
+  "C1": { title: "C1 · Dominio Operativo Eficaz Superior", unitStart: 61, diagnosticNote: "Manejas estructuras sofisticadas y comprendes textos exigentes con sentido implícito; el siguiente paso es la naturalidad retórica y el cambio de registro." },
+  "C2": { title: "C2 · Maestría / Nivel Cercano al Nativo", unitStart: 73, diagnosticNote: "Demuestras comprensión prácticamente total de matices pragmáticos, inversiones literarias y argumentación compleja." }
+};
 window.ProDiagnosticExam = {
   lvlIdx: 0,
   step: 0,
@@ -146,7 +167,6 @@ window.ProDiagnosticExam = {
 
   pickRandomUnusedQuestion() {
     const lvlKeys = ["A1", "A2", "B1", "B2", "C1", "C2"];
-    // Buscar primero en la banda actual; si se agotaron, buscar en bandas vecinas para jamás repetir
     const searchOrder = [this.lvlIdx];
     for (let offset = 1; offset < lvlKeys.length; offset++) {
       if (this.lvlIdx + offset < lvlKeys.length) searchOrder.push(this.lvlIdx + offset);
@@ -187,7 +207,6 @@ window.ProDiagnosticExam = {
 
     let bodyHtml = "";
     if (this.curQ.type === "choice") {
-      // Mezclar opciones al azar en cada aparición
       const indexedOpts = this.curQ.opts.map((text, origIdx) => ({
         text,
         isCorrect: origIdx === this.curQ.ans
@@ -238,7 +257,6 @@ window.ProDiagnosticExam = {
     `;
     if (this.curQ.audio) this.speak(this.curQ.audio, 0.95);
   },
-
   submitChoice(idx) {
     const ok = this.shuffledOpts[idx].isCorrect;
     document.querySelectorAll("[id^='ex-opt-']").forEach((b, i) => {
@@ -263,12 +281,12 @@ window.ProDiagnosticExam = {
 
   recordResult(ok) {
     const sk = this.curQ.skill;
-    this.scores[sk][1]++;
-    this.bandStats[this.curLvl][1]++;
+    this.scores[sk]++;
+    this.bandStats[this.curLvl]++;
 
     if (ok) {
-      this.scores[sk][0]++;
-      this.bandStats[this.curLvl][0]++;
+      this.scores[sk]++;
+      this.bandStats[this.curLvl]++;
       this.correctCount++;
       if (this.lvlIdx < 5) this.lvlIdx++;
     } else {
@@ -315,7 +333,7 @@ window.ProDiagnosticExam = {
       }
     }
 
-    const pct = s => s[1] === 0 ? 0 : Math.round((s[0] / s[1]) * 100);
+    const pct = s => s === 0 ? 0 : Math.round((s / s) * 100);
     const totalAnswered = this.correctCount + this.mistakes;
     const accuracy = totalAnswered > 0 ? Math.round((this.correctCount / totalAnswered) * 100) : 0;
 
@@ -335,13 +353,58 @@ window.ProDiagnosticExam = {
   showReport(level, report) {
     const profileMeta = CEFR_PROFILES[level] || CEFR_PROFILES["Pre-A1"];
     const evaluatedSkills = [
-      { key: "grammar", name: "Gramática Aplicada", val: report.grammar, count: this.scores.grammar[1] },
-      { key: "listening", name: "Comprensión Auditiva y Dictado", val: report.listening, count: this.scores.listening[1] },
-      { key: "reading", name: "Comprensión Lectora", val: report.reading, count: this.scores.reading[1] }
+      { key: "grammar", name: "Gramática Aplicada", val: report.grammar, count: this.scores.grammar },
+      { key: "listening", name: "Comprensión Auditiva y Dictado", val: report.listening, count: this.scores.listening },
+      { key: "reading", name: "Comprensión Lectora", val: report.reading, count: this.scores.reading }
     ].filter(s => s.count > 0);
 
     evaluatedSkills.sort((a, b) => a.val - b.val);
-    const weakName = evaluatedSkills.length > 0 ? evaluatedSkills[0].name : "Fundamentos Generales";
-"C1": { title: "C1 · Dominio Operativo Eficaz Superior", unitStart: 61, diagnosticNote: "Manejas estructuras sofisticadas y comprendes textos exigentes con sentido implícito; el siguiente paso es la naturalidad retórica y el cambio de registro." },
-"C2": { title: "C2 · Maestría / Nivel Cercano al Nativo", unitStart: 73, diagnosticNote: "Demuestras comprensión prácticamente total de matices pragmáticos, inversiones literarias y argumentación compleja." }
+    const weakName = evaluatedSkills.length > 0 ? evaluatedSkills.name : "Fundamentos Generales";
+    const strongName = evaluatedSkills.length > 0 ? evaluatedSkills[evaluatedSkills.length - 1].name : "Vocabulario Inicial";
+    const stopReason = report.mistakes >= this.maxMistakes
+      ? `Finalizado al alcanzar el límite de ${this.maxMistakes} fallos (${report.answered} preguntas respondidas).`
+      : `Evaluación completa de ${report.answered} preguntas finalizada.`;
+
+    this.mount.innerHTML = `
+      <div class="card" style="background:var(--bg); border:2px solid var(--accent); padding:22px;">
+        <div class="row-between" style="border-bottom:1px solid var(--border); padding-bottom:12px; margin-bottom:14px;">
+          <div>
+            <span class="badge" style="background:rgba(16,185,129,0.15); color:#34d399; border-color:#10b981;">INFORME DIAGNÓSTICO MCER</span>
+            <h3 style="margin:8px 0 2px; font-size:1.25rem;">Participante: ${this.profileName}</h3>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:0.75rem; color:var(--muted);">NIVEL REAL ASIGNADO</div>
+            <div style="font-size:1.8rem; font-weight:900; color:#34d399;">${level}</div>
+          </div>
+        </div>
+        <p style="font-weight:700; color:#60a5fa; margin-bottom:6px;">${profileMeta.title}</p>
+        <p class="muted" style="line-height:1.5; margin-bottom:14px;">${profileMeta.diagnosticNote}</p>
+        <div style="background:var(--card); border-radius:12px; padding:14px; margin-bottom:14px; border:1px solid var(--border);">
+          <div style="font-size:0.8rem; font-weight:700; color:#94a3b8; margin-bottom:10px; text-transform:uppercase;">Desglose por Competencia</div>
+          <div style="display:grid; gap:8px;">
+            <div class="row-between"><span>• Gramática Aplicada:</span> <strong>${report.grammar}% (${this.scores.grammar}/${this.scores.grammar})</strong></div>
+            <div class="row-between"><span>• Comprensión Auditiva / Dictado:</span> <strong>${report.listening}% (${this.scores.listening}/${this.scores.listening})</strong></div>
+            <div class="row-between"><span>• Comprensión Lectora:</span> <strong>${report.reading}% (${this.scores.reading}/${this.scores.reading})</strong></div>
+            <div class="row-between" style="border-top:1px solid var(--border); padding-top:8px; margin-top:4px;">
+              <span>• Precisión Global (${report.correct} aciertos / ${report.mistakes} fallos):</span>
+              <strong style="color:#60a5fa;">${report.accuracy}%</strong>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:0.9rem; display:grid; gap:6px; margin-bottom:14px;">
+          <p>✅ <strong>Fortaleza detectada:</strong> ${strongName}</p>
+          <p>🎯 <strong>Área prioritaria de refuerzo:</strong> ${weakName}</p>
+          <p>🚀 <strong>Inicio en el Curso:</strong> Unidad #${profileMeta.unitStart} (${level}).</p>
+        </div>
+        <p class="muted" style="font-size:0.8rem; font-style:italic; margin-bottom:16px;">${stopReason}</p>
+        <button class="btn btn-accent" id="ex-finish-btn" style="width:100%; font-size:1rem; padding:13px;">
+          Desbloquear Mi Curso en Nivel ${level} →
+        </button>
+      </div>
+    `;
+
+    document.getElementById("ex-finish-btn").onclick = () => {
+      this.onFinish({ level, report });
+    };
+  }
 };
