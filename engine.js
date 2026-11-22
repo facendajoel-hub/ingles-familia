@@ -9,54 +9,32 @@ const PRO_DESC = {
   "C2": "Mastery (100% English): Near-native precision."
 };
 
-const LEVEL_EXAMS = {
-  "Pre-A1": [
-    { q: "¿Cómo se dice 'Mucho gusto en conocerte'?", opts: ["See you later", "Nice to meet you", "Good night"], ans: 1, exp: "'Nice to meet you'." },
-    { q: "Completa: 'I ___ from Dominican Republic.'", opts: ["is", "are", "am"], ans: 2, exp: "Con 'I' siempre usamos 'am'." },
-    { q: "¿Qué número es 'Seven'?", opts: ["5", "7", "9"], ans: 1, exp: "Seven = 7." }
-  ],
-  "A1": [
-    { q: "Completa: 'She ___ coffee every morning.'", opts: ["drink", "drinks", "drinking"], ans: 1, exp: "Tercera persona singular lleva '-s'." },
-    { q: "Negativo: 'We ___ eat fast food.'", opts: ["doesn't", "don't", "not"], ans: 1, exp: "Con 'We' usamos 'don't'." },
-    { q: "Plural de 'Child':", opts: ["Childs", "Children", "Childrens"], ans: 1, exp: "Plural irregular: 'Children'." }
-  ],
-  "A2": [
-    { q: "Pasado de 'drive': 'Yesterday they ___ to Santiago.'", opts: ["drive", "drove", "driven"], ans: 1, exp: "Pasado simple: 'drove'." },
-    { q: "Comparativo: 'Today is ___ than yesterday.'", opts: ["hot", "more hot", "hotter"], ans: 2, exp: "Duplica consonante: 'hotter'." },
-    { q: "Obligación: 'You ___ wear a seatbelt.'", opts: ["must", "can't", "mustn't"], ans: 0, exp: "'Must' expresa obligación." }
-  ],
-  "B1": [
-    { q: "'If I ___ you, I would accept.'", opts: ["am", "was", "were"], ans: 2, exp: "'If I were you...'." },
-    { q: "¿Qué significa 'call off'?", opts: ["Llamar", "Cancelar", "Posponer"], ans: 1, exp: "'Call off' = cancelar." },
-    { q: "'She is used to ___ early.'", opts: ["wake up", "waking up", "woke up"], ans: 1, exp: "'Be used to' + '-ing'." }
-  ],
-  "B2": [
-    { q: "'I'd rather you ___ anyone yet.'", opts: ["don't tell", "didn't tell", "not tell"], ans: 1, exp: "'Would rather + subject + past simple'." },
-    { q: "Collocation: 'The policy will ___ a major impact.'", opts: ["do", "make", "have"], ans: 2, exp: "'To have an impact'." },
-    { q: "Meaning of 'cut corners':", opts: ["Drive fast", "Do something poorly to save time/money", "Increase budget"], ans: 1, exp: "Sacrifice quality to save effort." }
-  ],
-  "C1": [
-    { q: "'___ had he spoken than shares surged.'", opts: ["Hardly", "No sooner", "Scarcely"], ans: 1, exp: "'No sooner ... than'." },
-    { q: "Meaning of 'bite the bullet':", opts: ["Reject offer", "Face a difficult situation bravely", "Quit"], ans: 1, exp: "Endure an unavoidable hardship." },
-    { q: "'The board insisted that he ___ present.'", opts: ["is", "be", "was"], ans: 1, exp: "Mandative subjunctive uses base 'be'." }
-  ],
-  "C2": [
-    { q: "'He claims to be an expert, ___ his analysis misses the point.'", opts: ["albeit", "yet", "moreover"], ans: 1, exp: "'Yet' introduces a sharp contrast." },
-    { q: "Meaning of 'to equivocate':", opts: ["Speak bluntly", "Use ambiguous language to avoid commitment", "Apologize"], ans: 1, exp: "Deliberate ambiguity." },
-    { q: "'A ___ victory; legal fees exceeded the settlement.'", opts: ["pyrrhic", "resounding", "unanimous"], ans: 0, exp: "Won at too great a cost." }
-  ]
-};
-
-let db = JSON.parse(localStorage.getItem("famEngPro_Final")) || [
-  { id: 1, name: "Papá", svg: "svg-trader", level: null, done: [], xp: 0, streak: 0 },
-  { id: 2, name: "Angie", svg: "svg-elegant", level: null, done: [], xp: 0, streak: 0 },
-  { id: 3, name: "Engel", svg: "svg-soto-bat", level: null, done: [], xp: 0, streak: 0 },
-  { id: 4, name: "Dionangel", svg: "svg-soto-shuffle", level: null, done: [], xp: 0, streak: 0 }
+let db = JSON.parse(localStorage.getItem("famEngPro_84_v1")) || [
+  { id: 1, name: "Diojan", svg: "svg-trader", level: null, doneUnits: [], xp: 0, streak: 0 },
+  { id: 2, name: "Angie", svg: "svg-elegant", level: null, doneUnits: [], xp: 0, streak: 0 },
+  { id: 3, name: "Engel", svg: "svg-soto-bat", level: null, doneUnits: [], xp: 0, streak: 0 },
+  { id: 4, name: "Dionangel", svg: "svg-soto-shuffle", level: null, doneUnits: [], xp: 0, streak: 0 }
 ];
 let curUser = null;
+let curFilter = "ALL";
 
-function saveDB() { localStorage.setItem("famEngPro_Final", JSON.stringify(db)); }
-function say(t, r = 0.95) { if ("speechSynthesis" in window) { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang = "en-US"; u.rate = r; speechSynthesis.speak(u); } }
+function getAllUnits() {
+  const b = typeof DATA_BASICO !== "undefined" ? DATA_BASICO : [];
+  const i = typeof DATA_INTERMEDIO !== "undefined" ? DATA_INTERMEDIO : [];
+  const a = typeof DATA_AVANZADO !== "undefined" ? DATA_AVANZADO : [];
+  return b.concat(i, a);
+}
+
+function saveDB() { localStorage.setItem("famEngPro_84_v1", JSON.stringify(db)); }
+function say(t, r = 0.95) {
+  if ("speechSynthesis" in window) {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(t);
+    u.lang = "en-US";
+    u.rate = r;
+    speechSynthesis.speak(u);
+  }
+}
 
 function avatarHTML(svgKey, size = 76) {
   if (typeof CUSTOM_AVATARS !== "undefined" && CUSTOM_AVATARS[svgKey]) {
@@ -64,6 +42,7 @@ function avatarHTML(svgKey, size = 76) {
   }
   return `<span style="font-size:${size*0.6}px;">🦁</span>`;
 }
+
 function renderHome() {
   curUser = null;
   document.getElementById("header-actions").classList.add("hidden");
@@ -109,124 +88,228 @@ window.openUser = function(id) {
   }
 };
 
-window.retestLevel = function() {
-  startDiagnostic();
-};
+window.retestLevel = function() { startDiagnostic(); };
 
 function startDiagnostic() {
   ["view-profiles", "view-dashboard", "view-lesson"].forEach(id => document.getElementById(id).classList.add("hidden"));
   document.getElementById("view-test").classList.remove("hidden");
   ProDiagnosticExam.openIntro(document.getElementById("diag-mount"), (res) => {
     curUser.level = res.level;
-    const lvlIdx = PRO_LVLS.indexOf(res.level);
-    curUser.done = PRO_LVLS.slice(0, Math.max(0, lvlIdx));
     curUser.xp += 50;
     curUser.streak = Math.max(1, curUser.streak);
     saveDB();
     openUser(curUser.id);
   }, curUser.name);
 }
-
 function renderDashboard() {
   ["view-profiles", "view-test", "view-lesson"].forEach(id => document.getElementById(id).classList.add("hidden"));
   document.getElementById("view-dashboard").classList.remove("hidden");
+
+  const units = getAllUnits();
+  const total = units.length || 84;
+  const doneCount = curUser.doneUnits.length;
 
   document.getElementById("dash-avatar").innerHTML = avatarHTML(curUser.svg, 64);
   document.getElementById("dash-name").textContent = curUser.name;
   document.getElementById("dash-lvl-desc").textContent = "Nivel " + curUser.level + " • " + PRO_DESC[curUser.level];
 
-  const pct = Math.round((curUser.done.length / PRO_LVLS.length) * 100);
+  const pct = Math.round((doneCount / total) * 100);
   document.getElementById("dash-progress").style.width = pct + "%";
-  document.getElementById("dash-progress-text").textContent = curUser.done.length + " / " + PRO_LVLS.length + " niveles completados";
+  document.getElementById("dash-progress-text").textContent = doneCount + " / " + total + " unidades completadas";
   document.getElementById("dash-xp-total").textContent = curUser.xp + " XP acumulados";
 
-  const curIdx = PRO_LVLS.indexOf(curUser.level);
-  document.getElementById("levels-list").innerHTML = PRO_LVLS.map((lvl, idx) => {
-    const isDone = curUser.done.includes(lvl);
-    const isCurrent = lvl === curUser.level;
-    const isLocked = idx > curIdx && !isDone;
+  renderUnitsGrid();
+}
+
+window.filterUnits = function(lvl, btn) {
+  curFilter = lvl;
+  document.querySelectorAll("#level-tabs .tab-btn").forEach(b => b.classList.remove("active"));
+  if (btn) btn.classList.add("active");
+  renderUnitsGrid();
+};
+
+function renderUnitsGrid() {
+  const units = getAllUnits();
+  const userLvlIdx = PRO_LVLS.indexOf(curUser.level);
+  const filtered = curFilter === "ALL" ? units : units.filter(u => u.level === curFilter);
+
+  document.getElementById("units-grid").innerHTML = filtered.map(u => {
+    const uLvlIdx = PRO_LVLS.indexOf(u.level);
+    const isDone = curUser.doneUnits.includes(u.id);
+    const isUnlocked = uLvlIdx <= userLvlIdx || u.id === 1 || curUser.doneUnits.includes(u.id - 1);
+
     return `
-      <div class="level-card ${isDone ? "completed" : ""} ${isCurrent ? "current" : ""} ${isLocked ? "locked" : ""}">
-        <div style="display:flex; align-items:center; gap:12px;">
-          <span class="level-tag">${lvl}</span>
-          <div>
-            <div style="font-weight:700;">${PRO_DESC[lvl]}</div>
-            <div class="muted" style="font-size:0.82rem;">${isDone ? "✅ Dominado" : (isCurrent ? "🎯 Nivel Actual" : "🔒 Completa el nivel anterior")}</div>
+      <div class="unit-card ${isDone ? "completed" : ""} ${!isUnlocked ? "locked" : ""}">
+        <div>
+          <div class="row-between muted" style="font-size:0.78rem; font-weight:700; margin-bottom:6px;">
+            <span>UNIDAD ${u.id} · ${u.level}</span>
+            <span>${isDone ? "✅ Completada" : (isUnlocked ? "🔓 Disponible" : "🔒 Bloqueada")}</span>
           </div>
+          <div style="font-weight:700; font-size:1.02rem; margin-bottom:6px;">${u.title}</div>
+          <div class="muted" style="font-size:0.84rem;">${u.description}</div>
         </div>
-        <button class="btn btn-sm" ${isLocked ? "disabled" : ""} onclick="startLevelExam('${lvl}')">
-          ${isDone ? "Repasar" : (isLocked ? "Bloqueado" : "Practicar")}
+        <button class="btn btn-sm ${isDone ? "btn-outline" : ""}" ${!isUnlocked ? "disabled" : ""} onclick="openUnitLesson(${u.id})">
+          ${isDone ? "Repasar Unidad" : (isUnlocked ? "Estudiar Ahora" : "Completa nivel previo")}
         </button>
       </div>
     `;
   }).join("");
 }
 
-window.startLevelExam = function(lvl) {
+window.openUnitLesson = function(unitId) {
+  const unit = getAllUnits().find(u => u.id === unitId);
+  if (!unit) return;
+
   ["view-profiles", "view-test", "view-dashboard"].forEach(id => document.getElementById(id).classList.add("hidden"));
   document.getElementById("view-lesson").classList.remove("hidden");
-  document.getElementById("lesson-tag").textContent = "Evaluación de Nivel " + lvl;
+  document.getElementById("lesson-tag").textContent = `Unidad ${unit.id} · ${unit.level}`;
 
-  const qs = LEVEL_EXAMS[lvl] || LEVEL_EXAMS["Pre-A1"];
-  let qIdx = 0;
+  const mount = document.getElementById("lesson-mount");
+  mount.innerHTML = `
+    <span class="badge">UNIDAD ${unit.id} · NIVEL ${unit.level}</span>
+    <h2 style="margin:10px 0;">${unit.title}</h2>
+    <div class="theory-box">${unit.theory}</div>
+    <h3 style="margin-bottom:10px;">🗣 Chunks Clave (Escucha y Repite)</h3>
+    <div>
+      ${unit.chunks.map(c => {
+        const safe = c.en.replace(/'/g, "\\'");
+        return `
+          <div class="chunk-item">
+            <div>
+              <strong style="color:#60a5fa;">${c.en}</strong>
+              <div class="muted" style="font-size:0.85rem;">${c.es}</div>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button class="btn btn-outline btn-sm" onclick="say('${safe}', 0.95)">🔊</button>
+              <button class="btn btn-outline btn-sm" onclick="say('${safe}', 0.45)">🐢</button>
+            </div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+    <button class="btn btn-accent" style="width:100%; margin-top:14px; padding:13px;" onclick="startUnitPractice(${unit.id})">
+      Comenzar Práctica Interactiva →
+    </button>
+  `;
+};
+
+window.startUnitPractice = function(unitId) {
+  const unit = getAllUnits().find(u => u.id === unitId);
+  const exercises = [];
+
+  unit.chunks.forEach((ch, idx) => {
+    const others = unit.chunks.filter((_, i) => i !== idx).map(x => x.es);
+    while (others.length < 2) others.push("Expresión informal de despedida");
+    const opts = [ch.es, ...others.slice(0, 2)].sort(() => Math.random() - 0.5);
+    exercises.push({
+      type: "choice",
+      label: "Comprensión de Chunk",
+      prompt: `¿Qué significa: "${ch.en}"?`,
+      audio: ch.en,
+      opts: opts,
+      ans: ch.es,
+      exp: `${ch.en} → ${ch.es}`
+    });
+  });
+
+  unit.chunks.slice(0, 2).forEach(ch => {
+    exercises.push({
+      type: "dictation",
+      label: "Dictado Auditivo",
+      prompt: "Escucha el audio y escribe la frase exacta en inglés:",
+      audio: ch.en,
+      ans: ch.en,
+      exp: `Frase exacta: "${ch.en}" (${ch.es})`
+    });
+  });
+
+  let idx = 0;
   let score = 0;
 
-  function showQ() {
-    const q = qs[qIdx];
+  function renderEx() {
+    const ex = exercises[idx];
+    const safeAudio = ex.audio.replace(/'/g, "\\'");
     const mount = document.getElementById("lesson-mount");
+
+    let inputHtml = "";
+    if (ex.type === "choice") {
+      inputHtml = ex.opts.map((o, i) =>
+        `<button class="option-btn" id="u-opt-${i}" onclick="checkUnitChoice(${i})">${o}</button>`
+      ).join("");
+    } else {
+      inputHtml = `
+        <input type="text" id="u-dict-in" class="text-input" placeholder="Escribe exactamente lo que escuchas..." onkeydown="if(event.key==='Enter') checkUnitDict()">
+        <button class="btn btn-sm" id="u-dict-btn" onclick="checkUnitDict()">Verificar Dictado</button>
+      `;
+    }
+
     mount.innerHTML = `
-      <div class="muted" style="margin-bottom:8px;">Pregunta ${qIdx + 1} de ${qs.length}</div>
-      <h3 class="q-title">${q.q}</h3>
-      <div>
-        ${q.opts.map((o, i) => `<button class="option-btn" id="lvl-opt-${i}" onclick="checkLvlOpt(${i})">${o}</button>`).join("")}
+      <div class="row-between" style="margin-bottom:10px;">
+        <span class="badge">${ex.label}</span>
+        <span class="muted">Ejercicio ${idx + 1} de ${exercises.length}</span>
       </div>
-      <div id="lvl-fb" class="hidden"></div>
+      <h3 class="q-title">${ex.prompt}</h3>
+      <div class="audio-bar">
+        <button class="btn btn-outline btn-sm" onclick="say('${safeAudio}', 0.95)">🔊 Normal (0.95x)</button>
+        <button class="btn btn-outline btn-sm" onclick="say('${safeAudio}', 0.45)">🐢 Lento (0.45x)</button>
+      </div>
+      <div>${inputHtml}</div>
+      <div id="u-fb" class="hidden"></div>
       <div class="right-actions">
-        <button class="btn hidden" id="lvl-next" onclick="nextLvlQ()">Continuar →</button>
+        <button class="btn hidden" id="u-next" onclick="nextUnitEx()">Siguiente →</button>
       </div>
     `;
+    say(ex.audio, 0.95);
   }
 
-  window.checkLvlOpt = function(chosen) {
-    const q = qs[qIdx];
-    const ok = chosen === q.ans;
-    if (ok) { score++; say(q.opts[q.ans]); }
-    document.querySelectorAll("[id^='lvl-opt-']").forEach((b, i) => {
+  window.checkUnitChoice = function(chosenIdx) {
+    const ex = exercises[idx];
+    const chosen = ex.opts[chosenIdx];
+    const ok = chosen === ex.ans;
+    document.querySelectorAll("[id^='u-opt-']").forEach((b, i) => {
       b.disabled = true;
-      if (i === q.ans) b.classList.add("correct");
-      else if (i === chosen) b.classList.add("wrong");
+      if (ex.opts[i] === ex.ans) b.classList.add("correct");
+      else if (i === chosenIdx) b.classList.add("wrong");
     });
-    const fb = document.getElementById("lvl-fb");
-    fb.className = "feedback-box " + (ok ? "feedback-ok" : "feedback-err");
-    fb.innerHTML = `<strong>${ok ? "✅ ¡Correcto!" : "❌ Incorrecto:"}</strong> ${q.exp}`;
-    fb.classList.remove("hidden");
-    document.getElementById("lvl-next").classList.remove("hidden");
+    finishExStep(ok, ex.exp);
   };
 
-  window.nextLvlQ = function() {
-    qIdx++;
-    if (qIdx < qs.length) {
-      showQ();
+  window.checkUnitDict = function() {
+    const ex = exercises[idx];
+    const inp = document.getElementById("u-dict-in");
+    if (!inp || inp.disabled) return;
+    const clean = s => s.toLowerCase().replace(/[.,!?'"’]/g, "").replace(/\s+/g, " ").trim();
+    const ok = clean(inp.value) === clean(ex.ans);
+    inp.disabled = true;
+    const btn = document.getElementById("u-dict-btn");
+    if (btn) btn.disabled = true;
+    finishExStep(ok, ex.exp);
+  };
+
+  function finishExStep(ok, exp) {
+    if (ok) score++;
+    const fb = document.getElementById("u-fb");
+    fb.className = "feedback-box " + (ok ? "feedback-ok" : "feedback-err");
+    fb.innerHTML = `<strong>${ok ? "✅ ¡Correcto!" : "❌ Revisa la frase:"}</strong> ${exp}`;
+    fb.classList.remove("hidden");
+    document.getElementById("u-next").classList.remove("hidden");
+  }
+
+  window.nextUnitEx = function() {
+    idx++;
+    if (idx < exercises.length) {
+      renderEx();
     } else {
-      const passed = score >= Math.ceil(qs.length * 0.66);
-      if (passed) {
-        if (!curUser.done.includes(lvl)) curUser.done.push(lvl);
-        const nextIdx = PRO_LVLS.indexOf(lvl) + 1;
-        if (nextIdx < PRO_LVLS.length && curUser.level === lvl) {
-          curUser.level = PRO_LVLS[nextIdx];
-        }
-        curUser.xp += 100;
-        curUser.streak++;
-        saveDB();
-        alert(`🏆 ¡Nivel ${lvl} superado! (${score}/${qs.length} aciertos)\n+100 XP y racha aumentada.`);
-      } else {
-        alert(`📚 Obtuviste ${score}/${qs.length}. Repasa e inténtalo de nuevo para desbloquear el siguiente nivel.`);
-      }
+      if (!curUser.doneUnits.includes(unit.id)) curUser.doneUnits.push(unit.id);
+      curUser.xp += 50 + (score * 10);
+      curUser.streak = Math.max(1, curUser.streak + 1);
+      saveDB();
+      alert(`🏆 ¡Unidad ${unit.id} completada! (${score}/${exercises.length} aciertos)\n+${50 + score * 10} XP ganados.`);
       openUser(curUser.id);
     }
   };
 
-  showQ();
+  renderEx();
 };
 
 document.addEventListener("DOMContentLoaded", renderHome);
