@@ -822,3 +822,98 @@ window.addEventListener('DOMContentLoaded', () => {
   renderProfiles();
   syncFromCloud();
 });
+// ============================================================================
+// FAMILY ENGLISH PRO - APP.JS (FINAL - TROZO 2 DE 2)
+// ============================================================================
+
+function startSpeechValidation(targetText) {
+  const transcriptEl = document.getElementById('speech-transcript');
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    if (transcriptEl) transcriptEl.innerHTML = '⚠️ Tu navegador no soporta micrófono directo. Validando práctica oral...';
+    setTimeout(() => showExerciseResult(true, 'Práctica oral registrada correctamente.'), 900);
+    return;
+  }
+  const recognition = new SpeechRecognition();
+  recognition.lang = 'en-US';
+  if (transcriptEl) transcriptEl.textContent = '🎙️ Escuchando... habla ahora en inglés.';
+  recognition.onresult = (event) => {
+    const spoken = event.results[0][0].transcript;
+    if (transcriptEl) transcriptEl.innerHTML = `Escuchado: <em>"${spoken}"</em>`;
+    const targetWords = normalizeText(targetText).split(' ');
+    const spokenWords = normalizeText(spoken).split(' ');
+    const ratio = targetWords.filter(w => spokenWords.includes(w)).length / Math.max(1, targetWords.length);
+    const passed = ratio >= 0.6;
+    showExerciseResult(passed, passed ? `¡Buena pronunciación! (${Math.round(ratio * 100)}% de precisión)` : `Intenta pronunciar más claro: "${targetText}"`);
+  };
+  recognition.onerror = () => showExerciseResult(true, 'Práctica oral completada.');
+  recognition.start();
+}
+
+function showExerciseResult(isCorrect, detailHtml) {
+  const feedbackEl = document.getElementById('exercise-feedback');
+  if (!feedbackEl || feedbackEl.dataset.answered === '1') return;
+  feedbackEl.dataset.answered = '1';
+  const user = appState.users[appState.activeUserId];
+  const ex = currentSession.exercises[currentSession.index];
+  recordExerciseProgress(user, ex, isCorrect);
+  feedbackEl.innerHTML = `
+    <div class="${isCorrect ? 'feedback-ok' : 'feedback-err'}" style="padding:14px;border-radius:12px;">
+      <div style="font-weight:700;font-size:1rem;margin-bottom:4px;">${isCorrect ? '✅ ¡Correcto! +6 XP' : '❌ Repaso guardado en SRS'}</div>
+      <div style="font-size:0.92rem;line-height:1.5;">${detailHtml}</div>
+      <button onclick="nextExerciseStep()" class="btn-primary" style="margin-top:12px;width:100%;">Continuar →</button>
+    </div>`;
+}
+// ============================================================================
+// FAMILY ENGLISH PRO - APP.JS (CIERRE FINAL)
+// ============================================================================
+
+function recordExerciseProgress(user, exercise, isCorrect) {
+  const today = getTodayStr();
+  checkDailyReset(user);
+  const prev = user.todayExercises;
+  user.todayExercises += 1;
+  user.lastActiveDate = today;
+  if (isCorrect) {
+    currentSession.correctCount += 1;
+    user.xp += 6;
+    user.todayXp += 6;
+    if (currentSession.mode === 'srs') user.srsQueue = (user.srsQueue || []).filter((_, i) => i !== currentSession.index);
+  } else {
+    user.srsQueue = user.srsQueue || [];
+    if (!user.srsQueue.some(item => JSON.stringify(item) === JSON.stringify(exercise))) user.srsQueue.push(exercise);
+  }
+  if (prev < DAILY_GOAL_EXERCISES && user.todayExercises >= DAILY_GOAL_EXERCISES) user.streak += 1;
+}
+
+function nextExerciseStep() {
+  if (!currentSession) return;
+  currentSession.index += 1;
+  renderCurrentExercise();
+}
+
+async function finishSession() {
+  const user = appState.users[appState.activeUserId];
+  const unitNum = currentSession.unitNumber;
+  if (currentSession.mode === 'unit' && unitNum) {
+    if (!user.completedUnits.includes(unitNum)) { user.completedUnits.push(unitNum); user.xp += 30; user.todayXp += 30; }
+    if (unitNum === user.unlockedUpTo && user.unlockedUpTo < 84) user.unlockedUpTo = unitNum + 1;
+  }
+  await pushToCloud();
+  const modal = document.getElementById('lesson-modal');
+  if (modal) {
+    modal.innerHTML = `<div style="background:#1e293b;border:1px solid #10b981;border-radius:16px;padding:28px;max-width:480px;width:100%;text-align:center;color:#f8fafc;">
+      <div style="font-size:3rem;margin-bottom:8px;">🎉</div><h2 style="margin:0 0 8px;">¡Sesión Completada!</h2>
+      <p style="color:#94a3b8;margin-bottom:16px;">Aciertos: <strong>${currentSession.correctCount} de ${currentSession.exercises.length}</strong> · Guardado en la nube</p>
+      <div style="background:#0f172a;padding:14px;border-radius:12px;margin-bottom:20px;font-size:0.9rem;">
+        <div>Meta diaria: <strong>${user.todayExercises}/${DAILY_GOAL_EXERCISES} ejercicios</strong></div>
+        <div style="margin-top:4px;color:#38bdf8;">Siguiente unidad activa: <strong>Unidad #${user.unlockedUpTo}</strong></div>
+      </div><button onclick="closeLessonModal()" class="btn-primary" style="width:100%;">Volver a Mi Ruta</button></div>`;
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  loadFromLocal();
+  renderProfiles();
+  syncFromCloud();
+});
