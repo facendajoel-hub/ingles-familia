@@ -150,7 +150,6 @@ window.ProDiagnosticExam = {
       A1:, A2:, B1:, B2:, C1:, C2: [0, 0]
     };
     this.scores = { grammar:, listening:, reading: [0, 0] };
-
     this.used.clear();
     this.renderQ();
   },
