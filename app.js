@@ -1002,3 +1002,38 @@ renderCurrentExercise = function() {
     <div style="font-size:0.8rem;color:#94a3b8;margin-bottom:14px;text-align:right;">Paso ${idx + 1} de ${total}</div>
     <div>${bodyHtml}</div><div id="exercise-feedback" style="margin-top:16px;"></div></div>`;
 };
+// ============================================================================
+// PARCHE DE REPARACIÓN DE ÍNDICES [0] Y ARRANQUE LIMPIO
+// ============================================================================
+
+getTodayStr = function() {
+  return new Date().toISOString().split('T')[0];
+};
+
+getAvatarSvg = function(avatarId) {
+  const found = AVATAR_OPTIONS.find(a => a.id === avatarId) || AVATAR_OPTIONS[0];
+  return found.svg;
+};
+
+importProgressJSON = function(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const imported = JSON.parse(e.target.result);
+      Object.keys(appState.users).forEach(id => {
+        if (imported[id]) appState.users[id] = { ...appState.users[id], ...imported[id] };
+      });
+      await pushToCloud();
+      renderProfiles();
+      alert('✅ Progreso familiar restaurado y sincronizado en la nube.');
+    } catch (err) { alert('❌ El archivo seleccionado no es una copia válida.'); }
+  };
+  reader.readAsText(file);
+};
+
+// Ejecutar renderizado inmediato tras reparar las funciones
+loadFromLocal();
+renderProfiles();
+syncFromCloud();
