@@ -917,3 +917,88 @@ window.addEventListener('DOMContentLoaded', () => {
   renderProfiles();
   syncFromCloud();
 });
+// ============================================================================
+// EXTENSIÓN DE PROFUNDIDAD (CONVERSACIÓN + YOUTUBE + 5 MIN PRONUNCIACIÓN)
+// ============================================================================
+
+const _baseBuildSession = buildSessionExercises;
+buildSessionExercises = function(unitNumber) {
+  const bank = window.UNIT_CONTENT_BANK || {};
+  const data = bank[unitNumber];
+  if (!data || !data.conversation) return _baseBuildSession(unitNumber);
+
+  const exercises = [];
+  (data.chunks || []).forEach(c => exercises.push({ type: 'chunk', unitNumber, ...c }));
+  exercises.push({ type: 'conversation', unitNumber, ...data.conversation });
+  (data.builders || []).forEach(b => exercises.push({ type: 'builder', unitNumber, ...b }));
+  (data.cloze || []).forEach(cl => exercises.push({ type: 'cloze', unitNumber, ...cl }));
+  (data.dictations || []).forEach(d => exercises.push({ type: 'dictation', unitNumber, ...d }));
+  if (data.video) exercises.push({ type: 'video', unitNumber, ...data.video });
+  (data.pronunciation || []).forEach((p, idx) => {
+    exercises.push({
+      type: 'speaking',
+      unitNumber,
+      stepLabel: `PRONUNCIACIÓN (5 MIN) · RETO ${idx + 1} DE ${data.pronunciation.length}`,
+      target: p.en,
+      translation: p.es
+    });
+  });
+  return exercises;
+};
+// ============================================================================
+// PANTALLAS DE CONVERSACIÓN ESCRITA Y VIDEO YOUTUBE (BLOQUE 2 DE 2)
+// ============================================================================
+
+const _baseRenderExercise = renderCurrentExercise;
+renderCurrentExercise = function() {
+  const modal = document.getElementById('lesson-modal');
+  if (!modal || !currentSession) return;
+  const ex = currentSession.exercises[currentSession.index];
+  if (!ex || (ex.type !== 'conversation' && ex.type !== 'video')) {
+    return _baseRenderExercise();
+  }
+
+  const total = currentSession.exercises.length, idx = currentSession.index;
+  const progressPct = Math.round((idx / total) * 100);
+  let bodyHtml = '';
+
+  if (ex.type === 'conversation') {
+    const linesHtml = ex.lines.map(l => `
+      <div style="margin-bottom:10px;padding:10px;background:#1e293b;border-radius:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <strong style="color:#38bdf8;">${l.speaker}:</strong>
+          <div>
+            <button onclick="speakText('${escapeQuote(l.en)}', 0.95)" class="btn-secondary" style="padding:3px 8px;font-size:0.78rem;">🔊</button>
+            <button onclick="speakText('${escapeQuote(l.en)}', 0.45)" class="btn-secondary" style="padding:3px 8px;font-size:0.78rem;">🐢</button>
+          </div>
+        </div>
+        <div style="margin-top:4px;font-size:1rem;">${l.en}</div>
+        <div class="conv-trans" style="display:none;margin-top:4px;font-size:0.88rem;color:#fde68a;">🇪🇸 ${l.es}</div>
+      </div>`).join('');
+
+    bodyHtml = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="font-size:0.8rem;color:#10b981;font-weight:700;">CONVERSACIÓN ESCRITA · ${ex.title}</span>
+        <button onclick="document.querySelectorAll('.conv-trans').forEach(e=>e.style.display=e.style.display==='none'?'block':'none')" class="btn-secondary" style="padding:4px 10px;font-size:0.78rem;">👁️ Ver/Ocultar Traducción</button>
+      </div>
+      <div style="max-height:240px;overflow-y:auto;padding:8px;background:#0f172a;border-radius:10px;border:1px solid #334155;margin-bottom:12px;">${linesHtml}</div>
+      <p style="font-weight:600;margin-bottom:8px;">${ex.question}</p>
+      <div style="display:flex;flex-direction:column;gap:8px;">${ex.options.map((opt, i) => `<button class="option-btn" onclick="submitChoiceAnswer(${i}, ${ex.answer})">${opt}</button>`).join('')}</div>`;
+  } else if (ex.type === 'video') {
+    const ytUrl = `https://youtube.com{encodeURIComponent(ex.query)}`;
+    bodyHtml = `
+      <span style="font-size:0.8rem;color:#ef4444;font-weight:700;">INMERSIÓN EN VIDEO REAL (YOUTUBE)</span>
+      <div style="background:#0f172a;padding:18px;border-radius:12px;margin:12px 0;border:1px solid #334155;text-align:center;">
+        <h3 style="margin:0 0 8px;">🎬 ${ex.title}</h3>
+        <p style="color:#94a3b8;font-size:0.92rem;margin-bottom:16px;">${ex.tip}</p>
+        <a href="${ytUrl}" target="_blank" rel="noopener noreferrer" class="btn-primary" style="display:inline-block;text-decoration:none;background:#ef4444;border-color:#ef4444;margin-bottom:12px;">▶️ Abrir Conversación en YouTube</a>
+      </div>
+      <button onclick="showExerciseResult(true, '¡Inmersión audiovisual completada! Ahora pasamos a tus 5 minutos de pronunciación.')" class="btn-primary" style="width:100%;">Ya vi el video → Continuar a Pronunciación</button>`;
+  }
+
+  modal.innerHTML = `<div style="background:#1e293b;border:1px solid #334155;border-radius:16px;padding:24px;max-width:680px;width:100%;color:#f8fafc;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><strong>${currentSession.title}</strong><button onclick="closeLessonModal()" class="btn-secondary" style="padding:4px 10px;font-size:0.82rem;">✕ Salir</button></div>
+    <div style="background:#0f172a;height:8px;border-radius:999px;overflow:hidden;margin-bottom:6px;"><div style="background:#38bdf8;height:100%;width:${progressPct}%;"></div></div>
+    <div style="font-size:0.8rem;color:#94a3b8;margin-bottom:14px;text-align:right;">Paso ${idx + 1} de ${total}</div>
+    <div>${bodyHtml}</div><div id="exercise-feedback" style="margin-top:16px;"></div></div>`;
+};
