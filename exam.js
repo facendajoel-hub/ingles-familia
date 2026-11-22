@@ -146,10 +146,11 @@ window.ProDiagnosticExam = {
     this.step = 0;
     this.mistakes = 0;
     this.correctCount = 0;
-    this.bandStats = {
+        this.bandStats = {
       A1:, A2:, B1:, B2:, C1:, C2: [0, 0]
     };
     this.scores = { grammar:, listening:, reading: [0, 0] };
+
     this.used.clear();
     this.renderQ();
   },
