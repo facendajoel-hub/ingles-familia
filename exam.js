@@ -349,4 +349,38 @@ window.ProDiagnosticExam = {
           </div>
         </div>
 
-        <p style="font-weight:700; color:#60a5fa; margin-bottom:6px;">${profileMeta.title}</p>
+               <p style="font-weight:700; color:#60a5fa; margin-bottom:6px;">${profileMeta.title}</p>
+        <p class="muted" style="line-height:1.5; margin-bottom:14px;">${profileMeta.diagnosticNote}</p>
+
+        <div style="background:var(--card); border-radius:12px; padding:14px; margin-bottom:14px; border:1px solid var(--border);">
+          <div style="font-size:0.8rem; font-weight:700; color:#94a3b8; margin-bottom:10px; text-transform:uppercase;">Desglose por Competencia</div>
+          <div style="display:grid; gap:8px;">
+            <div class="row-between"><span>• Gramática Aplicada:</span> <strong>${report.grammar}% (${this.scores.grammar[0]}/${this.scores.grammar[1]})</strong></div>
+            <div class="row-between"><span>• Comprensión Auditiva / Dictado:</span> <strong>${report.listening}% (${this.scores.listening[0]}/${this.scores.listening[1]})</strong></div>
+            <div class="row-between"><span>• Comprensión Lectora:</span> <strong>${report.reading}% (${this.scores.reading[0]}/${this.scores.reading[1]})</strong></div>
+            <div class="row-between" style="border-top:1px solid var(--border); padding-top:8px; margin-top:4px;">
+              <span>• Precisión Global (${report.correct} aciertos / ${report.mistakes} fallos):</span>
+              <strong style="color:#60a5fa;">${report.accuracy}%</strong>
+            </div>
+          </div>
+        </div>
+
+        <div style="font-size:0.9rem; display:grid; gap:6px; margin-bottom:14px;">
+          <p>✅ <strong>Fortaleza detectada:</strong> ${strongName}</p>
+          <p>🎯 <strong>Área prioritaria de refuerzo:</strong> ${weakName}</p>
+          <p>🚀 <strong>Inicio en el Curso:</strong> Unidad #${profileMeta.unitStart} (${level}).</p>
+        </div>
+
+        <p class="muted" style="font-size:0.8rem; font-style:italic; margin-bottom:16px;">${stopReason}</p>
+
+        <button class="btn btn-accent" id="ex-finish-btn" style="width:100%; font-size:1rem; padding:13px;">
+          Desbloquear Mi Curso en Nivel ${level} →
+        </button>
+      </div>
+    `;
+
+    document.getElementById("ex-finish-btn").onclick = () => {
+      this.onFinish({ level, report });
+    };
+  }
+};
