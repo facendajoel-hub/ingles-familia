@@ -607,3 +607,32 @@ renderCurrentExercise = function() {
     setTimeout(() => speakText(autoText, 0.95), 300);
   }
 };
+// ============================================================================
+// AUDIO INMEDIATO AL ABRIR EJERCICIO (SIN DELAY BLOQUEADO POR NAVEGADOR)
+// ============================================================================
+function speakText(text, rate = 0.95) {
+  if (!('speechSynthesis' in window) || !text) return;
+  try {
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.resume();
+    const utter = new SpeechSynthesisUtterance(String(text));
+    const voices = window.speechSynthesis.getVoices();
+    const enVoice = voices.find(v => v.lang.includes('en-US')) || voices.find(v => v.lang.startsWith('en'));
+    if (enVoice) utter.voice = enVoice;
+    utter.lang = 'en-US';
+    utter.rate = rate;
+    utter.volume = 1.0;
+    window.speechSynthesis.speak(utter);
+  } catch (e) {}
+}
+
+renderCurrentExercise = function() {
+  _origRenderEx();
+  if (!currentSession || currentSession.index >= currentSession.exercises.length) return;
+  const ex = currentSession.exercises[currentSession.index];
+  const autoText = ex.type === 'chunk' ? (ex.example || ex.chunk)
+                 : ex.type === 'speaking' ? ex.target
+                 : ex.type === 'dictation' ? ex.en
+                 : ex.type === 'listening' ? ex.audio : null;
+  if (autoText) speakText(autoText, 0.95);
+};
