@@ -24,7 +24,7 @@ window.UNIT_CONTENT_BANK['1'] = {
   builders: [
     { prompt: 'Armar saludo de presentación:', target: 'Hi my name is Angie', translation: 'Hola, mi nombre es Angie' },
     { prompt: 'Preguntar el origen de alguien:', target: 'Where are you from', translation: '¿De dónde eres?' }
-    { prompt: 'Responder con amabilidad:', target: 'Nice to meet you welcome here', translation: 'Mucho gusto en conocerte, bienvenido aquí' }
+    { prompt: 'Responder con amabilidad:', target: 'Nice to meet you and welcome', translation: 'Mucho gusto en conocerte y bienvenido' }
   ],
   cloze: [
     { dialogue: 'A: Hello! My name is Mark.<br>B: Hi Mark! _____, I am Sarah.', options: ['Nice to meet you', 'See you yesterday', 'How old is it'], answer: 0 },
