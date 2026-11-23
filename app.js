@@ -913,3 +913,36 @@ renderCurrentExercise = function() {
     <div style="background:#0f172a;height:8px;border-radius:99px;margin-bottom:8px;"><div style="background:var(--accent);height:100%;width:${pct}%;border-radius:99px;"></div></div>
     <small style="color:var(--muted);display:block;text-align:right;margin-bottom:12px;">Paso ${idx + 1} de ${total}</small>${bodyHtml}</div>`;
 };
+// ============================================================================
+// CORRECCIÓN DEL REPRODUCTOR DE VIDEO (URL LIMPIA Y SIN BLOQUEOS)
+// ============================================================================
+const _prevRender3 = renderCurrentExercise;
+renderCurrentExercise = function() {
+  if (!currentSession || currentSession.index >= currentSession.exercises.length) { _prevRender3(); return; }
+  const ex = currentSession.exercises[currentSession.index];
+  if (ex.type !== 'video_lesson') { _prevRender3(); return; }
+
+  const m = document.getElementById('lesson-modal');
+  const total = currentSession.exercises.length, idx = currentSession.index, pct = Math.round((idx / total) * 100);
+  const ytSearch = 'https://youtube.com+' + encodeURIComponent(ex.title);
+  const embedSrc = ex.videoId ? ('https://youtube-nocookie.com' + ex.videoId) : '';
+
+  m.innerHTML = `<div class="card" style="max-width:680px;width:100%;">
+    <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+      <strong>${currentSession.title}</strong>
+      <button class="btn btn-outline" style="padding:4px 10px;" onclick="closeLessonModal()">✕</button>
+    </div>
+    <div style="background:#0f172a;height:8px;border-radius:99px;margin-bottom:8px;">
+      <div style="background:var(--accent);height:100%;width:${pct}%;border-radius:99px;"></div>
+    </div>
+    <small style="color:var(--muted);display:block;text-align:right;margin-bottom:12px;">Paso ${idx + 1} de ${total}</small>
+    <span class="pill">VIDEO NATIVO DEL TEMA</span>
+    <h3 style="margin:10px 0;">${ex.videoTitle}</h3>
+    ${embedSrc ? `<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;margin-bottom:12px;background:#000;"><iframe src="${embedSrc}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>` : ''}
+    <p style="color:var(--muted);font-size:0.9rem;">Observa cómo los hablantes nativos usan estas expresiones en contexto real:</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+      <a href="${ytSearch}" target="_blank" rel="noopener" class="btn btn-outline" style="text-decoration:none;">▶️ Abrir más videos en YouTube</a>
+    </div>
+    <button type="button" class="btn" style="width:100%;" onclick="currentSession.index++;renderCurrentExercise();">Continuar a los Ejercicios Prácticos →</button>
+  </div>`;
+};
