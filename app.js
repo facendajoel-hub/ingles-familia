@@ -570,3 +570,19 @@ async function finishDiagnosticExam() {
 }
 
 window.addEventListener('DOMContentLoaded', () => { loadFromLocal(); migrateLegacyProgress(); renderApp(); syncFromCloud(); });
+// ============================================================================
+// RESTAURAR NIVEL C2 DE DIOJAN (SI QUEDÓ EN PRE-A1 CON 0 XP)
+// ============================================================================
+(function fixDiojanC2() {
+  loadFromLocal();
+  const d = appState.users.diojan;
+  if (d && d.level === 'Pre-A1' && d.xp === 0) {
+    d.level = 'C2';
+    d.diagnosed = true;
+    d.unlockedUpTo = 73;
+    d.xp = 150;
+    saveToLocal();
+    renderApp();
+    pushToCloud();
+  }
+})();
