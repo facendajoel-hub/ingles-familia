@@ -675,3 +675,43 @@ function moveBWord(pos, dir) {
   [arr[pos], arr[target]] = [arr[target], arr[pos]];
   renderBuilderAnswerZone();
 }
+// ============================================================================
+// REEMPLAZO GLOBAL DEL CONSTRUCTOR DE ORACIONES (SIN CONFLICTO DE HOISTING)
+// ============================================================================
+window.renderBuilderAnswerZone = function() {
+  const z = document.getElementById('b-zone');
+  if (!z || !currentSession) return;
+  z.style.display = 'flex';
+  z.style.flexWrap = 'wrap';
+  z.style.gap = '6px';
+  z.innerHTML = currentSession.builderSelected.map((x, i) => `
+    <span style="display:inline-flex;align-items:center;gap:6px;background:#3a86ff;color:#fff;padding:6px 10px;border-radius:8px;font-weight:600;">
+      ${i > 0 ? `<button type="button" onclick="window.moveBWord(${i},-1)" style="background:rgba(0,0,0,0.3);border:none;color:#fff;border-radius:4px;cursor:pointer;padding:2px 6px;">◀</button>` : ''}
+      <span onclick="window.toggleBWord(${x.idx},'${escapeQuote(x.w)}')" style="cursor:pointer;">${x.w} ✕</span>
+      ${i < currentSession.builderSelected.length - 1 ? `<button type="button" onclick="window.moveBWord(${i},1)" style="background:rgba(0,0,0,0.3);border:none;color:#fff;border-radius:4px;cursor:pointer;padding:2px 6px;">▶</button>` : ''}
+    </span>
+  `).join('');
+};
+
+window.toggleBWord = function(idx, w) {
+  const el = document.getElementById(`bw-${idx}`);
+  if (!el || !currentSession) return;
+  const pos = currentSession.builderSelected.findIndex(x => x.idx === idx);
+  if (pos >= 0) {
+    currentSession.builderSelected.splice(pos, 1);
+    el.style.opacity = '1';
+  } else {
+    currentSession.builderSelected.push({ idx, w });
+    el.style.opacity = '0.35';
+  }
+  window.renderBuilderAnswerZone();
+};
+
+window.moveBWord = function(pos, dir) {
+  if (!currentSession) return;
+  const arr = currentSession.builderSelected;
+  const target = pos + dir;
+  if (target < 0 || target >= arr.length) return;
+  [arr[pos], arr[target]] = [arr[target], arr[pos]];
+  window.renderBuilderAnswerZone();
+};
