@@ -709,3 +709,49 @@ window.dropBWord = function(targetPos) {
   draggedWordPos = null;
   window.renderBuilderAnswerZone();
 };
+// ============================================================================
+// GUARDADO AUTOMÁTICO POR EJERCICIO (REANUDAR LECCIÓN DONDE TE QUEDASTE)
+// ============================================================================
+const _origShowFb = showFb;
+showFb = function(ok, detail) {
+  _origShowFb(ok, detail);
+  const u = appState.users[appState.activeUserId];
+  if (u && currentSession && currentSession.mode === 'unit') {
+    u.savedSession = {
+      unitNumber: currentSession.unitNumber,
+      index: currentSession.index + 1,
+      correctCount: currentSession.correctCount
+    };
+  }
+  pushToCloud();
+};
+
+window.startUnitLesson = function(unitNumber) {
+  const u = appState.users[appState.activeUserId];
+  const exercises = buildSessionExercises(unitNumber);
+  let startIdx = 0, startCorrect = 0;
+
+  if (u && u.savedSession && u.savedSession.unitNumber === unitNumber && u.savedSession.index > 0 && u.savedSession.index < exercises.length) {
+    startIdx = u.savedSession.index;
+    startCorrect = u.savedSession.correctCount || 0;
+  }
+
+  currentSession = {
+    mode: 'unit',
+    unitNumber,
+    title: `Unidad ${unitNumber}: ${UNIT_TITLES[unitNumber - 1] || ''}`,
+    exercises,
+    index: startIdx,
+    correctCount: startCorrect,
+    builderSelected: []
+  };
+  openLessonModal();
+  renderCurrentExercise();
+};
+
+const _origFinishSession = finishSession;
+finishSession = async function() {
+  const u = appState.users[appState.activeUserId];
+  if (u) delete u.savedSession;
+  await _origFinishSession();
+};
