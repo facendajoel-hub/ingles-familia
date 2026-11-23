@@ -586,3 +586,24 @@ window.addEventListener('DOMContentLoaded', () => { loadFromLocal(); migrateLega
     pushToCloud();
   }
 })();
+// ============================================================================
+// REPRODUCCIÓN AUTOMÁTICA DE AUDIO EN TODOS LOS EJERCICIOS (PRE-A1 A C2)
+// ============================================================================
+if ('speechSynthesis' in window) {
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+}
+
+const _origRenderEx = renderCurrentExercise;
+renderCurrentExercise = function() {
+  _origRenderEx();
+  if (!currentSession || currentSession.index >= currentSession.exercises.length) return;
+  const ex = currentSession.exercises[currentSession.index];
+  const autoText = ex.type === 'chunk' ? (ex.example || ex.chunk)
+                 : ex.type === 'speaking' ? ex.target
+                 : ex.type === 'dictation' ? ex.en
+                 : ex.type === 'listening' ? ex.audio : null;
+  if (autoText) {
+    setTimeout(() => speakText(autoText, 0.95), 300);
+  }
+};
