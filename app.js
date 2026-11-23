@@ -782,3 +782,134 @@ window.submitChoice = function(sel, ans) {
     showFb(ok, ok ? '¡Excelente!' : `Correcta: <strong>${ex.options[ans]}</strong>`);
   }
 };
+// ============================================================================
+// PILAR PEDAGÓGICO 1: EXPLICACIÓN INTELIGENTE DE ERRORES
+// ============================================================================
+function explainMistake(ex, userAnswer) {
+  if (ex.explanation) return ex.explanation;
+  if (ex.type === 'builder') {
+    return `En inglés el orden sigue la estructura <strong>Sujeto + Verbo + Complemento</strong> (o <em>Palabra interrogativa + Auxiliar + Sujeto</em> en preguntas).<br>• <strong>Tu orden:</strong> "${userAnswer || '(vacío)'}"<br>• <strong>Orden natural:</strong> "${ex.target}" (${ex.translation}).`;
+  }
+  if (ex.type === 'dictation') {
+    return `Escucha de nuevo en modo <strong>🐢 Lento</strong> y fíjate en cómo se unen las palabras al hablar.<br>• <strong>Escribiste:</strong> "${userAnswer || '(nada)'}"<br>• <strong>Frase exacta:</strong> "${ex.en}" (<em>${ex.es}</em>).`;
+  }
+  if (ex.type === 'cloze') {
+    const right = ex.options[ex.ans];
+    return `La opción correcta es <strong>"${right}"</strong> porque concuerda con el tiempo verbal y el contexto del diálogo. Las demás opciones cambian el tiempo o no suenan naturales para un hablante nativo.`;
+  }
+  if (ex.type === 'chunk') {
+    return `Recuerda aprender este bloque completo como una sola idea: <strong>"${ex.chunk}"</strong> significa <em>"${ex.options[ex.ans]}"</em>. Ejemplo: <em>"${ex.example}"</em>.`;
+  }
+  return `Revisa el audio o el texto clave: la respuesta correcta es <strong>"${ex.options ? ex.options[ex.ans] : ''}"</strong>.`;
+}
+
+window.checkBuilder = function() {
+  const ex = currentSession.exercises[currentSession.index];
+  const userStr = currentSession.builderSelected.map(x => x.w).join(' ');
+  const ok = norm(userStr) === norm(ex.target);
+  if (ok) speakText(ex.target, 0.95);
+  const msg = ok
+    ? `✅ <strong>¡Natural y correcto!</strong> "${ex.target}"<br>🇪🇸 <em>${ex.translation}</em>`
+    : explainMistake(ex, userStr);
+  showFb(ok, msg);
+};
+
+window.checkDictation = function() {
+  const ex = currentSession.exercises[currentSession.index], inp = document.getElementById('dict-in'), btn = document.getElementById('dict-btn');
+  if (!inp) return; if (btn) btn.disabled = true;
+  const ok = norm(inp.value) === norm(ex.en);
+  const msg = ok
+    ? `✅ <strong>¡Oído fino!</strong> "${ex.en}"<br>🇪🇸 <em>${ex.es}</em>`
+    : explainMistake(ex, inp.value);
+  showFb(ok, msg);
+};
+
+const _prevSubmitChoice = window.submitChoice;
+window.submitChoice = function(sel, ans) {
+  const ex = currentSession.exercises[currentSession.index];
+  if (sel !== ans) {
+    showFb(false, explainMistake(ex, ex.options ? ex.options[sel] : ''));
+  } else if (typeof _prevSubmitChoice === 'function') {
+    _prevSubmitChoice(sel, ans);
+  }
+};
+// ============================================================================
+// PILAR PEDAGÓGICO 2 Y 3: CONVERSACIÓN LARGA (2+ PÁRRAFOS) Y VIDEO POR UNIDAD
+// ============================================================================
+const UNIT_MEDIA_BANK = {
+  1: {
+    videoId: 'fN1garZ-h1o',
+    videoTitle: 'Greetings & Introductions in Real Life',
+    p1_en: 'Liam: Good morning! I do not think we have met yet. My name is Liam, and I just moved into apartment 4B yesterday. I am originally from Toronto, so everything in this neighborhood is still brand new to me. Nice to meet you!',
+    p1_es: 'Liam: ¡Buenos días! Creo que aún no nos conocemos. Me llamo Liam y me mudé ayer al apartamento 4B. Soy originario de Toronto, así que todo en este vecindario sigue siendo totalmente nuevo para mí. ¡Mucho gusto en conocerte!',
+    p2_en: 'Sofia: Welcome to the building, Liam! I am Sofia, and I live right across the hall in 4A. It is a pleasure to meet you. If you ever need recommendations for good coffee shops, supermarkets, or bus routes around here, please feel free to ask me anytime.',
+    p2_es: 'Sofia: ¡Bienvenido al edificio, Liam! Soy Sofia y vivo justo enfrente, en el 4A. Es un placer conocerte. Si alguna vez necesitas recomendaciones de buenas cafeterías, supermercados o rutas de autobús por aquí, siéntete con toda libertad de preguntarme cuando quieras.'
+  }
+};
+
+const _origBuildEx = buildSessionExercises;
+buildSessionExercises = function(unitNumber) {
+  const title = UNIT_TITLES[unitNumber - 1] || `Unit ${unitNumber}`;
+  const media = UNIT_MEDIA_BANK[unitNumber] || {
+    videoId: '',
+    videoTitle: `Real English Conversation: ${title}`,
+    p1_en: `Alex: Hi there! Today we are focusing on "${title}" in everyday situations. When native speakers talk about this topic, they pay close attention to natural expressions and clear pronunciation rather than memorizing isolated grammar rules.`,
+    p1_es: `Alex: ¡Hola! Hoy nos enfocamos en "${title}" en situaciones cotidianas. Cuando los hablantes nativos conversan sobre este tema, prestan mucha atención a las expresiones naturales y a la pronunciación clara en lugar de memorizar reglas aisladas.`,
+    p2_en: `Maya: That makes complete sense. By reading a full conversation first and listening carefully to how each sentence connects, it becomes much easier to understand real-world English and respond with confidence.`,
+    p2_es: `Maya: Eso tiene todo el sentido. Al leer primero una conversación completa y escuchar con atención cómo se conecta cada oración, se vuelve mucho más fácil comprender el inglés real y responder con confianza.`
+  };
+
+  const baseExercises = _origBuildEx(unitNumber);
+  return [
+    { type: 'reading_long', unitNumber, title, ...media },
+    { type: 'video_lesson', unitNumber, title, ...media },
+    ...baseExercises
+  ];
+};
+
+const _prevRender2 = renderCurrentExercise;
+renderCurrentExercise = function() {
+  if (!currentSession || currentSession.index >= currentSession.exercises.length) { _prevRender2(); return; }
+  const ex = currentSession.exercises[currentSession.index];
+  if (ex.type !== 'reading_long' && ex.type !== 'video_lesson') { _prevRender2(); return; }
+
+  const m = document.getElementById('lesson-modal');
+  const total = currentSession.exercises.length, idx = currentSession.index, pct = Math.round((idx / total) * 100);
+  const fullSpeech = `${ex.p1_en} ${ex.p2_en}`.replace(/\b(Liam|Sofia|Alex|Maya):\s*/g, '');
+
+  let bodyHtml = '';
+  if (ex.type === 'reading_long') {
+    bodyHtml = `
+      <span class="pill">LECTURA Y CONVERSACIÓN EN CONTEXTO</span>
+      <h3 style="margin:10px 0;">${ex.title}</h3>
+      <div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;">
+        <button type="button" class="btn" onclick="speakText('${escapeQuote(fullSpeech)}', 0.92)">🔊 Escuchar Todo</button>
+        <button type="button" class="btn btn-outline" onclick="speakText('${escapeQuote(fullSpeech)}', 0.45)">🐢 Lento (0.45x)</button>
+        <button type="button" class="btn btn-outline" onclick="const t=document.getElementById('tr-box');t.style.display=t.style.display==='none'?'block':'none';">🇪🇸 Ver / Ocultar Traducción</button>
+      </div>
+      <div class="card" style="background:#0f172a;line-height:1.65;font-size:0.98rem;">
+        <p style="margin-top:0;">${ex.p1_en}</p>
+        <p style="margin-bottom:0;">${ex.p2_en}</p>
+      </div>
+      <div id="tr-box" class="card" style="display:none;background:#1e293b;border-color:#38bdf8;line-height:1.6;font-size:0.92rem;color:#cbd5e1;">
+        <p style="margin-top:0;">${ex.p1_es}</p>
+        <p style="margin-bottom:0;">${ex.p2_es}</p>
+      </div>
+      <button type="button" class="btn" style="width:100%;" onclick="currentSession.index++;renderCurrentExercise();">He leído y escuchado la conversación →</button>`;
+  } else {
+    const ytSearch = `https://youtube.com{encodeURIComponent(ex.title)}`;
+    bodyHtml = `
+      <span class="pill">VIDEO NATIVO DEL TEMA</span>
+      <h3 style="margin:10px 0;">${ex.videoTitle}</h3>
+      ${ex.videoId ? `<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;margin-bottom:12px;background:#000;"><iframe src="https://youtube.com{ex.videoId}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allowfullscreen></iframe></div>` : ''}
+      <p style="color:var(--muted);font-size:0.9rem;">Observa cómo los hablantes nativos usan estas expresiones en la vida real. Si deseas explorar más ejemplos en video:</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+        <a href="${ytSearch}" target="_blank" rel="noopener" class="btn btn-outline" style="text-decoration:none;">▶️ Ver videos en YouTube</a>
+      </div>
+      <button type="button" class="btn" style="width:100%;" onclick="currentSession.index++;renderCurrentExercise();">Continuar a los Ejercicios Prácticos →</button>`;
+  }
+
+  m.innerHTML = `<div class="card" style="max-width:680px;width:100%;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><strong>${currentSession.title}</strong><button class="btn btn-outline" style="padding:4px 10px;" onclick="closeLessonModal()">✕</button></div>
+    <div style="background:#0f172a;height:8px;border-radius:99px;margin-bottom:8px;"><div style="background:var(--accent);height:100%;width:${pct}%;border-radius:99px;"></div></div>
+    <small style="color:var(--muted);display:block;text-align:right;margin-bottom:12px;">Paso ${idx + 1} de ${total}</small>${bodyHtml}</div>`;
+};
