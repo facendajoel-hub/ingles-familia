@@ -755,3 +755,30 @@ finishSession = async function() {
   if (u) delete u.savedSession;
   await _origFinishSession();
 };
+// ============================================================================
+// LECTURA AUTOMÁTICA DEL DIÁLOGO COMPLETO AL RESPONDER CORRECTAMENTE
+// ============================================================================
+window.submitChoice = function(sel, ans) {
+  const ex = currentSession.exercises[currentSession.index];
+  const ok = sel === ans;
+
+  if (ex.type === 'cloze' && ok) {
+    const correctWord = ex.options[ans];
+    const fullDialogueHtml = ex.dialogue.replace(/_{2,}/g, `<strong style="color:#38bdf8;">${correctWord}</strong>`);
+    const cleanSpeechText = ex.dialogue
+      .replace(/_{2,}/g, correctWord)
+      .replace(/<[^>]*>/g, '. ')
+      .replace(/\b[AB]:\s*/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    speakText(cleanSpeechText, 0.95);
+    showFb(true, `
+      <div style="margin-bottom:8px;">${fullDialogueHtml}</div>
+      <button type="button" class="btn btn-outline" style="padding:4px 10px;font-size:0.82rem;" onclick="speakText('${escapeQuote(cleanSpeechText)}', 0.95)">🔊 Escuchar de nuevo</button>
+      <button type="button" class="btn btn-outline" style="padding:4px 10px;font-size:0.82rem;" onclick="speakText('${escapeQuote(cleanSpeechText)}', 0.45)">🐢 Lento</button>
+    `);
+  } else {
+    showFb(ok, ok ? '¡Excelente!' : `Correcta: <strong>${ex.options[ans]}</strong>`);
+  }
+};
