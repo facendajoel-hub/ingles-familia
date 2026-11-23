@@ -636,3 +636,42 @@ renderCurrentExercise = function() {
                  : ex.type === 'listening' ? ex.audio : null;
   if (autoText) speakText(autoText, 0.95);
 };
+// ============================================================================
+// CONSTRUCTOR DE ORACIONES INTERACTIVO (DEVOLVER Y REORDENAR PALABRAS)
+// ============================================================================
+function renderBuilderAnswerZone() {
+  const z = document.getElementById('b-zone');
+  if (!z) return;
+  z.style.display = 'flex';
+  z.style.flexWrap = 'wrap';
+  z.style.gap = '6px';
+  z.innerHTML = currentSession.builderSelected.map((x, i) => `
+    <span style="display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:#fff;padding:6px 10px;border-radius:8px;font-weight:600;">
+      ${i > 0 ? `<button type="button" onclick="moveBWord(${i},-1)" style="background:rgba(0,0,0,0.25);border:none;color:#fff;border-radius:4px;cursor:pointer;padding:2px 6px;">◀</button>` : ''}
+      <span onclick="toggleBWord(${x.idx},'${escapeQuote(x.w)}')" style="cursor:pointer;" title="Quitar palabra">${x.w} ✕</span>
+      ${i < currentSession.builderSelected.length - 1 ? `<button type="button" onclick="moveBWord(${i},1)" style="background:rgba(0,0,0,0.25);border:none;color:#fff;border-radius:4px;cursor:pointer;padding:2px 6px;">▶</button>` : ''}
+    </span>
+  `).join('');
+}
+
+function toggleBWord(idx, w) {
+  const el = document.getElementById(`bw-${idx}`);
+  if (!el) return;
+  const pos = currentSession.builderSelected.findIndex(x => x.idx === idx);
+  if (pos >= 0) {
+    currentSession.builderSelected.splice(pos, 1);
+    el.style.opacity = '1';
+  } else {
+    currentSession.builderSelected.push({ idx, w });
+    el.style.opacity = '0.35';
+  }
+  renderBuilderAnswerZone();
+}
+
+function moveBWord(pos, dir) {
+  const arr = currentSession.builderSelected;
+  const target = pos + dir;
+  if (target < 0 || target >= arr.length) return;
+  [arr[pos], arr[target]] = [arr[target], arr[pos]];
+  renderBuilderAnswerZone();
+}
