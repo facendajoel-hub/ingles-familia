@@ -511,3 +511,62 @@ async function finishSession() {
   if (m) m.innerHTML = `<div class="card" style="max-width:440px;width:100%;text-align:center;"><h2>🎉 ¡Sesión Completada!</h2><p>Aciertos: ${currentSession.correctCount}/${currentSession.exercises.length}</p><button class="btn" style="width:100%;" onclick="closeLessonModal()">Volver a Mi Ruta</button></div>`;
 }
 window.addEventListener('DOMContentLoaded', () => { loadFromLocal(); renderApp(); syncFromCloud(); });
+// ============================================================================
+// EXAMEN OBLIGATORIO (TROZO 2 DE 3: ARRANQUE Y PREGUNTAS)
+// ============================================================================
+let examRun = null;
+function startDiagnosticForActiveProfile() {
+  const user = appState.users[appState.activeUserId], root = document.getElementById('app-root');
+  if (!user || !root) return;
+  const bank = (typeof EXAM_QUESTIONS !== 'undefined') ? EXAM_QUESTIONS : (window.EXAM_QUESTIONS || {});
+  const bands = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].filter(b => Array.isArray(bank[b]) && bank[b].length);
+  if (!bands.length) { alert('⚠️ No se encontró exam.js. Verifica <script src="exam.js"></script> en index.html.'); return; }
+  examRun = { bands, bandIdx: 0, qIdxByBand: { A1:0, A2:0, B1:0, B2:0, C1:0, C2:0 }, mistakes: 0, totalAsked: 0, correct: 0, highestPassed: 'Pre-A1', currentQ: null };
+  nextExamQuestion();
+}
+
+function nextExamQuestion() {
+  const root = document.getElementById('app-root'), bank = (typeof EXAM_QUESTIONS !== 'undefined') ? EXAM_QUESTIONS : window.EXAM_QUESTIONS;
+  if (examRun.mistakes >= 5 || examRun.totalAsked >= 35 || examRun.bandIdx >= examRun.bands.length) { finishDiagnosticExam(); return; }
+  const band = examRun.bands[examRun.bandIdx], qIdx = examRun.qIdxByBand[band];
+  if (qIdx >= bank[band].length) { examRun.highestPassed = band; examRun.bandIdx++; nextExamQuestion(); return; }
+  const q = bank[band][qIdx];
+  examRun.currentQ = { ...q, band }; examRun.qIdxByBand[band]++; examRun.totalAsked++;
+  if (q.audio) setTimeout(() => speakText(q.audio, 0.95), 250);
+  root.innerHTML = `<div class="card" style="max-width:680px;margin:auto;">
+    <div style="display:flex;justify-content:space-between;margin-bottom:10px;"><span class="pill">DIAGNÓSTICO MCER · ${band}</span><span style="color:#f87171;font-weight:700;">Fallos: ${examRun.mistakes}/5 · Pregunta ${examRun.totalAsked}/35</span></div>
+    ${q.audio ? `<div style="margin:10px 0;"><button class="btn" onclick="speakText('${escapeQuote(q.audio)}',0.95)">🔊 Escuchar</button> <button class="btn btn-outline" onclick="speakText('${escapeQuote(q.audio)}',0.45)">🐢 Lento (0.45x)</button></div>` : ''}
+    <h3>${q.q}</h3>
+    ${q.type === 'dictation' ? `<input id="exam-dict-in" type="text" placeholder="Escribe en inglés..."><button id="exam-sub-btn" class="btn" style="width:100%;" onclick="gradeExamAnswer()">Verificar</button>` : q.opts.map((o, i) => `<button class="option-btn" onclick="gradeExamAnswer(${i})">${o}</button>`).join('')}
+    <div id="exam-fb" style="margin-top:12px;"></div>
+    <div style="margin-top:12px;text-align:right;"><button class="btn btn-outline" style="font-size:0.8rem;" onclick="examRun.highestPassed='Pre-A1';finishDiagnosticExam();">Empezar desde Cero (Pre-A1)</button></div></div>`;
+}
+// ============================================================================
+// EXAMEN OBLIGATORIO (TROZO 3 DE 3: CALIFICACIÓN, REPORTE Y ARRANQUE)
+// ============================================================================
+function gradeExamAnswer(choiceIdx) {
+  const fb = document.getElementById('exam-fb');
+  if (!fb || fb.dataset.done === '1') return; fb.dataset.done = '1';
+  const q = examRun.currentQ;
+  const ok = q.type === 'dictation' ? norm(document.getElementById('exam-dict-in')?.value) === norm(q.ans) : choiceIdx === q.ans;
+  if (ok) { examRun.correct++; examRun.highestPassed = q.band; } else { examRun.mistakes++; }
+  fb.innerHTML = `<div class="card" style="background:${ok ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'};border-color:${ok ? '#10b981' : '#ef4444'};">
+    <strong>${ok ? '✅ ¡Correcto!' : '❌ Incorrecto'}</strong><p style="margin:6px 0 10px;">${q.exp || ''}</p>
+    <button class="btn" style="width:100%;" onclick="nextExamQuestion()">Siguiente →</button></div>`;
+}
+
+async function finishDiagnosticExam() {
+  const u = appState.users[appState.activeUserId], root = document.getElementById('app-root');
+  const lvl = examRun ? examRun.highestPassed : 'Pre-A1', startU = Math.max(0, LEVELS.indexOf(lvl)) * 12 + 1;
+  u.level = lvl; u.diagnosed = true; u.xp += 150;
+  if (u.unlockedUpTo < startU) u.unlockedUpTo = startU;
+  appState.selectedBand = lvl; appState.view = 'dashboard';
+  await pushToCloud();
+  if (root) root.innerHTML = `<div class="card" style="max-width:520px;margin:auto;text-align:center;">
+    <h2>📊 Reporte Diagnóstico MCER</h2><p>Nivel asignado a <strong>${u.name}</strong>:</p>
+    <div style="font-size:2.4rem;font-weight:800;color:#38bdf8;margin:10px 0;">${lvl}</div>
+    <p style="color:var(--muted);">Aciertos: ${examRun.correct}/${examRun.totalAsked} · Ruta desbloqueada desde la <strong>Unidad #${startU}</strong> (+150 XP)</p>
+    <button class="btn" style="width:100%;" onclick="renderApp()">Ir a Mi Ruta de Aprendizaje</button></div>`;
+}
+
+window.addEventListener('DOMContentLoaded', () => { loadFromLocal(); migrateLegacyProgress(); renderApp(); syncFromCloud(); });
