@@ -1095,3 +1095,12 @@ renderCurrentExercise = function() {
     : `<span style="font-size:0.8rem;color:#10b981;font-weight:700;">COMPRENSIÓN DE LECTURA</span><p style="font-weight:600;margin:12px 0;">${ex.question}</p><div style="display:flex;flex-direction:column;gap:10px;">${ex.options.map((opt, i) => `<button class="option-btn" onclick="submitChoiceAnswer(${i}, ${ex.answer})">${opt}</button>`).join('')}</div>`;
   modal.innerHTML = `<div style="background:#1e293b;border:1px solid #334155;border-radius:16px;padding:24px;max-width:680px;width:100%;color:#f8fafc;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><strong>${currentSession.title}</strong><button onclick="closeLessonModal()" class="btn-secondary" style="padding:4px 10px;font-size:0.82rem;">✕ Salir</button></div><div style="background:#0f172a;height:8px;border-radius:999px;margin-bottom:6px;"><div style="background:#38bdf8;height:100%;width:${pct}%;"></div></div><div style="font-size:0.8rem;color:#94a3b8;margin-bottom:16px;text-align:right;">Ejercicio ${idx + 1} de ${total}</div><div>${body}</div><div id="exercise-feedback" style="margin-top:16px;"></div></div>`;
 };
+// ============================================================================
+// PARCHE BOTÓN SIGUIENTE EN LECTURA (PEGAR AL FINAL DE APP.JS)
+// ============================================================================
+window.nextExerciseStep = function() {
+  if (!currentSession) return;
+  window.speechSynthesis && window.speechSynthesis.cancel();
+  currentSession.index += 1;
+  renderCurrentExercise();
+};
