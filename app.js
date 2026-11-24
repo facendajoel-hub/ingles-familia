@@ -1042,26 +1042,3 @@ renderCurrentExercise = function() {
     </div><button onclick="nextExerciseStep()" class="btn-primary" style="width:100%;">He leído el texto · Ir a las Preguntas →</button>
     <div id="exercise-feedback" style="margin-top:16px;"></div></div>`;
 };
-// ============================================================================
-// PARCHE DE ARRANQUE DIRECTO DE UNIDAD (PEGAR AL FINAL DE APP.JS)
-// ============================================================================
-startUnitLesson = function(unitNumber) {
-  const data = getUnitData(unitNumber);
-  const steps = [];
-  if (data.reading && data.reading.lines) {
-    steps.push({ type: 'reading_text', unitNumber, ...data.reading });
-    (data.reading.questions || []).forEach(q => steps.push({ type: 'reading_q', unitNumber, ...q }));
-  }
-  (data.chunks || []).forEach(c => steps.push({ type: 'chunk', unitNumber, ...c }));
-  (data.builders || []).forEach(b => steps.push({ type: 'builder', unitNumber, ...b }));
-  (data.cloze || []).forEach(cl => steps.push({ type: 'cloze', unitNumber, ...cl }));
-  (data.dictations || []).forEach(d => steps.push({ type: 'dictation', unitNumber, ...d }));
-  (data.listening || []).forEach(l => steps.push({ type: 'listening', unitNumber, ...l }));
-  const chunkPhrase = (data.chunks && data.chunks[0]) ? data.chunks[0].chunk : 'Nice to meet you!';
-  const fullPhrase = (data.dictations && data.dictations[0]) ? data.dictations[0].en : 'Good morning!';
-  steps.push({ type: 'speaking', unitNumber, stepLabel: 'Pilar 3 · Chunk Clave', target: chunkPhrase });
-  steps.push({ type: 'speaking', unitNumber, stepLabel: 'Pilar 3 · Oración Completa', target: fullPhrase });
-  currentSession = { mode: 'unit', unitNumber, title: `Unidad ${unitNumber}: ${UNIT_TITLES[unitNumber - 1] || ''}`, exercises: steps, index: 0, correctCount: 0, builderSelected: [] };
-  openLessonModal();
-  renderCurrentExercise();
-};
