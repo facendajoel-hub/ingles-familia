@@ -990,3 +990,55 @@ renderCurrentExercise = function() {
     <div style="font-size:0.8rem;color:#94a3b8;margin-bottom:16px;text-align:right;">Ejercicio ${idx + 1} de ${total}</div>
     <div>${bodyHtml}</div><div id="exercise-feedback" style="margin-top:16px;"></div></div>`;
 };
+// ============================================================================
+// PARCHE VOCES NATURALES POR PERSONAJE (PEGAR AL FINAL DE APP.JS - TROZO 1/2)
+// ============================================================================
+function getNaturalFemaleVoices() {
+  const voices = window.speechSynthesis.getVoices();
+  const enVoices = voices.filter(v => v.lang.startsWith('en'));
+  const natural = enVoices.filter(v => /Natural|Neural|Google|Aria|Jenny|Zira|Samantha|Victoria|Karen|Moira|Tessa/i.test(v.name) && !/David|Mark|Guy|Daniel|Alex|Fred/i.test(v.name));
+  const pool = natural.length >= 2 ? natural : (enVoices.length >= 2 ? enVoices : voices);
+  return {
+    voiceA: pool[0] || null,
+    voiceB: pool[1] || pool[0] || null
+  };
+}
+function playDialogueSequence(lines, rate = 0.95) {
+  if (!('speechSynthesis' in window) || !lines || !lines.length) return;
+  window.speechSynthesis.cancel();
+  const { voiceA, voiceB } = getNaturalFemaleVoices();
+  const speakers = [...new Set(lines.map(l => l.speaker))];
+  lines.forEach((line, idx) => {
+    const utter = new SpeechSynthesisUtterance(line.en);
+    const isSecond = speakers.indexOf(line.speaker) === 1;
+    utter.voice = isSecond ? voiceB : voiceA;
+    utter.lang = 'en-US';
+    utter.rate = rate;
+    utter.pitch = isSecond ? 1.02 : 1.15;
+    setTimeout(() => window.speechSynthesis.speak(utter), idx === 0 ? 60 : 0);
+  });
+}
+// ============================================================================
+// PARCHE VOCES NATURALES POR PERSONAJE (PEGAR AL FINAL DE APP.JS - TROZO 2/2)
+// ============================================================================
+const _prevRenderCurrentExercise = renderCurrentExercise;
+renderCurrentExercise = function() {
+  const modal = document.getElementById('lesson-modal');
+  const ex = currentSession && currentSession.exercises[currentSession.index];
+  if (!modal || !ex || ex.type !== 'reading_text') {
+    return _prevRenderCurrentExercise();
+  }
+  const total = currentSession.exercises.length, idx = currentSession.index;
+  const progressPct = Math.round((idx / total) * 100);
+  modal.innerHTML = `<div style="background:#1e293b;border:1px solid #334155;border-radius:16px;padding:24px;max-width:680px;width:100%;color:#f8fafc;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><strong>${currentSession.title}</strong><button onclick="closeLessonModal()" class="btn-secondary" style="padding:4px 10px;font-size:0.82rem;">✕ Salir</button></div>
+    <div style="background:#0f172a;height:8px;border-radius:999px;overflow:hidden;margin-bottom:6px;"><div style="background:#38bdf8;height:100%;width:${progressPct}%;"></div></div>
+    <div style="font-size:0.8rem;color:#94a3b8;margin-bottom:16px;text-align:right;">Ejercicio ${idx + 1} de ${total}</div>
+    <span style="font-size:0.8rem;color:#38bdf8;font-weight:700;">LECTURA EN CONTEXTO · ${ex.title}</span>
+    <div style="background:#0f172a;padding:16px;border-radius:12px;margin:12px 0;border:1px solid #334155;line-height:1.6;">
+      ${ex.lines.map(l => `<p style="margin:0 0 10px;"><strong style="color:${l.speaker === 'Liam' ? '#38bdf8' : '#f472b6'};">${l.speaker}:</strong> ${l.en}</p>`).join('')}
+      <button onclick="playDialogueSequence(currentSession.exercises[currentSession.index].lines, 0.95)" class="btn-secondary" style="padding:6px 12px;font-size:0.85rem;">🔊 Escuchar Diálogo (2 Voces)</button>
+      <button onclick="playDialogueSequence(currentSession.exercises[currentSession.index].lines, 0.45)" class="btn-secondary" style="padding:6px 12px;font-size:0.85rem;">🐢 Lento</button>
+    </div><button onclick="nextExerciseStep()" class="btn-primary" style="width:100%;">He leído el texto · Ir a las Preguntas →</button>
+    <div id="exercise-feedback" style="margin-top:16px;"></div></div>`;
+};
