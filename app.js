@@ -1169,3 +1169,29 @@ document.addEventListener('keydown', function(e) {
   const nextBtn = lessonModal.querySelector('button.btn-primary, button.btn[onclick*="nextExerciseStep"], button.btn[onclick*="checkBuilder"]');
   if (nextBtn) { e.preventDefault(); nextBtn.click(); }
 });
+// ============================================================================
+// PARCHE: HABILITAR TODAS LAS LECCIONES (UNIDADES 1 A 84) SIN BLOQUEOS
+// ============================================================================
+function getUnitData(unitNumber) {
+  const bank = window.UNIT_CONTENT_BANK || {};
+  if (bank[unitNumber]) return bank[unitNumber];
+  if (bank[String(unitNumber)]) return bank[String(unitNumber)];
+  const title = UNIT_TITLES[unitNumber - 1] || ('Unit ' + unitNumber);
+  return {
+    reading: {
+      title: title,
+      lines: [
+        { speaker: 'Alex', en: `Hi! Today we are practicing ${title} in real daily situations.`, es: `¡Hola! Hoy practicamos ${title} en situaciones diarias reales.` },
+        { speaker: 'Maya', en: `Great! Listening and speaking out loud helps us learn ${title} naturally.`, es: `¡Genial! Escuchar y hablar en voz alta nos ayuda a aprender ${title} de forma natural.` }
+      ],
+      questions: [
+        { question: `What is the main topic of this lesson?`, options: [title, 'Cooking recipes', 'Car mechanics'], answer: 0 }
+      ]
+    },
+    chunks: [{ chunk: `Key phrase for ${title}`, meaning: `Expresión clave de ${title}`, example: `We use ${title} every day.`, options: [`Expresión clave de ${title}`, 'Frase sin relación', 'Expresión antigua'], answer: 0 }],
+    builders: [{ prompt: 'Ordena la frase de práctica:', target: 'Daily practice builds real fluency', translation: 'La práctica diaria construye fluidez real' }],
+    cloze: [{ dialogue: 'A: How do you improve fast?<br>B: I _____ every day.', options: ['practice', 'practicing', 'practiced'], answer: 0 }],
+    dictations: [{ en: 'Speaking out loud every day builds confidence.', es: 'Hablar en voz alta todos los días construye confianza.' }],
+    pronunciation: [{ en: 'Daily practice helps me speak English naturally.', es: 'La práctica diaria me ayuda a hablar inglés con naturalidad.' }]
+  };
+}
