@@ -1147,3 +1147,25 @@ window.submitChoiceAnswer = function(sel, ans) {
   const rightText = ex && ex.options ? ex.options[ans] : '';
   showFb(ok, ok ? '¡Excelente!' : `Correcta: <strong>${rightText}</strong>`);
 };
+// ============================================================================
+// ATAJO DE TECLADO: AVANZAR Y VERIFICAR CON LA TECLA ENTER
+// ============================================================================
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Enter') return;
+  const lessonModal = document.getElementById('lesson-modal');
+  if (!lessonModal || lessonModal.style.display === 'none') return;
+
+  const fbBtn = lessonModal.querySelector('#ex-fb button, #exercise-feedback button');
+  if (fbBtn) { e.preventDefault(); fbBtn.click(); return; }
+
+  const dictInput = document.getElementById('dict-in');
+  if (dictInput && document.activeElement === dictInput) {
+    e.preventDefault();
+    const dictBtn = document.getElementById('dict-btn');
+    if (dictBtn && !dictBtn.disabled) dictBtn.click();
+    return;
+  }
+
+  const nextBtn = lessonModal.querySelector('button.btn-primary, button.btn[onclick*="nextExerciseStep"], button.btn[onclick*="checkBuilder"]');
+  if (nextBtn) { e.preventDefault(); nextBtn.click(); }
+});
