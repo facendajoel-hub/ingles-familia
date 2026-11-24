@@ -1135,3 +1135,15 @@ window.startUnitLesson = function(unitNumber) {
   }
   _patchStartLesson(unitNumber);
 };
+// ============================================================================
+// PARCHE DE EMERGENCIA: CORRECCIÓN DE EX.ANS Y CLIC DIRECTO EN READING_Q
+// ============================================================================
+window.submitChoiceAnswer = function(sel, ans) {
+  const ex = currentSession.exercises[currentSession.index];
+  if (ex && ex.ans === undefined) ex.ans = ans;
+  const wrongFb = document.getElementById('exercise-feedback');
+  if (wrongFb && !document.getElementById('ex-fb')) wrongFb.id = 'ex-fb';
+  const ok = Number(sel) === Number(ans);
+  const rightText = ex && ex.options ? ex.options[ans] : '';
+  showFb(ok, ok ? '¡Excelente!' : `Correcta: <strong>${rightText}</strong>`);
+};
