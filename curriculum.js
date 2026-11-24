@@ -1,5 +1,17 @@
 window.UNIT_CONTENT_BANK = window.UNIT_CONTENT_BANK || {};
 window.UNIT_CONTENT_BANK['1'] = {
+  reading: {
+    title: 'Meeting a Neighbor in the Hallway',
+    lines: [
+      { speaker: 'Liam', en: 'Good morning! I do not think we have met yet. My name is Liam, and I just moved into apartment 4B yesterday. I am originally from Toronto, so everything in this neighborhood is still brand new to me. Nice to meet you!', es: '¡Buenos días! Creo que aún no nos conocemos. Me llamo Liam y me acabo de mudar al apartamento 4B ayer. Soy originario de Toronto, así que todo en este vecindario es completamente nuevo para mí. ¡Mucho gusto en conocerte!' },
+      { speaker: 'Sofia', en: 'Welcome to the building, Liam! I am Sofia, and I live right across the hall in 4A. It is a pleasure to meet you. If you ever need recommendations for good coffee shops, supermarkets, or bus routes around here, please feel free to ask me anytime.', es: '¡Bienvenido al edificio, Liam! Soy Sofia y vivo justo al otro lado del pasillo, en el 4A. Es un placer conocerte. Si alguna vez necesitas recomendaciones de buenas cafeterías, supermercados o rutas de autobús por aquí, por favor siéntete libre de preguntarme en cualquier momento.' }
+    ],
+    questions: [
+      { question: 'Why is everything in the neighborhood new to Liam?', options: ['He moved into apartment 4B yesterday from Toronto.', 'He works at a coffee shop across the hall.', 'He is visiting Sofia for the weekend.'], answer: 0 },
+      { question: 'Where does Sofia live?', options: ['In apartment 4B', 'Right across the hall in 4A', 'In Toronto'], answer: 1 },
+      { question: 'What does Sofia offer to recommend to Liam?', options: ['Coffee shops, supermarkets, and bus routes', 'Hotels and airports', 'Schools and hospitals'], answer: 0 }
+    ]
+  },
   chunks: [
     { chunk: 'Nice to meet you!', meaning: '¡Mucho gusto en conocerte!', example: 'Hi, I am Diojan. Nice to meet you!', options: ['¡Mucho gusto en conocerte!', '¿Dónde vives?', 'Nos vemos mañana'], answer: 0 },
     { chunk: 'Where are you from?', meaning: '¿De dónde eres?', example: 'Hello! Where are you from?', options: ['¿Cuántos años tienes?', '¿De dónde eres?', '¿Cómo te llamas?'], answer: 1 },
@@ -23,7 +35,7 @@ window.UNIT_CONTENT_BANK['1'] = {
   },
   builders: [
     { prompt: 'Armar saludo de presentación:', target: 'Hi my name is Angie', translation: 'Hola, mi nombre es Angie' },
-    { prompt: 'Preguntar el origen de alguien:', target: 'Where are you from', translation: '¿De dónde eres?' }
+    { prompt: 'Preguntar el origen de alguien:', target: 'Where are you from', translation: '¿De dónde eres?' },
     { prompt: 'Responder con amabilidad:', target: 'Nice to meet you and welcome', translation: 'Mucho gusto en conocerte y bienvenido' }
   ],
   cloze: [
