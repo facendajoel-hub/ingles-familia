@@ -946,3 +946,47 @@ renderCurrentExercise = function() {
     <button type="button" class="btn" style="width:100%;" onclick="currentSession.index++;renderCurrentExercise();">Continuar a los Ejercicios Prácticos →</button>
   </div>`;
 };
+// ============================================================================
+// PARCHE LECTURA EN CONTEXTO (PEGAR AL FINAL DE APP.JS - TROZO 1 DE 2)
+// ============================================================================
+const _origBuildSessionExercises = buildSessionExercises;
+buildSessionExercises = function(unitNumber) {
+  const data = getUnitData(unitNumber);
+  const readingSteps = [];
+  if (data.reading && data.reading.lines) {
+    readingSteps.push({ type: 'reading_text', unitNumber, ...data.reading });
+    (data.reading.questions || []).forEach(q => {
+      readingSteps.push({ type: 'reading_q', unitNumber, ...q });
+    });
+  }
+  return [...readingSteps, ..._origBuildSessionExercises(unitNumber)];
+};
+// ============================================================================
+// PARCHE LECTURA EN CONTEXTO (PEGAR AL FINAL DE APP.JS - TROZO 2 DE 2)
+// ============================================================================
+const _origRenderCurrentExercise = renderCurrentExercise;
+renderCurrentExercise = function() {
+  const modal = document.getElementById('lesson-modal');
+  const ex = currentSession && currentSession.exercises[currentSession.index];
+  if (!modal || !ex || (ex.type !== 'reading_text' && ex.type !== 'reading_q')) {
+    return _origRenderCurrentExercise();
+  }
+  const total = currentSession.exercises.length, idx = currentSession.index;
+  const progressPct = Math.round((idx / total) * 100);
+  const fullAudio = ex.type === 'reading_text' ? escapeQuote(ex.lines.map(l => l.en).join(' ')) : '';
+  const bodyHtml = ex.type === 'reading_text'
+    ? `<span style="font-size:0.8rem;color:#38bdf8;font-weight:700;">LECTURA EN CONTEXTO · ${ex.title}</span>
+       <div style="background:#0f172a;padding:16px;border-radius:12px;margin:12px 0;border:1px solid #334155;line-height:1.6;">
+         ${ex.lines.map(l => `<p style="margin:0 0 10px;"><strong style="color:#38bdf8;">${l.speaker}:</strong> ${l.en}</p>`).join('')}
+         <button onclick="speakText('${fullAudio}', 0.95)" class="btn-secondary" style="padding:6px 12px;font-size:0.85rem;">🔊 Escuchar Todo</button>
+         <button onclick="speakText('${fullAudio}', 0.45)" class="btn-secondary" style="padding:6px 12px;font-size:0.85rem;">🐢 Lento</button>
+       </div><button onclick="nextExerciseStep()" class="btn-primary" style="width:100%;">He leído el texto · Ir a las Preguntas →</button>`
+    : `<span style="font-size:0.8rem;color:#10b981;font-weight:700;">COMPRENSIÓN DE LECTURA</span>
+       <p style="font-weight:600;margin:12px 0;">${ex.question}</p>
+       <div style="display:flex;flex-direction:column;gap:10px;">${ex.options.map((opt, i) => `<button class="option-btn" onclick="submitChoiceAnswer(${i}, ${ex.answer})">${opt}</button>`).join('')}</div>`;
+  modal.innerHTML = `<div style="background:#1e293b;border:1px solid #334155;border-radius:16px;padding:24px;max-width:680px;width:100%;color:#f8fafc;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><strong>${currentSession.title}</strong><button onclick="closeLessonModal()" class="btn-secondary" style="padding:4px 10px;font-size:0.82rem;">✕ Salir</button></div>
+    <div style="background:#0f172a;height:8px;border-radius:999px;overflow:hidden;margin-bottom:6px;"><div style="background:#38bdf8;height:100%;width:${progressPct}%;"></div></div>
+    <div style="font-size:0.8rem;color:#94a3b8;margin-bottom:16px;text-align:right;">Ejercicio ${idx + 1} de ${total}</div>
+    <div>${bodyHtml}</div><div id="exercise-feedback" style="margin-top:16px;"></div></div>`;
+};
