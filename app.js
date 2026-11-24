@@ -1104,3 +1104,34 @@ window.nextExerciseStep = function() {
   currentSession.index += 1;
   renderCurrentExercise();
 };
+// ============================================================================
+// PARCHE FINAL: CLIC EN PREGUNTAS DE LECTURA Y COMPATIBILIDAD UNIDAD 1
+// ============================================================================
+window.submitChoiceAnswer = function(sel, ans) {
+  if (typeof window.submitChoice === 'function') window.submitChoice(sel, ans);
+};
+
+const _patchRenderReadingQ = renderCurrentExercise;
+renderCurrentExercise = function() {
+  _patchRenderReadingQ();
+  const wrongFb = document.getElementById('exercise-feedback');
+  if (wrongFb && !document.getElementById('ex-fb')) wrongFb.id = 'ex-fb';
+};
+
+const _patchStartLesson = window.startUnitLesson;
+window.startUnitLesson = function(unitNumber) {
+  const bank = window.UNIT_CONTENT_BANK && window.UNIT_CONTENT_BANK[String(unitNumber)];
+  if (bank) {
+    if (bank.dictation && !bank.dictations) {
+      bank.dictations = bank.dictation.map(d => ({ en: d.text || d.en, es: d.translation || d.es }));
+    }
+    if (bank.cloze) {
+      bank.cloze = bank.cloze.map(cl => {
+        if (cl.dialogue !== undefined && typeof cl.answer === 'number') return cl;
+        const idx = Array.isArray(cl.options) ? cl.options.indexOf(cl.answer) : 0;
+        return { dialogue: cl.sentence || cl.dialogue, options: cl.options, answer: idx >= 0 ? idx : 0 };
+      });
+    }
+  }
+  _patchStartLesson(unitNumber);
+};
