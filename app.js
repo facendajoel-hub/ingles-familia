@@ -1042,3 +1042,56 @@ renderCurrentExercise = function() {
     </div><button onclick="nextExerciseStep()" class="btn-primary" style="width:100%;">He leído el texto · Ir a las Preguntas →</button>
     <div id="exercise-feedback" style="margin-top:16px;"></div></div>`;
 };
+// ============================================================================
+// ARRANQUE DIRECTO UNIDAD 1 + 2 VOCES FEMENINAS (TROZO 1 DE 2)
+// ============================================================================
+function playDialogueSequence(lines, rate = 0.95) {
+  if (!('speechSynthesis' in window) || !lines || !lines.length) return;
+  window.speechSynthesis.cancel();
+  const voices = window.speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
+  const fem = voices.filter(v => /Natural|Neural|Google|Aria|Jenny|Zira|Samantha|Victoria|Karen|Moira/i.test(v.name) && !/David|Mark|Guy|Daniel|Alex/i.test(v.name));
+  const pool = fem.length ? fem : voices;
+  const voiceA = pool.at(0) || null;
+  const voiceB = pool.at(1) || voiceA;
+  const speakers = [...new Set(lines.map(l => l.speaker))];
+  lines.forEach((line, idx) => {
+    const u = new SpeechSynthesisUtterance(line.en);
+    const isSecond = speakers.indexOf(line.speaker) === 1;
+    if (voiceA) u.voice = isSecond ? voiceB : voiceA;
+    u.lang = 'en-US';
+    u.rate = rate;
+    u.pitch = isSecond ? 1.0 : 1.16;
+    setTimeout(() => window.speechSynthesis.speak(u), idx === 0 ? 60 : 0);
+  });
+}
+// ============================================================================
+// ARRANQUE DIRECTO UNIDAD 1 + LECTURA EN CONTEXTO (TROZO 2 DE 2)
+// ============================================================================
+window.startUnitLesson = function(unitNumber) {
+  const data = (window.UNIT_CONTENT_BANK && window.UNIT_CONTENT_BANK[String(unitNumber)]) || getUnitData(unitNumber);
+  const steps = [];
+  if (data.reading && data.reading.lines) {
+    steps.push({ type: 'reading_text', unitNumber, ...data.reading });
+    (data.reading.questions || []).forEach(q => steps.push({ type: 'reading_q', unitNumber, ...q }));
+  }
+  (data.chunks || []).forEach(c => steps.push({ type: 'chunk', unitNumber, ...c }));
+  (data.builders || []).forEach(b => steps.push({ type: 'builder', unitNumber, ...b }));
+  (data.cloze || []).forEach(cl => steps.push({ type: 'cloze', unitNumber, ...cl }));
+  (data.dictations || []).forEach(d => steps.push({ type: 'dictation', unitNumber, ...d }));
+  (data.pronunciation || []).forEach(p => steps.push({ type: 'speaking', unitNumber, stepLabel: 'Pilar 3 · Pronunciación', target: p.en, translation: p.es }));
+  currentSession = { mode: 'unit', unitNumber, title: `Unidad ${unitNumber}: ${UNIT_TITLES[unitNumber - 1] || ''}`, exercises: steps, index: 0, correctCount: 0, builderSelected: [] };
+  openLessonModal();
+  renderCurrentExercise();
+};
+
+const _baseRenderExercise = renderCurrentExercise;
+renderCurrentExercise = function() {
+  const modal = document.getElementById('lesson-modal');
+  const ex = currentSession && currentSession.exercises[currentSession.index];
+  if (!modal || !ex || (ex.type !== 'reading_text' && ex.type !== 'reading_q')) return _baseRenderExercise();
+  const total = currentSession.exercises.length, idx = currentSession.index, pct = Math.round((idx / total) * 100);
+  const body = ex.type === 'reading_text'
+    ? `<span style="font-size:0.8rem;color:#38bdf8;font-weight:700;">LECTURA EN CONTEXTO · ${ex.title}</span><div style="background:#0f172a;padding:16px;border-radius:12px;margin:12px 0;border:1px solid #334155;line-height:1.6;">${ex.lines.map(l => `<p style="margin:0 0 10px;"><strong style="color:${l.speaker === 'Liam' ? '#38bdf8' : '#f472b6'};">${l.speaker}:</strong> ${l.en}</p>`).join('')}<button onclick="playDialogueSequence(currentSession.exercises[currentSession.index].lines, 0.95)" class="btn-secondary" style="padding:6px 12px;font-size:0.85rem;">🔊 Escuchar (2 Voces)</button> <button onclick="playDialogueSequence(currentSession.exercises[currentSession.index].lines, 0.45)" class="btn-secondary" style="padding:6px 12px;font-size:0.85rem;">🐢 Lento</button></div><button onclick="nextExerciseStep()" class="btn-primary" style="width:100%;">Ir a las Preguntas de Lectura →</button>`
+    : `<span style="font-size:0.8rem;color:#10b981;font-weight:700;">COMPRENSIÓN DE LECTURA</span><p style="font-weight:600;margin:12px 0;">${ex.question}</p><div style="display:flex;flex-direction:column;gap:10px;">${ex.options.map((opt, i) => `<button class="option-btn" onclick="submitChoiceAnswer(${i}, ${ex.answer})">${opt}</button>`).join('')}</div>`;
+  modal.innerHTML = `<div style="background:#1e293b;border:1px solid #334155;border-radius:16px;padding:24px;max-width:680px;width:100%;color:#f8fafc;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><strong>${currentSession.title}</strong><button onclick="closeLessonModal()" class="btn-secondary" style="padding:4px 10px;font-size:0.82rem;">✕ Salir</button></div><div style="background:#0f172a;height:8px;border-radius:999px;margin-bottom:6px;"><div style="background:#38bdf8;height:100%;width:${pct}%;"></div></div><div style="font-size:0.8rem;color:#94a3b8;margin-bottom:16px;text-align:right;">Ejercicio ${idx + 1} de ${total}</div><div>${body}</div><div id="exercise-feedback" style="margin-top:16px;"></div></div>`;
+};
