@@ -89,3 +89,46 @@ window.UNIT_CONTENT_BANK['2'] = {
     { en: 'Thirteen, thirty, fourteen, forty, fifteen, fifty.', es: 'Trece, treinta, catorce, cuarenta, quince, cincuenta.' }
   ]
 };
+window.UNIT_CONTENT_BANK['2'] = {
+  grammarTip: {
+    title: "Gramática Clave: Edad con 'To Be' y Números",
+    rules: [
+      "Usa <strong>am / is / are</strong> para decir la edad (nunca <em>have</em>): <em>I am 35 years old. / He is 13.</em>",
+      "Para pedir teléfonos usa <strong>What is your...?</strong> y lee los números dígito por dígito (el 0 suena como <em>'oh'</em>).",
+      "Con 2 o más elementos agrega <strong>-s</strong> al final: <em>one phone, two phones.</em>"
+    ]
+  },
+  reading: {
+    title: "Registering at the Gym (Registro en el Gimnasio)",
+    lines: [
+      { speaker: "Receptionist", en: "Good morning! Welcome to Power Gym. What is your full name, please?", es: "¡Buenos días! Bienvenido a Power Gym. ¿Cuál es su nombre completo, por favor?" },
+      { speaker: "Diojan", en: "Hi! My name is Diojan. I am here to register for a family membership.", es: "¡Hola! Me llamo Diojan. Estoy aquí para inscribirme en una membresía familiar." },
+      { speaker: "Receptionist", en: "Great! How old are you, and what is your phone number?", es: "¡Genial! ¿Cuántos años tiene y cuál es su número de teléfono?" },
+      { speaker: "Diojan", en: "I am thirty-eight years old, and my phone number is eight-oh-nine, five-five-five, zero-one-four-two.", es: "Tengo treinta y ocho años y mi número de teléfono es 809-555-0142." }
+    ],
+    questions: [
+      { question: "Why is Diojan at Power Gym?", options: ["To register for a family membership", "To buy protein powder", "To work as a receptionist"], answer: 0 },
+      { question: "How old is Diojan in the dialogue?", options: ["35 years old", "38 years old", "28 years old"], answer: 1 }
+    ]
+  },
+  chunks: [
+    { chunk: "How old are you?", meaning: "¿Cuántos años tienes?", example: "Hi Engel! How old are you now?", options: ["¿Cuántos años tienes?", "¿Cómo estás?", "¿Qué hora es?"], answer: 0 },
+    { chunk: "What is your phone number?", meaning: "¿Cuál es tu número de teléfono?", example: "Excuse me, what is your phone number?", options: ["¿Dónde vives?", "¿Cuál es tu número de teléfono?", "¿Cuál es tu correo?"], answer: 1 }
+  ],
+  builders: [
+    { prompt: "Decir tu edad correctamente con To Be:", target: "I am thirty eight years old", translation: "Tengo treinta y ocho años" },
+    { prompt: "Preguntar la edad de un amigo:", target: "How old is your brother today", translation: "¿Cuántos años tiene tu hermano hoy?" }
+  ],
+  cloze: [
+    { dialogue: "A: How old is your son?<br>B: He _____ thirteen years old.", options: ["is", "has", "are"], answer: 0 },
+    { dialogue: "A: What _____ your phone number?<br>B: It is 809-555-0199.", options: ["are", "is", "am"], answer: 1 }
+  ],
+  dictations: [
+    { en: "My son is thirteen years old and he is very tall.", es: "Mi hijo tiene trece años y es muy alto." },
+    { en: "What is your phone number? My number is eight-oh-nine, five-five-five, zero-one-four-two.", es: "¿Cuál es tu número de teléfono? Mi número es 809-555-0142." }
+  ],
+  pronunciation: [
+    { en: "How old are you? I am thirty-eight years old.", es: "¿Cuántos años tienes? Tengo treinta y ocho años." },
+    { en: "What is your phone number? It is eight-oh-nine, five-five-five, zero-one-four-two.", es: "¿Cuál es tu número de teléfono? Es 809-555-0142." }
+  ]
+};
