@@ -1195,3 +1195,13 @@ function getUnitData(unitNumber) {
     pronunciation: [{ en: 'Daily practice helps me speak English naturally.', es: 'La práctica diaria me ayuda a hablar inglés con naturalidad.' }]
   };
 }
+// ============================================================================
+// PARCHE DE ARRANQUE LIMPIO
+// ============================================================================
+function migrateLegacyProgress() {}
+
+(function bootAppNow() {
+  loadFromLocal();
+  renderApp();
+  syncFromCloud();
+})();
