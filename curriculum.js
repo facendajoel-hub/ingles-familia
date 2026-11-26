@@ -1,45 +1,69 @@
 window.UNIT_CONTENT_BANK = window.UNIT_CONTENT_BANK || {};
+// ============================================================================
+// MOTOR PEDAGÓGICO DE 45 MINUTOS (7 FASES) - BLOQUE 2 DE 2
+// ============================================================================
+const _m45PrevRender = renderCurrentExercise;
+renderCurrentExercise = function() {
+  const modal = document.getElementById('lesson-modal');
+  const ex = currentSession && currentSession.exercises[currentSession.index];
+  if (!modal || !ex) return _m45PrevRender();
 
-window.UNIT_CONTENT_BANK['1'] = {
-  reading: {
-    title: 'Meeting a Neighbor in the Hallway',
-    lines: [
-      { speaker: 'Liam', en: 'Good morning! I do not think we have met yet. My name is Liam, and I just moved into apartment 4B yesterday. I am originally from Toronto, so everything in this neighborhood is still brand new to me. Nice to meet you!', es: '¡Buenos días! Creo que aún no nos conocemos. Me llamo Liam y me acabo de mudar al apartamento 4B ayer. Soy originario de Toronto, así que todo en este vecindario es completamente nuevo para mí. ¡Mucho gusto en conocerte!' },
-      { speaker: 'Sofia', en: 'Welcome to the building, Liam! I am Sofia, and I live right across the hall in 4A. It is a pleasure to meet you. If you ever need recommendations for good coffee shops, supermarkets, or bus routes around here, please feel free to ask me anytime.', es: '¡Bienvenido al edificio, Liam! Soy Sofia y vivo justo al otro lado del pasillo, en el 4A. Es un placer conocerte. Si alguna vez necesitas recomendaciones de buenas cafeterías, supermercados o rutas de autobús por aquí, por favor siéntete libre de preguntarme en cualquier momento.' }
-    ],
-    questions: [
-      { question: 'Why is everything in the neighborhood new to Liam?', options: ['He moved into apartment 4B yesterday from Toronto.', 'He works at a coffee shop across the hall.', 'He is visiting Sofia for the weekend.'], answer: 0 },
-      { question: 'Where does Sofia live?', options: ['In apartment 4B', 'Right across the hall in 4A', 'In Toronto'], answer: 1 },
-      { question: 'What does Sofia offer to recommend to Liam?', options: ['Coffee shops, supermarkets, and bus routes', 'Hotels and airports', 'Schools and hospitals'], answer: 0 }
-    ]
-  },
+  if (ex.type === 'video_step') {
+    _m45PrevRender();
+    const subEn = document.getElementById('scene-sub-en');
+    if (subEn && !document.getElementById('scene-sub-box')) {
+      subEn.parentElement.insertAdjacentHTML('beforeend', `<button onclick="toggleSceneSubtitles()" class="btn-secondary" style="margin-left:8px;">👁️ Ver/Ocultar Texto</button>`);
+      subEn.id = 'scene-sub-box';
+      subEn.style.filter = 'blur(6px)';
+    }
+    return;
+  }
+
+  if (ex.type !== 'error_spot' && ex.type !== 'free_speaking') return _m45PrevRender();
+  const total = currentSession.exercises.length, idx = currentSession.index, pct = Math.round((idx / total) * 100);
+  const body = ex.type === 'error_spot'
+    ? `<span style="font-size:0.8rem;color:#f87171;font-weight:700;">🔍 DETECTA EL ERROR (TRAMPA DEL ESPAÑOL)</span><div style="background:#0f172a;padding:14px;border-radius:10px;margin:12px 0;border:1px solid #ef4444;font-size:1.1rem;">❌ "${ex.wrongSentence}"</div><p style="font-weight:600;">Selecciona la forma natural correcta en inglés:</p><div style="display:flex;flex-direction:column;gap:10px;">${ex.options.map((o, i) => `<button class="option-btn" onclick="submitChoiceAnswer(${i}, ${ex.answer})">${o}</button>`).join('')}</div>`
+    : `<span style="font-size:0.8rem;color:#34d399;font-weight:700;">🎙️ PRODUCCIÓN LIBRE (RESPONDE CON TUS PALABRAS)</span><div style="background:#0f172a;padding:16px;border-radius:12px;margin:12px 0;border:1px solid #334155;"><p style="font-size:1.1rem;font-weight:700;margin:0 0 6px;">${ex.promptEn}</p><small style="color:#94a3b8;">${ex.promptEs} (Ej: "${ex.sample}")</small></div><button onclick="startSpeechValidation('${escapeQuote(ex.sample)}')" class="btn-primary" style="width:100%;">🎙️ Responder en Voz Alta</button><div id="speech-transcript" style="margin-top:8px;text-align:center;color:#94a3b8;"></div>`;
+  modal.innerHTML = `<div style="background:#1e293b;border:1px solid #334155;border-radius:16px;padding:24px;max-width:680px;width:100%;color:#f8fafc;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><strong>${currentSession.title}</strong><button onclick="closeLessonModal()" class="btn-secondary" style="padding:4px 10px;font-size:0.82rem;">✕ Salir</button></div><div style="background:#0f172a;height:8px;border-radius:999px;margin-bottom:14px;"><div style="background:#38bdf8;height:100%;width:${pct}%;"></div></div><div>${body}</div><div id="exercise-feedback" style="margin-top:16px;"></div></div>`;
+};
   chunks: [
-    { chunk: 'Nice to meet you!', meaning: '¡Mucho gusto en conocerte!', example: 'Hi, I am Diojan. Nice to meet you!', options: ['¡Mucho gusto en conocerte!', '¿Dónde vives?', 'Nos vemos mañana'], answer: 0 },
-    { chunk: 'Where are you from?', meaning: '¿De dónde eres?', example: 'Hello! Where are you from?', options: ['¿Cuántos años tienes?', '¿De dónde eres?', '¿Cómo te llamas?'], answer: 1 },
-    { chunk: 'How is it going?', meaning: '¿Cómo te va? / ¿Qué tal todo?', example: 'Hey Angie! How is it going today?', options: ['¿A dónde vas?', '¿Cómo te va? / ¿Qué tal todo?', '¿Qué hora es?'], answer: 1 },
-    { chunk: 'I am doing great, thanks!', meaning: 'Me va genial, ¡gracias!', example: 'I am doing great, thanks! And you?', options: ['Estoy muy cansado.', 'Me va genial, ¡gracias!', 'No entiendo nada.'], answer: 1 }
+    { chunk: "I do not think we have met yet", meaning: "Creo que aún no nos conocemos", example: "Good morning! I do not think we have met yet.", options: ["Creo que aún no nos conocemos", "Ya nos conocemos de antes", "No quiero hablar contigo"], answer: 0 },
+    { chunk: "Brand new to me", meaning: "Completamente nuevo para mí", example: "Everything in this neighborhood is still brand new to me.", options: ["Muy antiguo para mí", "Completamente nuevo para mí", "Demasiado caro para mí"], answer: 1 },
+    { chunk: "Right across the hall", meaning: "Justo al otro lado del pasillo", example: "I live right across the hall in apartment 4A.", options: ["Al final de la calle", "Justo al otro lado del pasillo", "En el último piso"], answer: 1 },
+    { chunk: "Please feel free to ask me anytime", meaning: "Por favor, siéntete libre de preguntarme en cualquier momento", example: "If you need good coffee shops, please feel free to ask me anytime.", options: ["Por favor, siéntete libre de preguntarme en cualquier momento", "No me molestes por favor", "Pregúntale al guardia"], answer: 0 }
+  ],
+  errorSpot: [
+    { wrongSentence: "Hello! Am Diojan and am from Santo Domingo.", options: ["Hello! I am Diojan and I am from Santo Domingo.", "Hello! Is Diojan and is from Santo Domingo.", "Hello! Are Diojan and I from Santo Domingo."], answer: 0 },
+    { wrongSentence: "Where you are from?", options: ["Where are you from?", "Where is you from?", "From where you are?"], answer: 0 },
+    { wrongSentence: "She are my neighbor across the hall.", options: ["She is my neighbor across the hall.", "She am my neighbor across the hall.", "She be my neighbor across the hall."], answer: 0 }
   ],
   builders: [
-    { prompt: 'Armar saludo de presentación:', target: 'Hi my name is Angie', translation: 'Hola, mi nombre es Angie' },
-    { prompt: 'Preguntar el origen de alguien:', target: 'Where are you from', translation: '¿De dónde eres?' },
-    { prompt: 'Responder con amabilidad:', target: 'Nice to meet you and welcome', translation: 'Mucho gusto en conocerte y bienvenido' }
+    { prompt: "Romper el hielo con alguien nuevo:", target: "I do not think we have met yet", translation: "Creo que aún no nos conocemos" },
+    { prompt: "Explicar de dónde vienes:", target: "I am originally from Toronto", translation: "Soy originario de Toronto" },
+    { prompt: "Ofrecer ayuda con amabilidad:", target: "Please feel free to ask me anytime", translation: "Por favor siéntete libre de preguntarme en cualquier momento" },
+    { prompt: "Dar la bienvenida al edificio:", target: "It is a pleasure to meet you", translation: "Es un placer conocerte" }
   ],
   cloze: [
-    { dialogue: 'A: Hello! My name is Mark.<br>B: Hi Mark! _____, I am Sarah.', options: ['Nice to meet you', 'See you yesterday', 'How old is it'], answer: 0 },
-    { dialogue: 'A: Are you from Spain?<br>B: No, _____ from the Dominican Republic.', options: ['he are', 'I am', 'they is'], answer: 1 },
-    { dialogue: 'A: Hey Engel! How is it going?<br>B: _____, thanks! How about you?', options: ['I am doing great', 'My name is Engel', 'Good night'], answer: 0 }
+    { dialogue: "Liam: Good morning! I just _____ into apartment 4B yesterday.<br>Sofia: Welcome to the building!", options: ["moved", "move", "moving"], answer: 0 },
+    { dialogue: "Sofia: I live right _____ the hall in apartment 4A.", options: ["across", "under", "between"], answer: 0 },
+    { dialogue: "Liam: Everything in this neighborhood is still _____ new to me.", options: ["brand", "very", "much"], answer: 0 },
+    { dialogue: "Sofia: If you need bus routes, please _____ free to ask me anytime.", options: ["feel", "feeling", "felt"], answer: 0 }
   ],
   dictations: [
-    { en: 'Good morning! My name is Diojan and I am from Santo Domingo.', es: '¡Buenos días! Mi nombre es Diojan y soy de Santo Domingo.' },
-    { en: 'Nice to meet you, Alex! Welcome to our neighborhood.', es: '¡Mucho gusto en conocerte, Alex! Bienvenido a nuestro vecindario.' },
-    { en: 'How is it going today? I am doing great, thank you so much!', es: '¿Cómo te va hoy? Me va genial, ¡muchas gracias!' }
+    { en: "Good morning! My name is Liam.", es: "¡Buenos días! Mi nombre es Liam." },
+    { en: "I just moved into apartment 4B yesterday.", es: "Me acabo de mudar al apartamento 4B ayer." },
+    { en: "Everything in this neighborhood is still brand new to me.", es: "Todo en este vecindario es completamente nuevo para mí." },
+    { en: "Please feel free to ask me anytime.", es: "Por favor, siéntete libre de preguntarme en cualquier momento." }
   ],
   pronunciation: [
-    { en: 'Nice to meet you!', es: '¡Mucho gusto en conocerte!' },
-    { en: 'Where are you from?', es: '¿De dónde eres?' },
-    { en: 'How is it going today?', es: '¿Cómo te va hoy?' },
-    { en: 'Good morning! My name is Alex and I am from Canada.', es: '¡Buenos días! Mi nombre es Alex y soy de Canadá.' },
-    { en: 'I am doing great, thank you so much! Welcome to the neighborhood.', es: 'Me va genial, ¡muchas gracias! Bienvenido al vecindario.' }
+    { en: "I do not think we have met yet.", es: "Creo que aún no nos conocemos." },
+    { en: "I am originally from Toronto.", es: "Soy originario de Toronto." },
+    { en: "It is a pleasure to meet you.", es: "Es un placer conocerte." },
+    { en: "Please feel free to ask me anytime.", es: "Por favor, siéntete libre de preguntarme en cualquier momento." }
+  ],
+  freeSpeaking: [
+    { promptEn: "Introduce yourself! Say your name and where you are from.", promptEs: "Preséntate diciendo tu nombre y de dónde eres", sample: "Hello! My name is Diojan and I am from Santo Domingo." },
+    { promptEn: "Welcome a new neighbor to your building or neighborhood.", promptEs: "Dale la bienvenida a un nuevo vecino", sample: "Welcome to the neighborhood! Please feel free to ask me anytime." }
   ]
 };
 window.UNIT_CONTENT_BANK['2'] = {
