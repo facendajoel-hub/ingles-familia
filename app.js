@@ -782,3 +782,53 @@ renderCurrentExercise = function() {
       <button onclick="playAnimatedScene(0.5)" class="btn-secondary">🐢 Modo Lento</button>
     </div><button onclick="nextExerciseStep()" class="btn-primary" style="width:100%;">Continuar / Finalizar Unidad →</button></div>`;
 };
+// ============================================================================
+// MOTOR PEDAGÓGICO DE 45 MINUTOS (7 FASES) - BLOQUE 1 DE 2
+// ============================================================================
+window.toggleSceneSubtitles = function() {
+  const box = document.getElementById('scene-sub-box');
+  if (!box) return;
+  const hidden = box.style.filter === 'blur(6px)';
+  box.style.filter = hidden ? 'none' : 'blur(6px)';
+};
+
+const _m45PrevStart = window.startUnitLesson;
+window.startUnitLesson = function(unitNumber) {
+  _m45PrevStart(unitNumber);
+  const data = (window.UNIT_CONTENT_BANK && window.UNIT_CONTENT_BANK[String(unitNumber)]) || {};
+  if (!currentSession) return;
+  const extra = [];
+  (data.errorSpot || []).forEach(e => extra.push({ type: 'error_spot', unitNumber, ...e }));
+  (data.freeSpeaking || []).forEach(f => extra.push({ type: 'free_speaking', unitNumber, ...f }));
+  if (extra.length) {
+    currentSession.exercises.splice(Math.max(1, currentSession.exercises.length - 1), 0, ...extra);
+    renderCurrentExercise();
+  }
+};
+// ============================================================================
+// MOTOR PEDAGÓGICO DE 45 MINUTOS (7 FASES) - BLOQUE 2 DE 2
+// ============================================================================
+const _m45PrevRender = renderCurrentExercise;
+renderCurrentExercise = function() {
+  const modal = document.getElementById('lesson-modal');
+  const ex = currentSession && currentSession.exercises[currentSession.index];
+  if (!modal || !ex) return _m45PrevRender();
+
+  if (ex.type === 'video_step') {
+    _m45PrevRender();
+    const subEn = document.getElementById('scene-sub-en');
+    if (subEn && !document.getElementById('scene-sub-box')) {
+      subEn.parentElement.insertAdjacentHTML('beforeend', `<button onclick="toggleSceneSubtitles()" class="btn-secondary" style="margin-left:8px;">👁️ Ver/Ocultar Texto</button>`);
+      subEn.id = 'scene-sub-box';
+      subEn.style.filter = 'blur(6px)';
+    }
+    return;
+  }
+
+  if (ex.type !== 'error_spot' && ex.type !== 'free_speaking') return _m45PrevRender();
+  const total = currentSession.exercises.length, idx = currentSession.index, pct = Math.round((idx / total) * 100);
+  const body = ex.type === 'error_spot'
+    ? `<span style="font-size:0.8rem;color:#f87171;font-weight:700;">🔍 DETECTA EL ERROR (TRAMPA DEL ESPAÑOL)</span><div style="background:#0f172a;padding:14px;border-radius:10px;margin:12px 0;border:1px solid #ef4444;font-size:1.1rem;">❌ "${ex.wrongSentence}"</div><p style="font-weight:600;">Selecciona la forma natural correcta en inglés:</p><div style="display:flex;flex-direction:column;gap:10px;">${ex.options.map((o, i) => `<button class="option-btn" onclick="submitChoiceAnswer(${i}, ${ex.answer})">${o}</button>`).join('')}</div>`
+    : `<span style="font-size:0.8rem;color:#34d399;font-weight:700;">🎙️ PRODUCCIÓN LIBRE (RESPONDE CON TUS PALABRAS)</span><div style="background:#0f172a;padding:16px;border-radius:12px;margin:12px 0;border:1px solid #334155;"><p style="font-size:1.1rem;font-weight:700;margin:0 0 6px;">${ex.promptEn}</p><small style="color:#94a3b8;">${ex.promptEs} (Ej: "${ex.sample}")</small></div><button onclick="startSpeechValidation('${escapeQuote(ex.sample)}')" class="btn-primary" style="width:100%;">🎙️ Responder en Voz Alta</button><div id="speech-transcript" style="margin-top:8px;text-align:center;color:#94a3b8;"></div>`;
+  modal.innerHTML = `<div style="background:#1e293b;border:1px solid #334155;border-radius:16px;padding:24px;max-width:680px;width:100%;color:#f8fafc;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><strong>${currentSession.title}</strong><button onclick="closeLessonModal()" class="btn-secondary" style="padding:4px 10px;font-size:0.82rem;">✕ Salir</button></div><div style="background:#0f172a;height:8px;border-radius:999px;margin-bottom:14px;"><div style="background:#38bdf8;height:100%;width:${pct}%;"></div></div><div>${body}</div><div id="exercise-feedback" style="margin-top:16px;"></div></div>`;
+};
