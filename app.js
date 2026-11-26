@@ -1,7 +1,7 @@
 // ============================================================================
 // FAMILY ENGLISH PRO - APP.JS UNIFICADO (TROZO 1 DE 5)
 // ============================================================================
-const FIREBASE_DB_URL = 'https://firebaseio.com';
+const FIREBASE_DB_URL = 'https://' + 'ingles-familia-default-rtdb' + '://' + 'family_english.json';
 const STORAGE_KEY = 'family_english_pro_v3';
 const LEVELS = ['Pre-A1', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 const DAILY_GOAL_EXERCISES = 25;
@@ -486,11 +486,19 @@ function renderCurrentExercise() {
   } else if (ex.type === 'listening') {
     html = `<span class="pill">COMPRENSIÓN AUDITIVA</span><div style="margin:10px 0;"><button class="btn" onclick="speakText('${escapeQuote(ex.audio)}',0.95)">🔊 Audio</button> <button class="btn btn-outline" onclick="speakText('${escapeQuote(ex.audio)}',0.45)">🐢 Lento</button></div>
       <p><strong>${ex.question}</strong></p>${ex.options.map((o, i) => `<button class="option-btn" onclick="submitChoice(${i},${ex.answer})">${o}</button>`).join('')}`;
-  } else if (ex.type === 'speaking') {
+    } else if (ex.type === 'speaking') {
     html = `<span class="pill">${ex.stepLabel || 'SPEAKING'}</span><h3>"${ex.target}"</h3>${ex.translation ? `<p style="color:var(--muted);font-size:0.9rem;">🇪🇸 ${ex.translation}</p>` : ''}
       <div style="margin-bottom:12px;"><button class="btn btn-outline" onclick="speakText('${escapeQuote(ex.target)}',0.95)">🔊 Normal</button> <button class="btn btn-outline" onclick="speakText('${escapeQuote(ex.target)}',0.45)">🐢 Lento</button></div>
----
+      <button class="btn" style="width:100%;" onclick="startSpeech('${escapeQuote(ex.target)}')">🎙️ Hablar</button><div id="sp-txt" style="margin-top:8px;color:var(--muted);text-align:center;"></div>`;
+  }
 
+  m.innerHTML = `<div class="card" style="max-width:660px;width:100%;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><strong>${currentSession.title}</strong><button class="btn btn-outline" style="padding:4px 10px;" onclick="closeLessonModal()">✕</button></div>
+    <div style="background:#0f172a;height:8px;border-radius:99px;margin-bottom:8px;"><div style="background:var(--accent);height:100%;width:${pct}%;border-radius:99px;"></div></div>
+    <small style="color:var(--muted);display:block;text-align:right;margin-bottom:12px;">Ejercicio ${idx + 1} de ${total}</small>${html}<div id="ex-fb" style="margin-top:14px;"></div></div>`;
+
+  const autoText = ex.type === 'chunk' ? (ex.example || ex.chunk) : ex.type === 'speaking' ? ex.target : ex.type === 'dictation' ? ex.en : ex.type === 'listening' ? ex.audio : null;
+  if (autoText) speakText(autoText, 0.95);
+}
 ### 🧩 BLOQUE 5B (Calificación, Constructor Drag & Drop y Arranque Final)
 
 ```javascript
@@ -605,3 +613,4 @@ document.addEventListener('keydown', function(e) {
   const nextBtn = lessonModal.querySelector('button.btn[onclick*="nextExerciseStep"], button.btn[onclick*="checkBuilder"]');
   if (nextBtn) { e.preventDefault(); nextBtn.click(); }
 });
+window.addEventListener('DOMContentLoaded', () => { loadFromLocal(); renderApp(); syncFromCloud(); });
