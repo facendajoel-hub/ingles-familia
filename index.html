@@ -102,6 +102,11 @@
   <script src="unit_1.js"></script>
   <!-- Motor principal de la aplicación -->
   <script src="app.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+</script>
 </body>
 </html>
   <script src="curriculum.js"></script>
