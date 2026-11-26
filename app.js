@@ -673,3 +673,40 @@ window.checkDictationAnswer = function() {
     <div>🇬🇧 <strong>Revisión:</strong> ${diffHtml}</div>
     <div style="margin-top:4px;color:#fde68a;">🇪🇸 <strong>Traducción:</strong> "${ex.es}"</div>`);
 };
+// ============================================================================
+// PARCHE: ACTIVAR PASO DE VIDEO EN TODAS LAS UNIDADES (1 A 84)
+// ============================================================================
+const _videoPrevStart = window.startUnitLesson;
+window.startUnitLesson = function(unitNumber) {
+  _videoPrevStart(unitNumber);
+  const data = (window.UNIT_CONTENT_BANK && window.UNIT_CONTENT_BANK[String(unitNumber)]) || {};
+  const title = UNIT_TITLES[unitNumber - 1] || ('Unit ' + unitNumber);
+  const vid = data.video || {
+    title: 'Inmersión Real: ' + title,
+    query: 'English conversation ' + title + ' practice',
+    tip: 'Escucha el diálogo real durante 2 o 3 minutos prestando atención a la entonación sin traducir palabra por palabra.'
+  };
+  if (currentSession) {
+    currentSession.exercises.push({ type: 'video_step', unitNumber, ...vid });
+  }
+};
+
+const _videoPrevRender = renderCurrentExercise;
+renderCurrentExercise = function() {
+  const modal = document.getElementById('lesson-modal');
+  const ex = currentSession && currentSession.exercises[currentSession.index];
+  if (!modal || !ex || ex.type !== 'video_step') return _videoPrevRender();
+  const total = currentSession.exercises.length, idx = currentSession.index, pct = Math.round((idx / total) * 100);
+  const ytUrl = 'https://youtube.com' + encodeURIComponent(ex.query);
+  modal.innerHTML = `<div style="background:#1e293b;border:1px solid #334155;border-radius:16px;padding:24px;max-width:680px;width:100%;color:#f8fafc;">
+    <div style="display:flex;justify-content:space-between;margin-bottom:10px;"><strong>${currentSession.title}</strong><button onclick="closeLessonModal()" class="btn-secondary" style="padding:4px 10px;font-size:0.82rem;">✕ Salir</button></div>
+    <div style="background:#0f172a;height:8px;border-radius:999px;margin-bottom:6px;"><div style="background:#38bdf8;height:100%;width:${pct}%;"></div></div>
+    <div style="font-size:0.8rem;color:#94a3b8;margin-bottom:16px;text-align:right;">Paso ${idx + 1} de ${total}</div>
+    <span style="font-size:0.8rem;color:#ef4444;font-weight:700;">🎥 INMERSIÓN EN VIDEO REAL</span>
+    <div style="background:#0f172a;padding:18px;border-radius:12px;margin:12px 0;border:1px solid #334155;">
+      <h3 style="margin:0 0 8px;">${ex.title}</h3>
+      <p style="color:#94a3b8;font-size:0.92rem;line-height:1.5;margin-bottom:16px;">${ex.tip}</p>
+      <a href="${ytUrl}" target="_blank" rel="noopener noreferrer" class="btn-primary" style="display:inline-block;text-decoration:none;background:#ef4444;">▶ Abrir Video en YouTube ↗</a>
+    </div>
+    <button onclick="nextExerciseStep()" class="btn-primary" style="width:100%;">Ya vi el video · Finalizar Unidad →</button></div>`;
+};
