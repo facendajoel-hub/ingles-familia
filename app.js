@@ -1,7 +1,7 @@
 // ============================================================================
 // FAMILY ENGLISH PRO - APP.JS (BLOQUE 1 DE 4)
 // ============================================================================
-var FIREBASE_DB_URL = 'https://firebaseio.com';
+var FIREBASE_DB_URL = 'https://' + '://firebaseio.com';
 const STORAGE_KEY = 'family_english_pro_v3';
 const LEVELS = ['Pre-A1', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 const DAILY_GOAL_EXERCISES = 25;
