@@ -1,7 +1,7 @@
 // ============================================================================
 // FAMILY ENGLISH PRO - APP.JS UNIFICADO (TROZO 1 DE 5)
 // ============================================================================
-const FIREBASE_DB_URL = 'https://' + 'ingles-familia-default-rtdb' + '.firebaseio.' + 'com/family_english.json';
+var FIREBASE_DB_URL = 'https://' + 'ingles-familia-default-rtdb' + '.firebaseio.' + 'com/family_english.json';
 const STORAGE_KEY = 'family_english_pro_v3';
 const LEVELS = ['Pre-A1', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 const DAILY_GOAL_EXERCISES = 25;
