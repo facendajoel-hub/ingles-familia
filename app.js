@@ -639,3 +639,37 @@ renderCurrentExercise = function() {
     <ul style="background:#0f172a;padding:18px 20px 18px 34px;border-radius:12px;margin:12px 0;border:1px solid #334155;line-height:1.7;">${ex.rules.map(r => `<li style="margin-bottom:8px;">${r}</li>`).join('')}</ul>
     <button onclick="nextExerciseStep()" class="btn-primary" style="width:100%;">Entendido · Ir a la Lectura →</button></div>`;
 };
+// ============================================================================
+// PARCHE: DICTADO FLEXIBLE (80% ACIERTO + NÚMEROS/CONTRACCIONES + DETALLE)
+// ============================================================================
+function cleanDictation(str) {
+  const nums = { '0':'zero','1':'one','2':'two','3':'three','4':'four','5':'five','6':'six','7':'seven','8':'eight','9':'nine','10':'ten','13':'thirteen','38':'thirty eight' };
+  let s = String(str).toLowerCase().replace(/[-–]/g, ' ').replace(/[.,!?;:'"¿¡]/g, '')
+    .replace(/\bi'm\b/g, 'i am').replace(/\bit's\b/g, 'it is').replace(/\bdon't\b/g, 'do not').replace(/\s+/g, ' ').trim();
+  Object.keys(nums).forEach(k => { s = s.replace(new RegExp('\\b' + k + '\\b', 'g'), nums[k]); });
+  return s;
+}
+
+window.checkDictationAnswer = function() {
+  const ex = currentSession.exercises[currentSession.index];
+  const input = document.getElementById('dictation-input') || document.getElementById('dict-in');
+  const btn = document.getElementById('dictation-submit-btn') || document.getElementById('dict-btn');
+  if (!input) return;
+  if (btn) btn.disabled = true;
+
+  const userWords = cleanDictation(input.value).split(' ').filter(Boolean);
+  const targetWords = cleanDictation(ex.en).split(' ').filter(Boolean);
+  const matched = targetWords.filter(w => userWords.includes(w)).length;
+  const accuracy = Math.round((matched / Math.max(1, targetWords.length)) * 100);
+  const isCorrect = accuracy >= 80;
+
+  const diffHtml = ex.en.split(' ').map(orig => {
+    const ok = userWords.includes(cleanDictation(orig));
+    return `<span style="color:${ok ? '#34d399' : '#f87171'};font-weight:${ok ? '600' : '700'};">${orig}</span>`;
+  }).join(' ');
+
+  showExerciseResult(isCorrect, `
+    <div style="margin-bottom:4px;">Precisión auditiva: <strong>${accuracy}%</strong> ${isCorrect && accuracy < 100 ? '(¡Aprobado por comprensión!)' : ''}</div>
+    <div>🇬🇧 <strong>Revisión:</strong> ${diffHtml}</div>
+    <div style="margin-top:4px;color:#fde68a;">🇪🇸 <strong>Traducción:</strong> "${ex.es}"</div>`);
+};
