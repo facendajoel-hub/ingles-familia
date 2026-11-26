@@ -499,9 +499,7 @@ function renderCurrentExercise() {
   const autoText = ex.type === 'chunk' ? (ex.example || ex.chunk) : ex.type === 'speaking' ? ex.target : ex.type === 'dictation' ? ex.en : ex.type === 'listening' ? ex.audio : null;
   if (autoText) speakText(autoText, 0.95);
 }
-### 🧩 BLOQUE 5B (Calificación, Constructor Drag & Drop y Arranque Final)
 
-```javascript
 // ============================================================================
 // BLOQUE 5B: CALIFICACIÓN, CONSTRUCTOR DRAG & DROP Y ARRANQUE FINAL
 // ============================================================================
