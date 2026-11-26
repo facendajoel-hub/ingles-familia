@@ -7,7 +7,6 @@ renderCurrentExercise = function() {
   const modal = document.getElementById('lesson-modal');
   const ex = currentSession && currentSession.exercises[currentSession.index];
   if (!modal || !ex) return _m45PrevRender();
-
   if (ex.type === 'video_step') {
     _m45PrevRender();
     const subEn = document.getElementById('scene-sub-en');
@@ -18,7 +17,6 @@ renderCurrentExercise = function() {
     }
     return;
   }
-
   if (ex.type !== 'error_spot' && ex.type !== 'free_speaking') return _m45PrevRender();
   const total = currentSession.exercises.length, idx = currentSession.index, pct = Math.round((idx / total) * 100);
   const body = ex.type === 'error_spot'
@@ -26,6 +24,19 @@ renderCurrentExercise = function() {
     : `<span style="font-size:0.8rem;color:#34d399;font-weight:700;">🎙️ PRODUCCIÓN LIBRE (RESPONDE CON TUS PALABRAS)</span><div style="background:#0f172a;padding:16px;border-radius:12px;margin:12px 0;border:1px solid #334155;"><p style="font-size:1.1rem;font-weight:700;margin:0 0 6px;">${ex.promptEn}</p><small style="color:#94a3b8;">${ex.promptEs} (Ej: "${ex.sample}")</small></div><button onclick="startSpeechValidation('${escapeQuote(ex.sample)}')" class="btn-primary" style="width:100%;">🎙️ Responder en Voz Alta</button><div id="speech-transcript" style="margin-top:8px;text-align:center;color:#94a3b8;"></div>`;
   modal.innerHTML = `<div style="background:#1e293b;border:1px solid #334155;border-radius:16px;padding:24px;max-width:680px;width:100%;color:#f8fafc;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><strong>${currentSession.title}</strong><button onclick="closeLessonModal()" class="btn-secondary" style="padding:4px 10px;font-size:0.82rem;">✕ Salir</button></div><div style="background:#0f172a;height:8px;border-radius:999px;margin-bottom:14px;"><div style="background:#38bdf8;height:100%;width:${pct}%;"></div></div><div>${body}</div><div id="exercise-feedback" style="margin-top:16px;"></div></div>`;
 };
+
+window.UNIT_CONTENT_BANK['1'] = {
+  reading: {
+    title: 'Meeting a Neighbor in the Hallway',
+    lines: [
+      { speaker: 'Liam', en: 'Good morning! I do not think we have met yet. My name is Liam, and I just moved into apartment 4B yesterday. I am originally from Toronto, so everything in this neighborhood is still brand new to me. Nice to meet you!', es: '¡Buenos días! Creo que aún no nos conocemos. Me llamo Liam y me acabo de mudar al apartamento 4B ayer. Soy originario de Toronto, así que todo en este vecindario es completamente nuevo para mí. ¡Mucho gusto en conocerte!' },
+      { speaker: 'Sofia', en: 'Welcome to the building, Liam! I am Sofia, and I live right across the hall in 4A. It is a pleasure to meet you. If you ever need recommendations for good coffee shops, supermarkets, or bus routes around here, please feel free to ask me anytime.', es: '¡Bienvenido al edificio, Liam! Soy Sofia y vivo justo al otro lado del pasillo, en el 4A. Es un placer conocerte. Si alguna vez necesitas recomendaciones de buenas cafeterías, supermercados o rutas de autobús por aquí, por favor siéntete libre de preguntarme en cualquier momento.' }
+    ],
+    questions: [
+      { question: 'Why is everything in the neighborhood new to Liam?', options: ['He moved into apartment 4B yesterday from Toronto.', 'He works at a coffee shop across the hall.', 'He is visiting Sofia for the weekend.'], answer: 0 },
+      { question: 'Where does Sofia live?', options: ['In apartment 4B', 'Right across the hall in 4A', 'In Toronto'], answer: 1 }
+    ]
+  },
   chunks: [
     { chunk: "I do not think we have met yet", meaning: "Creo que aún no nos conocemos", example: "Good morning! I do not think we have met yet.", options: ["Creo que aún no nos conocemos", "Ya nos conocemos de antes", "No quiero hablar contigo"], answer: 0 },
     { chunk: "Brand new to me", meaning: "Completamente nuevo para mí", example: "Everything in this neighborhood is still brand new to me.", options: ["Muy antiguo para mí", "Completamente nuevo para mí", "Demasiado caro para mí"], answer: 1 },
@@ -67,53 +78,6 @@ renderCurrentExercise = function() {
   ]
 };
 window.UNIT_CONTENT_BANK['2'] = {
-  reading: {
-    title: 'Numbers, Age and Phone Numbers at the Gym',
-    lines: [
-      { speaker: 'Liam', en: 'Hi! Welcome to City Fitness. Are you here to register?', es: '¡Hola! Bienvenida a City Fitness. ¿Estás aquí para inscribirte?' },
-      { speaker: 'Sofia', en: 'Yes, please. My name is Sofia Martinez.', es: 'Sí, por favor. Me llamo Sofía Martínez.' },
-      { speaker: 'Liam', en: 'Great, Sofia. How old are you?', es: 'Genial, Sofía. ¿Cuántos años tienes?' },
-      { speaker: 'Sofia', en: 'I am twenty-eight years old. My brother is twenty-one.', es: 'Tengo veintiocho años. Mi hermano tiene veintiuno.' },
-      { speaker: 'Liam', en: 'What is your phone number?', es: '¿Cuál es tu número de teléfono?' },
-      { speaker: 'Sofia', en: 'My phone number is five-five-five, zero-one-nine-four.', es: 'Mi número de teléfono es cinco-cinco-cinco, cero-uno-nueve-cuatro.' },
-      { speaker: 'Liam', en: 'Thank you! Your locker number is twelve. Have a great workout!', es: '¡Gracias! Tu número de casillero es el doce. ¡Que tengas un excelente entrenamiento!' }
-    ],
-    questions: [
-      { question: 'How old is Sofia?', options: ['She is 28 years old.', 'She is 21 years old.', 'She is 12 years old.'], answer: 0 },
-      { question: 'What is Sofia’s locker number?', options: ['Number 12', 'Number 28', 'Number 555'], answer: 0 },
-      { question: 'What is the last digit of Sofia’s phone number?', options: ['Four (4)', 'Nine (9)', 'Zero (0)'], answer: 0 }
-    ]
-  },
-  chunks: [
-    { chunk: 'How old are you?', meaning: '¿Cuántos años tienes?', example: 'Hi Mark! How old are you today?', options: ['¿Cuántos años tienes?', '¿Dónde vives?', '¿Cuál es tu nombre?'], answer: 0 },
-    { chunk: 'I am twenty-five years old.', meaning: 'Tengo veinticinco años.', example: 'I am twenty-five years old and I live in Santo Domingo.', options: ['Tengo veinticinco años.', 'Tengo veinticinco dólares.', 'Son las veinticinco horas.'], answer: 0 },
-    { chunk: 'What is your phone number?', meaning: '¿Cuál es tu número de teléfono?', example: 'Excuse me, what is your phone number?', options: ['¿Cuál es tu número de teléfono?', '¿Cuál es tu dirección?', '¿Tienes un teléfono nuevo?'], answer: 0 },
-    { chunk: 'My number is five-five-five, zero-two-eight-one.', meaning: 'Mi número es 555-0281.', example: 'Call me later! My number is five-five-five, zero-two-eight-one.', options: ['Mi número es 555-0281.', 'Mi casa es la 555.', 'Tengo cinco teléfonos.'], answer: 0 }
-  ],
-  builders: [
-    { prompt: 'Pregunta la edad a alguien:', target: 'How old are you', translation: '¿Cuántos años tienes?' },
-    { prompt: 'Di que tienes treinta años:', target: 'I am thirty years old', translation: 'Tengo treinta años' },
-    { prompt: 'Pregunta el número de teléfono:', target: 'What is your phone number', translation: '¿Cuál es tu número de teléfono?' },
-    { prompt: 'Da tu número diciendo los dígitos:', target: 'My phone number is eight zero nine', translation: 'Mi número de teléfono es ocho cero nueve' }
-  ],
-  cloze: [
-    { dialogue: 'A: _____ old is your son?<br>B: He is thirteen years old.', options: ['How', 'What', 'Who'], answer: 0 },
-    { dialogue: 'A: How old are you?<br>B: I _____ thirty-five years old.', options: ['am', 'have', 'is'], answer: 0 },
-    { dialogue: 'A: What is your phone _____?<br>B: It is 555-0147.', options: ['number', 'name', 'age'], answer: 0 }
-  ],
-  dictations: [
-    { en: 'I am twenty-eight years old.', es: 'Tengo veintiocho años.' },
-    { en: 'What is your phone number?', es: '¿Cuál es tu número de teléfono?' },
-    { en: 'My phone number is five-five-five, zero-one-nine-four.', es: 'Mi número de teléfono es cinco-cinco-cinco, cero-uno-nueve-cuatro.' },
-    { en: 'She is nineteen years old and he is forty.', es: 'Ella tiene diecinueve años y él tiene cuarenta.' }
-  ],
-  pronunciation: [
-    { en: 'How old are you? I am thirty-two years old.', es: '¿Cuántos años tienes? Tengo treinta y dos años.' },
-    { en: 'My phone number is eight-zero-nine, five-five-five, zero-one-two-three.', es: 'Mi número de teléfono es 809-555-0123.' },
-    { en: 'Thirteen, thirty, fourteen, forty, fifteen, fifty.', es: 'Trece, treinta, catorce, cuarenta, quince, cincuenta.' }
-  ]
-};
-window.UNIT_CONTENT_BANK['2'] = {
   grammarTip: {
     title: "Gramática Clave: Edad con 'To Be' y Números",
     rules: [
@@ -139,6 +103,10 @@ window.UNIT_CONTENT_BANK['2'] = {
     { chunk: "How old are you?", meaning: "¿Cuántos años tienes?", example: "Hi Engel! How old are you now?", options: ["¿Cuántos años tienes?", "¿Cómo estás?", "¿Qué hora es?"], answer: 0 },
     { chunk: "What is your phone number?", meaning: "¿Cuál es tu número de teléfono?", example: "Excuse me, what is your phone number?", options: ["¿Dónde vives?", "¿Cuál es tu número de teléfono?", "¿Cuál es tu correo?"], answer: 1 }
   ],
+  errorSpot: [
+    { wrongSentence: "I have thirty-eight years old.", options: ["I am thirty-eight years old.", "I has thirty-eight years old.", "I is thirty-eight years old."], answer: 0 },
+    { wrongSentence: "My son have thirteen years.", options: ["My son is thirteen years old.", "My son are thirteen years old.", "My son am thirteen years old."], answer: 0 }
+  ],
   builders: [
     { prompt: "Decir tu edad correctamente con To Be:", target: "I am thirty eight years old", translation: "Tengo treinta y ocho años" },
     { prompt: "Preguntar la edad de un amigo:", target: "How old is your brother today", translation: "¿Cuántos años tiene tu hermano hoy?" }
@@ -154,5 +122,8 @@ window.UNIT_CONTENT_BANK['2'] = {
   pronunciation: [
     { en: "How old are you? I am thirty-eight years old.", es: "¿Cuántos años tienes? Tengo treinta y ocho años." },
     { en: "What is your phone number? It is eight-oh-nine, five-five-five, zero-one-four-two.", es: "¿Cuál es tu número de teléfono? Es 809-555-0142." }
+  ],
+  freeSpeaking: [
+    { promptEn: "Say your age and your phone number out loud.", promptEs: "Di tu edad y tu número de teléfono en voz alta", sample: "I am thirty-eight years old and my phone number is eight-oh-nine, five-five-five, zero-one-four-two." }
   ]
 };
