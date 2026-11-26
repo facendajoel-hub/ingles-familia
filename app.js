@@ -710,3 +710,16 @@ renderCurrentExercise = function() {
     </div>
     <button onclick="nextExerciseStep()" class="btn-primary" style="width:100%;">Ya vi el video · Finalizar Unidad →</button></div>`;
 };
+// ============================================================================
+// PARCHE: CORREGIR ENLACE DE YOUTUBE SIN RECORTES
+// ============================================================================
+document.addEventListener('click', function(e) {
+  const link = e.target.closest('a');
+  if (link && link.href && link.href.includes('youtube')) {
+    e.preventDefault();
+    const ex = currentSession && currentSession.exercises[currentSession.index];
+    const q = (ex && ex.query) ? ex.query : 'English conversation practice';
+    const url = 'https://' + 'www.youtube.' + 'com/results?search_query=' + encodeURIComponent(q);
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+});
