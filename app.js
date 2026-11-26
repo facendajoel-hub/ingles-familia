@@ -1,7 +1,7 @@
 // ============================================================================
-// FAMILY ENGLISH PRO - APP.JS (BLOQUE 1 DE 4)
+// FAMILY ENGLISH PRO - APP.JS UNIFICADO (TROZO 1 DE 5)
 // ============================================================================
-var FIREBASE_DB_URL = 'https://' + '://firebaseio.com';
+const FIREBASE_DB_URL = 'https://firebaseio.com';
 const STORAGE_KEY = 'family_english_pro_v3';
 const LEVELS = ['Pre-A1', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 const DAILY_GOAL_EXERCISES = 25;
@@ -40,7 +40,15 @@ const UNIT_TITLES = [
   'Dialectos, Modismos y Variantes Globales', 'Redacción Editorial y Ensayística', 'Debate Socrático en Tiempo Real', 'Maestría Total C2: Certificación Familiar'
 ];
 
+const UNIT_MEDIA_BANK = { 1: { videoId: 'fN1garZ-h1o', videoTitle: 'Greetings & Introductions in Real Life' } };
+// ============================================================================
+// TROZO 2 DE 5: UTILIDADES, FIREBASE Y AUDIO
+// ============================================================================
 function getTodayStr() { return new Date().toISOString().split('T')[0]; }
+function norm(s) { return String(s || '').toLowerCase().replace(/[.,!?;:'"¿¡]/g, '').replace(/\s+/g, ' ').trim(); }
+function escapeQuote(str) { return String(str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+function getAvatarSvg(id) { return (AVATAR_OPTIONS.find(a => a.id === id) || AVATAR_OPTIONS[0]).svg; }
+
 function createDefaultUsers() {
   const list = [
     { id: 'diojan', name: 'Diojan', avatar: 'diojan' },
@@ -54,11 +62,10 @@ function createDefaultUsers() {
   });
   return users;
 }
+
 let appState = { users: createDefaultUsers(), activeUserId: null, selectedBand: 'Pre-A1', view: 'profiles' };
-let currentSession = null, editingUserId = null, tempSelectedAvatar = null;
-// ============================================================================
-// FAMILY ENGLISH PRO - APP.JS (BLOQUE 2 DE 4: FIREBASE Y AUDIO)
-// ============================================================================
+let currentSession = null, editingUserId = null, tempSelectedAvatar = null, draggedWordPos = null, examRun = null;
+
 function loadFromLocal() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -70,7 +77,7 @@ function loadFromLocal() {
         });
       }
     }
-  } catch (e) { console.warn(e); }
+  } catch (e) {}
 }
 
 function saveToLocal() {
@@ -81,19 +88,9 @@ function updateSyncBadge(status, text) {
   const badge = document.querySelector('.badge-save');
   if (!badge) return;
   badge.textContent = text;
-  if (status === 'ok') {
-    badge.style.background = 'rgba(16, 185, 129, 0.15)';
-    badge.style.borderColor = '#10b981';
-    badge.style.color = '#34d399';
-  } else if (status === 'syncing') {
-    badge.style.background = 'rgba(56, 189, 248, 0.15)';
-    badge.style.borderColor = '#38bdf8';
-    badge.style.color = '#7dd3fc';
-  } else {
-    badge.style.background = 'rgba(245, 158, 11, 0.15)';
-    badge.style.borderColor = '#f59e0b';
-    badge.style.color = '#fbbf24';
-  }
+  if (status === 'ok') { badge.style.background = 'rgba(16, 185, 129, 0.15)'; badge.style.borderColor = '#10b981'; badge.style.color = '#34d399'; }
+  else if (status === 'syncing') { badge.style.background = 'rgba(56, 189, 248, 0.15)'; badge.style.borderColor = '#38bdf8'; badge.style.color = '#7dd3fc'; }
+  else { badge.style.background = 'rgba(245, 158, 11, 0.15)'; badge.style.borderColor = '#f59e0b'; badge.style.color = '#fbbf24'; }
 }
 
 async function syncFromCloud() {
@@ -111,31 +108,20 @@ async function syncFromCloud() {
           if (cloudScore >= localScore) appState.users[id] = { ...localU, ...cloudU };
         }
       });
-      saveToLocal();
-      renderApp();
-    } else {
-      await pushToCloud();
-    }
+      saveToLocal(); renderApp();
+    } else { await pushToCloud(); }
     updateSyncBadge('ok', '☁️ Nube sincronizada');
-  } catch (err) {
-    updateSyncBadge('offline', '💾 Guardado local activo');
-  }
+  } catch (err) { updateSyncBadge('offline', '💾 Guardado local activo'); }
 }
 
 async function pushToCloud() {
   saveToLocal();
   updateSyncBadge('syncing', '🔄 Guardando...');
   try {
-    const res = await fetch(FIREBASE_DB_URL, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ users: appState.users, updatedAt: new Date().toISOString() })
-    });
+    const res = await fetch(FIREBASE_DB_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ users: appState.users, updatedAt: new Date().toISOString() }) });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     updateSyncBadge('ok', '☁️ Nube sincronizada');
-  } catch (err) {
-    updateSyncBadge('offline', '💾 Guardado local activo');
-  }
+  } catch (err) { updateSyncBadge('offline', '💾 Guardado local activo'); }
 }
 
 function checkDailyReset(user) {
@@ -143,36 +129,49 @@ function checkDailyReset(user) {
   if (user.lastActiveDate !== today) {
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
     if (user.lastActiveDate && user.lastActiveDate !== yesterday && user.todayExercises > 0) user.streak = 0;
-    user.todayExercises = 0;
-    user.todayXp = 0;
+    user.todayExercises = 0; user.todayXp = 0;
   }
 }
 
+if ('speechSynthesis' in window) {
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+}
+
 function speakText(text, rate = 0.95) {
-  if (!('speechSynthesis' in window)) return;
-  window.speechSynthesis.cancel();
-  setTimeout(() => {
-    const utter = new SpeechSynthesisUtterance(text);
+  if (!('speechSynthesis' in window) || !text) return;
+  try {
+    window.speechSynthesis.cancel(); window.speechSynthesis.resume();
+    const utter = new SpeechSynthesisUtterance(String(text));
     const voices = window.speechSynthesis.getVoices();
     const enVoice = voices.find(v => v.lang.includes('en-US')) || voices.find(v => v.lang.startsWith('en'));
     if (enVoice) utter.voice = enVoice;
-    utter.lang = 'en-US';
-    utter.rate = rate;
+    utter.lang = 'en-US'; utter.rate = rate; utter.volume = 1.0;
     window.speechSynthesis.speak(utter);
-  }, 60);
+  } catch (e) {}
 }
 
-function escapeQuote(str) { return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
-// ============================================================================
-// FAMILY ENGLISH PRO - APP.JS (BLOQUE 3 DE 4: PERFILES Y TABLERO 84 UNIDADES)
-// ============================================================================
-function getAvatarSvg(id) {
-  return (AVATAR_OPTIONS.find(a => a.id === id) || AVATAR_OPTIONS[0]).svg;
+function playDialogueSequence(lines, rate = 0.95) {
+  if (!('speechSynthesis' in window) || !lines || !lines.length) return;
+  window.speechSynthesis.cancel(); window.speechSynthesis.resume();
+  const voices = window.speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
+  const fem = voices.filter(v => /Natural|Neural|Google|Aria|Jenny|Zira|Samantha|Victoria|Karen|Moira/i.test(v.name) && !/David|Mark|Guy|Daniel|Alex/i.test(v.name));
+  const pool = fem.length ? fem : voices;
+  const voiceA = pool[0] || null, voiceB = pool[1] || voiceA;
+  const speakers = [...new Set(lines.map(l => l.speaker))];
+  lines.forEach((line, idx) => {
+    const u = new SpeechSynthesisUtterance(line.en);
+    const isSecond = speakers.indexOf(line.speaker) === 1;
+    if (voiceA) u.voice = isSecond ? voiceB : voiceA;
+    u.lang = 'en-US'; u.rate = rate; u.pitch = isSecond ? 1.0 : 1.15;
+    setTimeout(() => window.speechSynthesis.speak(u), idx === 0 ? 60 : 0);
+  });
 }
-
+// ============================================================================
+// TROZO 3 DE 5: PERFILES Y TABLERO DE 84 UNIDADES
+// ============================================================================
 function showProfiles() {
-  appState.activeUserId = null;
-  appState.view = 'profiles';
+  appState.activeUserId = null; appState.view = 'profiles';
   const btn = document.getElementById('btn-switch-user');
   if (btn) btn.classList.add('hidden');
   renderApp();
@@ -184,14 +183,8 @@ function selectUser(userId) {
   checkDailyReset(user);
   const btn = document.getElementById('btn-switch-user');
   if (btn) btn.classList.remove('hidden');
-
-  if (!user.diagnosed || !user.level) {
-    startDiagnosticForActiveProfile();
-  } else {
-    appState.selectedBand = user.level;
-    appState.view = 'dashboard';
-    renderApp();
-  }
+  if (!user.diagnosed || !user.level) { startDiagnosticForActiveProfile(); }
+  else { appState.selectedBand = user.level; appState.view = 'dashboard'; renderApp(); }
 }
 
 function renderApp() {
@@ -208,31 +201,22 @@ function renderApp() {
           ${Object.values(appState.users).map(u => {
             checkDailyReset(u);
             const lvl = u.diagnosed && u.level ? `Nivel ${u.level} · Unidad ${u.unlockedUpTo}` : 'Evaluar nivel inicial';
-            return `
-              <div class="profile-card" onclick="selectUser('${u.id}')">
-                <div style="text-align:right;margin-bottom:-10px;">
-                  <button class="btn btn-outline" style="padding:4px 8px;font-size:0.75rem;" onclick="event.stopPropagation(); openEditProfileModal('${u.id}')">✏️ Editar</button>
-                </div>
-                <div class="avatar-circle" style="background:none;border:none;width:82px;height:82px;">${getAvatarSvg(u.avatar)}</div>
-                <h3 style="margin:6px 0;">${u.name}</h3>
-                <div class="pill" style="margin-bottom:8px;">${lvl}</div>
-                <div style="font-size:0.88rem;color:var(--muted);">🔥 ${u.streak} días · ⭐ ${u.xp} XP</div>
-              </div>`;
+            return `<div class="profile-card" onclick="selectUser('${u.id}')">
+              <div style="text-align:right;margin-bottom:-10px;"><button class="btn btn-outline" style="padding:4px 8px;font-size:0.75rem;" onclick="event.stopPropagation(); openEditProfileModal('${u.id}')">✏️ Editar</button></div>
+              <div class="avatar-circle" style="background:none;border:none;width:82px;height:82px;">${getAvatarSvg(u.avatar)}</div>
+              <h3 style="margin:6px 0;">${u.name}</h3>
+              <div class="pill" style="margin-bottom:8px;">${lvl}</div>
+              <div style="font-size:0.88rem;color:var(--muted);">🔥 ${u.streak} días · ⭐ ${u.xp} XP</div>
+            </div>`;
           }).join('')}
         </div>
       </div>
       <div class="card">
         <h3 style="margin-top:0;">🏆 Tabla de Clasificación Familiar</h3>
-        ${sorted.map((u, idx) => `
-          <div class="dialogue-line" style="display:flex;justify-content:space-between;align-items:center;">
-            <div style="display:flex;align-items:center;gap:10px;">
-              <strong>#${idx + 1}</strong>
-              <div style="width:32px;height:32px;">${getAvatarSvg(u.avatar)}</div>
-              <span>${u.name}</span>
-              <span class="pill">${u.diagnosed && u.level ? u.level : 'Nuevo'}</span>
-            </div>
-            <div style="color:var(--gold);font-weight:700;">🔥 ${u.streak} | ⭐ ${u.xp} XP</div>
-          </div>`).join('')}
+        ${sorted.map((u, idx) => `<div class="dialogue-line" style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="display:flex;align-items:center;gap:10px;"><strong>#${idx + 1}</strong><div style="width:32px;height:32px;">${getAvatarSvg(u.avatar)}</div><span>${u.name}</span><span class="pill">${u.diagnosed && u.level ? u.level : 'Nuevo'}</span></div>
+          <div style="color:var(--gold);font-weight:700;">🔥 ${u.streak} | ⭐ ${u.xp} XP</div>
+        </div>`).join('')}
       </div>
       <div class="card" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center;">
         <span style="color:var(--muted);font-size:0.9rem;">Respaldo:</span>
@@ -248,26 +232,22 @@ function renderApp() {
     let unitsHtml = '';
     for (let uNum = start; uNum < start + 12; uNum++) {
       const done = user.completedUnits.includes(uNum), unlocked = uNum <= user.unlockedUpTo, curr = uNum === user.unlockedUpTo;
-      unitsHtml += `
-        <div class="unit-box ${unlocked ? '' : 'locked'}" style="${curr ? 'border:2px solid #38bdf8;' : done ? 'border:1px solid #10b981;' : ''}">
-          <div>
-            <span class="pill">UNIDAD ${uNum} · ${appState.selectedBand}</span>
-            <h4 style="margin:8px 0 4px;">${UNIT_TITLES[uNum - 1] || 'Unidad ' + uNum}</h4>
-            <div style="font-size:0.8rem;color:var(--muted);">${done ? '✅ Completada' : curr ? '▶️ Lección Actual' : unlocked ? '🔓 Práctica Libre' : '🔒 Bloqueada'}</div>
-          </div>
-          <button class="btn ${unlocked ? (curr ? '' : 'btn-outline') : 'btn-outline'}" onclick="${unlocked ? `startUnitLesson(${uNum})` : `alert('Completa primero la Unidad #${user.unlockedUpTo}')`}">
-            ${unlocked ? (done ? 'Repasar' : 'Iniciar') : 'Bloqueada'}
-          </button>
-        </div>`;
+      unitsHtml += `<div class="unit-box ${unlocked ? '' : 'locked'}" style="${curr ? 'border:2px solid #38bdf8;' : done ? 'border:1px solid #10b981;' : ''}">
+        <div>
+          <span class="pill">UNIDAD ${uNum} · ${appState.selectedBand}</span>
+          <h4 style="margin:8px 0 4px;">${UNIT_TITLES[uNum - 1] || 'Unidad ' + uNum}</h4>
+          <div style="font-size:0.8rem;color:var(--muted);">${done ? '✅ Completada' : curr ? '▶️ Lección Actual' : unlocked ? '🔓 Práctica Libre' : '🔒 Bloqueada'}</div>
+        </div>
+        <button class="btn ${unlocked ? (curr ? '' : 'btn-outline') : 'btn-outline'}" onclick="${unlocked ? `startUnitLesson(${uNum})` : `alert('Completa primero la Unidad #${user.unlockedUpTo}')`}">
+          ${unlocked ? (done ? 'Repasar' : 'Iniciar') : 'Bloqueada'}
+        </button>
+      </div>`;
     }
     root.innerHTML = `
       <div class="card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;">
         <div style="display:flex;align-items:center;gap:14px;">
           <div style="width:64px;height:64px;">${getAvatarSvg(user.avatar)}</div>
-          <div>
-            <h2 style="margin:0;">${user.name} <span class="pill">${user.level}</span></h2>
-            <p style="margin:4px 0 0;color:var(--muted);">Ruta Activa: Unidad #${user.unlockedUpTo} · 🔥 ${user.streak} días · ⭐ ${user.xp} XP</p>
-          </div>
+          <div><h2 style="margin:0;">${user.name} <span class="pill">${user.level}</span></h2><p style="margin:4px 0 0;color:var(--muted);">Ruta Activa: Unidad #${user.unlockedUpTo} · 🔥 ${user.streak} días · ⭐ ${user.xp} XP</p></div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="btn btn-gold" onclick="startSrsReview()">🧠 Repaso SRS (${(user.srsQueue || []).length})</button>
@@ -275,24 +255,17 @@ function renderApp() {
         </div>
       </div>
       <div class="card">
-        <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:0.9rem;">
-          <strong>Meta Diaria (30 min / 25 ejercicios)</strong>
-          <span>${user.todayExercises}/${DAILY_GOAL_EXERCISES} ejercicios (${user.todayXp}/${DAILY_GOAL_XP} XP)</span>
-        </div>
-        <div style="background:#0f172a;height:10px;border-radius:999px;overflow:hidden;">
-          <div style="background:var(--success);height:100%;width:${pct}%;"></div>
-        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:0.9rem;"><strong>Meta Diaria (30 min / 25 ejercicios)</strong><span>${user.todayExercises}/${DAILY_GOAL_EXERCISES} ejercicios (${user.todayXp}/${DAILY_GOAL_XP} XP)</span></div>
+        <div style="background:#0f172a;height:10px;border-radius:999px;overflow:hidden;"><div style="background:var(--success);height:100%;width:${pct}%;"></div></div>
       </div>
       <div class="card">
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
-          ${LEVELS.map(l => `<button class="btn ${l === appState.selectedBand ? '' : 'btn-outline'}" onclick="appState.selectedBand='${l}';renderApp();">${l}</button>`).join('')}
-        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">${LEVELS.map(l => `<button class="btn ${l === appState.selectedBand ? '' : 'btn-outline'}" onclick="appState.selectedBand='${l}';renderApp();">${l}</button>`).join('')}</div>
         <div class="units-grid">${unitsHtml}</div>
       </div>`;
   }
 }
 // ============================================================================
-// FAMILY ENGLISH PRO - APP.JS (BLOQUE 4A: MODAL EDICIÓN, EXAMEN Y EJERCICIOS)
+// BLOQUE 4A: RESPALDO JSON Y EDICIÓN DE PERFIL
 // ============================================================================
 function exportProgressJSON() {
   const a = document.createElement('a');
@@ -341,180 +314,9 @@ async function saveProfileChanges() {
   document.getElementById('edit-profile-modal').style.display = 'none';
   renderApp(); await pushToCloud();
 }
-
-function startDiagnosticForActiveProfile() {
-  const user = appState.users[appState.activeUserId];
-  const root = document.getElementById('app-root');
-  if (!user || !root) return;
-  root.innerHTML = `<div id="view-exam"><div id="exam-container"></div></div>`;
-  if (typeof window.initDiagnosticExam === 'function') {
-    window.initDiagnosticExam(user, async (res) => {
-      const startUnit = Math.max(0, LEVELS.indexOf(res.level)) * 12 + 1;
-      user.level = res.level; user.diagnosed = true;
-      if (user.unlockedUpTo < startUnit) user.unlockedUpTo = startUnit;
-      appState.selectedBand = res.level; appState.view = 'dashboard';
-      await pushToCloud(); renderApp();
-    });
-  } else {
-    user.level = 'Pre-A1'; user.diagnosed = true; user.unlockedUpTo = 1;
-    appState.view = 'dashboard'; pushToCloud(); renderApp();
-  }
-}
-
-function buildSessionExercises(unitNumber) {
-  const bank = window.UNIT_CONTENT_BANK || {};
-  const title = UNIT_TITLES[unitNumber - 1] || `Unit ${unitNumber}`;
-  const data = bank[unitNumber] || {
-    chunks: [{ chunk: `Key phrase for ${title}`, meaning: `Expresión clave de ${title}`, example: `We practice ${title} in real context.`, options: [`Expresión clave de ${title}`, 'Frase fuera de contexto', 'Expresión en desuso'], answer: 0 }],
-    builders: [{ prompt: 'Ordena la frase:', target: 'Daily practice builds real fluency', translation: 'La práctica diaria construye fluidez real' }],
-    cloze: [{ dialogue: 'A: How do you learn fast?<br>B: I _____ every day.', options: ['practice', 'practicing', 'practiced'], answer: 0 }],
-    dictations: [{ en: 'Speaking out loud every day builds confidence.', es: 'Hablar en voz alta todos los días construye confianza.' }],
-    listening: [{ audio: 'Practicing thirty minutes daily is very effective.', question: 'How many minutes daily?', options: ['Ten minutes', 'Thirty minutes', 'Five minutes'], answer: 1 }]
-  };
-  const exs = [];
-  (data.chunks || []).forEach(c => exs.push({ type: 'chunk', unitNumber, ...c }));
-  (data.builders || []).forEach(b => exs.push({ type: 'builder', unitNumber, ...b }));
-  (data.cloze || []).forEach(cl => exs.push({ type: 'cloze', unitNumber, ...cl }));
-  (data.dictations || []).forEach(d => exs.push({ type: 'dictation', unitNumber, ...d }));
-  (data.listening || []).forEach(l => exs.push({ type: 'listening', unitNumber, ...l }));
-  const t1 = data.chunks?.[0]?.chunk || 'I am ready to speak English';
-  const t2 = data.dictations?.[0]?.en || 'Daily practice helps me speak naturally.';
-  exs.push({ type: 'speaking', unitNumber, stepLabel: 'Pilar 3 · Chunk Clave', target: t1 });
-  exs.push({ type: 'speaking', unitNumber, stepLabel: 'Pilar 3 · Oración Completa', target: t2 });
-  return exs;
-}
 // ============================================================================
-// FAMILY ENGLISH PRO - APP.JS (BLOQUE 4B - TROZO 1 DE 2: SESIÓN Y RENDER)
+// BLOQUE 4B: EXAMEN DIAGNÓSTICO Y DATOS DE UNIDAD
 // ============================================================================
-function startUnitLesson(unitNumber) {
-  currentSession = { mode: 'unit', unitNumber, title: `Unidad ${unitNumber}: ${UNIT_TITLES[unitNumber - 1] || ''}`, exercises: buildSessionExercises(unitNumber), index: 0, correctCount: 0, builderSelected: [] };
-  openLessonModal(); renderCurrentExercise();
-}
-
-function startSrsReview() {
-  const user = appState.users[appState.activeUserId];
-  if (!user?.srsQueue?.length) { alert('¡No tienes repasos pendientes en SRS!'); return; }
-  currentSession = { mode: 'srs', unitNumber: null, title: `Repaso SRS (${user.srsQueue.length})`, exercises: [...user.srsQueue], index: 0, correctCount: 0, builderSelected: [] };
-  openLessonModal(); renderCurrentExercise();
-}
-
-function openLessonModal() {
-  let m = document.getElementById('lesson-modal');
-  if (!m) { m = document.createElement('div'); m.id = 'lesson-modal'; m.style.cssText = 'position:fixed;inset:0;background:rgba(11,19,43,0.94);display:flex;align-items:center;justify-content:center;z-index:9998;padding:16px;overflow-y:auto;'; document.body.appendChild(m); }
-  m.style.display = 'flex';
-}
-
-function closeLessonModal() {
-  const m = document.getElementById('lesson-modal');
-  if (m) m.style.display = 'none';
-  currentSession = null; renderApp();
-}
-
-function renderCurrentExercise() {
-  const m = document.getElementById('lesson-modal');
-  if (!m || !currentSession) return;
-  const total = currentSession.exercises.length, idx = currentSession.index;
-  if (idx >= total) { finishSession(); return; }
-  const ex = currentSession.exercises[idx], pct = Math.round((idx / total) * 100);
-  currentSession.builderSelected = [];
-  let html = '';
-
-  if (ex.type === 'chunk') {
-    html = `<span class="pill">CHUNK EN CONTEXTO</span><h3>"${ex.chunk}"</h3><p style="color:var(--muted);font-style:italic;">"${ex.example}"</p>
-      <div style="margin-bottom:12px;"><button class="btn btn-outline" onclick="speakText('${escapeQuote(ex.example)}',0.95)">🔊 Normal</button> <button class="btn btn-outline" onclick="speakText('${escapeQuote(ex.example)}',0.45)">🐢 Lento</button></div>
-      ${ex.options.map((o, i) => `<button class="option-btn" onclick="submitChoice(${i},${ex.answer})">${o}</button>`).join('')}`;
-  } else if (ex.type === 'builder') {
-    const shuf = [...ex.target.split(' ')].sort(() => Math.random() - 0.5);
-    html = `<span class="pill">CONSTRUCTOR DE ORACIONES</span><p>${ex.prompt}</p><div id="b-zone" style="min-height:46px;background:#0f172a;border:2px dashed #475569;border-radius:10px;padding:8px;margin-bottom:12px;"></div>
-      <div style="margin-bottom:14px;">${shuf.map((w, i) => `<span id="bw-${i}" class="word-chip" onclick="toggleBWord(${i},'${escapeQuote(w)}')">${w}</span>`).join('')}</div>
-      <button class="btn" style="width:100%;" onclick="checkBuilder()">Comprobar</button>`;
-  } else if (ex.type === 'cloze') {
-    html = `<span class="pill">DIÁLOGO</span><div class="card" style="background:#0f172a;">${ex.dialogue}</div>${ex.options.map((o, i) => `<button class="option-btn" onclick="submitChoice(${i},${ex.answer})">${o}</button>`).join('')}`;
-  } else if (ex.type === 'dictation') {
-    setTimeout(() => speakText(ex.en, 0.95), 250);
-    html = `<span class="pill">DICTADO NATIVO</span><p>Escribe lo que escuchas:</p><button class="btn" onclick="speakText('${escapeQuote(ex.en)}',0.95)">🔊 Normal</button> <button class="btn btn-outline" onclick="speakText('${escapeQuote(ex.en)}',0.45)">🐢 Lento</button>
-      <input id="dict-in" type="text" placeholder="Escribe en inglés..."><button id="dict-btn" class="btn" style="width:100%;" onclick="checkDictation()">Verificar</button>`;
-  } else if (ex.type === 'listening') {
-    setTimeout(() => speakText(ex.audio, 0.95), 250);
-    html = `<span class="pill">COMPRENSIÓN AUDITIVA</span><div style="margin:10px 0;"><button class="btn" onclick="speakText('${escapeQuote(ex.audio)}',0.95)">🔊 Audio</button> <button class="btn btn-outline" onclick="speakText('${escapeQuote(ex.audio)}',0.45)">🐢 Lento</button></div>
-      <p><strong>${ex.question}</strong></p>${ex.options.map((o, i) => `<button class="option-btn" onclick="submitChoice(${i},${ex.answer})">${o}</button>`).join('')}`;
-  } else if (ex.type === 'speaking') {
-    html = `<span class="pill">${ex.stepLabel || 'SPEAKING'}</span><h3>"${ex.target}"</h3><div style="margin-bottom:12px;"><button class="btn btn-outline" onclick="speakText('${escapeQuote(ex.target)}',0.95)">🔊 Normal</button> <button class="btn btn-outline" onclick="speakText('${escapeQuote(ex.target)}',0.45)">🐢 Lento</button></div>
-      <button class="btn" style="width:100%;" onclick="startSpeech('${escapeQuote(ex.target)}')">🎙️ Hablar</button><div id="sp-txt" style="margin-top:8px;color:var(--muted);text-align:center;"></div>`;
-  }
-
-  m.innerHTML = `<div class="card" style="max-width:650px;width:100%;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><strong>${currentSession.title}</strong><button class="btn btn-outline" style="padding:4px 10px;" onclick="closeLessonModal()">✕</button></div>
-    <div style="background:#0f172a;height:8px;border-radius:99px;margin-bottom:8px;"><div style="background:var(--accent);height:100%;width:${pct}%;border-radius:99px;"></div></div>
-    <small style="color:var(--muted);display:block;text-align:right;margin-bottom:12px;">Ejercicio ${idx + 1} de ${total}</small>${html}<div id="ex-fb" style="margin-top:14px;"></div></div>`;
-}
-// ============================================================================
-// FAMILY ENGLISH PRO - APP.JS (BLOQUE 4B - TROZO 2 DE 2: CIERRE FINAL)
-// ============================================================================
-function toggleBWord(idx, w) {
-  const el = document.getElementById(`bw-${idx}`);
-  if (!el) return;
-  const pos = currentSession.builderSelected.findIndex(x => x.idx === idx);
-  if (pos >= 0) { currentSession.builderSelected.splice(pos, 1); el.style.opacity = '1'; }
-  else { currentSession.builderSelected.push({ idx, w }); el.style.opacity = '0.35'; }
-  const z = document.getElementById('b-zone');
-  if (z) z.innerHTML = currentSession.builderSelected.map(x => `<span class="word-chip" style="background:var(--accent);">${x.w}</span>`).join('');
-}
-
-function norm(s) { return String(s).toLowerCase().replace(/[.,!?;:'"¿¡]/g, '').replace(/\s+/g, ' ').trim(); }
-function checkBuilder() {
-  const ex = currentSession.exercises[currentSession.index];
-  const ok = norm(currentSession.builderSelected.map(x => x.w).join(' ')) === norm(ex.target);
-  showFb(ok, `Oración: <strong>${ex.target}</strong><br>🇪🇸 <em>${ex.translation}</em>`);
-}
-function submitChoice(sel, ans) {
-  const ex = currentSession.exercises[currentSession.index];
-  showFb(sel === ans, sel === ans ? '¡Excelente!' : `Correcta: <strong>${ex.options[ans]}</strong>`);
-}
-function checkDictation() {
-  const ex = currentSession.exercises[currentSession.index], inp = document.getElementById('dict-in'), btn = document.getElementById('dict-btn');
-  if (!inp) return; if (btn) btn.disabled = true;
-  showFb(norm(inp.value) === norm(ex.en), `🇬🇧 <strong>Exacto:</strong> "${ex.en}"<br>🇪🇸 <strong>Traducción:</strong> "${ex.es}"`);
-}
-function startSpeech(target) {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition, txt = document.getElementById('sp-txt');
-  if (!SR) { setTimeout(() => showFb(true, 'Práctica oral completada.'), 700); return; }
-  const rec = new SR(); rec.lang = 'en-US';
-  if (txt) txt.textContent = '🎙️ Escuchando...';
-  rec.onresult = (e) => {
-    const sp = e.results[0][0].transcript, tw = norm(target).split(' '), sw = norm(sp).split(' ');
-    const ok = (tw.filter(w => sw.includes(w)).length / Math.max(1, tw.length)) >= 0.6;
-    showFb(ok, ok ? `¡Bien! Dijiste: "${sp}"` : `Intenta: "${target}" (Dijiste: "${sp}")`);
-  };
-  rec.onerror = () => showFb(true, 'Práctica oral completada.');
-  rec.start();
-}
-function showFb(ok, detail) {
-  const fb = document.getElementById('ex-fb');
-  if (!fb || fb.dataset.done === '1') return; fb.dataset.done = '1';
-  const u = appState.users[appState.activeUserId], ex = currentSession.exercises[currentSession.index], prev = u.todayExercises;
-  checkDailyReset(u); u.todayExercises += 1; u.lastActiveDate = getTodayStr();
-  if (ok) { currentSession.correctCount += 1; u.xp += 6; u.todayXp += 6; if (currentSession.mode === 'srs') u.srsQueue.splice(currentSession.index, 1); }
-  else if (!u.srsQueue.some(i => JSON.stringify(i) === JSON.stringify(ex))) u.srsQueue.push(ex);
-  if (prev < DAILY_GOAL_EXERCISES && u.todayExercises >= DAILY_GOAL_EXERCISES) u.streak += 1;
-  fb.innerHTML = `<div class="card" style="background:${ok ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'};border-color:${ok ? '#10b981' : '#ef4444'};">
-    <strong>${ok ? '✅ ¡Correcto! +6 XP' : '❌ Guardado en SRS'}</strong><p style="margin:6px 0 12px;">${detail}</p>
-    <button class="btn" style="width:100%;" onclick="currentSession.index++;renderCurrentExercise();">Continuar →</button></div>`;
-}
-async function finishSession() {
-  const u = appState.users[appState.activeUserId], un = currentSession.unitNumber;
-  if (currentSession.mode === 'unit' && un) {
-    if (!u.completedUnits.includes(un)) { u.completedUnits.push(un); u.xp += 30; u.todayXp += 30; }
-    if (un === u.unlockedUpTo && u.unlockedUpTo < 84) u.unlockedUpTo = un + 1;
-  }
-  await pushToCloud();
-  const m = document.getElementById('lesson-modal');
-  if (m) m.innerHTML = `<div class="card" style="max-width:440px;width:100%;text-align:center;"><h2>🎉 ¡Sesión Completada!</h2><p>Aciertos: ${currentSession.correctCount}/${currentSession.exercises.length}</p><button class="btn" style="width:100%;" onclick="closeLessonModal()">Volver a Mi Ruta</button></div>`;
-}
-window.addEventListener('DOMContentLoaded', () => { loadFromLocal(); renderApp(); syncFromCloud(); });
-// ============================================================================
-// EXAMEN OBLIGATORIO (TROZO 2 DE 3: ARRANQUE Y PREGUNTAS)
-// ============================================================================
-let examRun = null;
 function startDiagnosticForActiveProfile() {
   const user = appState.users[appState.activeUserId], root = document.getElementById('app-root');
   if (!user || !root) return;
@@ -541,9 +343,7 @@ function nextExamQuestion() {
     <div id="exam-fb" style="margin-top:12px;"></div>
     <div style="margin-top:12px;text-align:right;"><button class="btn btn-outline" style="font-size:0.8rem;" onclick="examRun.highestPassed='Pre-A1';finishDiagnosticExam();">Empezar desde Cero (Pre-A1)</button></div></div>`;
 }
-// ============================================================================
-// EXAMEN OBLIGATORIO (TROZO 3 DE 3: CALIFICACIÓN, REPORTE Y ARRANQUE)
-// ============================================================================
+
 function gradeExamAnswer(choiceIdx) {
   const fb = document.getElementById('exam-fb');
   if (!fb || fb.dataset.done === '1') return; fb.dataset.done = '1';
@@ -569,625 +369,18 @@ async function finishDiagnosticExam() {
     <button class="btn" style="width:100%;" onclick="renderApp()">Ir a Mi Ruta de Aprendizaje</button></div>`;
 }
 
-window.addEventListener('DOMContentLoaded', () => { loadFromLocal(); migrateLegacyProgress(); renderApp(); syncFromCloud(); });
-// ============================================================================
-// RESTAURAR NIVEL C2 DE DIOJAN (SI QUEDÓ EN PRE-A1 CON 0 XP)
-// ============================================================================
-(function fixDiojanC2() {
-  loadFromLocal();
-  const d = appState.users.diojan;
-  if (d && d.level === 'Pre-A1' && d.xp === 0) {
-    d.level = 'C2';
-    d.diagnosed = true;
-    d.unlockedUpTo = 73;
-    d.xp = 150;
-    saveToLocal();
-    renderApp();
-    pushToCloud();
-  }
-})();
-// ============================================================================
-// REPRODUCCIÓN AUTOMÁTICA DE AUDIO EN TODOS LOS EJERCICIOS (PRE-A1 A C2)
-// ============================================================================
-if ('speechSynthesis' in window) {
-  window.speechSynthesis.getVoices();
-  window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
-}
-
-const _origRenderEx = renderCurrentExercise;
-renderCurrentExercise = function() {
-  _origRenderEx();
-  if (!currentSession || currentSession.index >= currentSession.exercises.length) return;
-  const ex = currentSession.exercises[currentSession.index];
-  const autoText = ex.type === 'chunk' ? (ex.example || ex.chunk)
-                 : ex.type === 'speaking' ? ex.target
-                 : ex.type === 'dictation' ? ex.en
-                 : ex.type === 'listening' ? ex.audio : null;
-  if (autoText) {
-    setTimeout(() => speakText(autoText, 0.95), 300);
-  }
-};
-// ============================================================================
-// AUDIO INMEDIATO AL ABRIR EJERCICIO (SIN DELAY BLOQUEADO POR NAVEGADOR)
-// ============================================================================
-function speakText(text, rate = 0.95) {
-  if (!('speechSynthesis' in window) || !text) return;
-  try {
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.resume();
-    const utter = new SpeechSynthesisUtterance(String(text));
-    const voices = window.speechSynthesis.getVoices();
-    const enVoice = voices.find(v => v.lang.includes('en-US')) || voices.find(v => v.lang.startsWith('en'));
-    if (enVoice) utter.voice = enVoice;
-    utter.lang = 'en-US';
-    utter.rate = rate;
-    utter.volume = 1.0;
-    window.speechSynthesis.speak(utter);
-  } catch (e) {}
-}
-
-renderCurrentExercise = function() {
-  _origRenderEx();
-  if (!currentSession || currentSession.index >= currentSession.exercises.length) return;
-  const ex = currentSession.exercises[currentSession.index];
-  const autoText = ex.type === 'chunk' ? (ex.example || ex.chunk)
-                 : ex.type === 'speaking' ? ex.target
-                 : ex.type === 'dictation' ? ex.en
-                 : ex.type === 'listening' ? ex.audio : null;
-  if (autoText) speakText(autoText, 0.95);
-};
-// ============================================================================
-// CONSTRUCTOR DE ORACIONES INTERACTIVO (DEVOLVER Y REORDENAR PALABRAS)
-// ============================================================================
-function renderBuilderAnswerZone() {
-  const z = document.getElementById('b-zone');
-  if (!z) return;
-  z.style.display = 'flex';
-  z.style.flexWrap = 'wrap';
-  z.style.gap = '6px';
-  z.innerHTML = currentSession.builderSelected.map((x, i) => `
-    <span style="display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:#fff;padding:6px 10px;border-radius:8px;font-weight:600;">
-      ${i > 0 ? `<button type="button" onclick="moveBWord(${i},-1)" style="background:rgba(0,0,0,0.25);border:none;color:#fff;border-radius:4px;cursor:pointer;padding:2px 6px;">◀</button>` : ''}
-      <span onclick="toggleBWord(${x.idx},'${escapeQuote(x.w)}')" style="cursor:pointer;" title="Quitar palabra">${x.w} ✕</span>
-      ${i < currentSession.builderSelected.length - 1 ? `<button type="button" onclick="moveBWord(${i},1)" style="background:rgba(0,0,0,0.25);border:none;color:#fff;border-radius:4px;cursor:pointer;padding:2px 6px;">▶</button>` : ''}
-    </span>
-  `).join('');
-}
-
-function toggleBWord(idx, w) {
-  const el = document.getElementById(`bw-${idx}`);
-  if (!el) return;
-  const pos = currentSession.builderSelected.findIndex(x => x.idx === idx);
-  if (pos >= 0) {
-    currentSession.builderSelected.splice(pos, 1);
-    el.style.opacity = '1';
-  } else {
-    currentSession.builderSelected.push({ idx, w });
-    el.style.opacity = '0.35';
-  }
-  renderBuilderAnswerZone();
-}
-
-function moveBWord(pos, dir) {
-  const arr = currentSession.builderSelected;
-  const target = pos + dir;
-  if (target < 0 || target >= arr.length) return;
-  [arr[pos], arr[target]] = [arr[target], arr[pos]];
-  renderBuilderAnswerZone();
-}
-// ============================================================================
-// CONSTRUCTOR DE ORACIONES CON ARRASTRE LIBRE (DRAG & DROP)
-// ============================================================================
-let draggedWordPos = null;
-
-window.renderBuilderAnswerZone = function() {
-  const z = document.getElementById('b-zone');
-  if (!z || !currentSession) return;
-  z.style.display = 'flex';
-  z.style.flexWrap = 'wrap';
-  z.style.gap = '8px';
-  z.innerHTML = currentSession.builderSelected.map((x, i) => `
-    <span draggable="true"
-          ondragstart="draggedWordPos=${i};this.style.opacity='0.4';"
-          ondragend="this.style.opacity='1';"
-          ondragover="event.preventDefault();this.style.outline='2px solid #38bdf8';"
-          ondragleave="this.style.outline='none';"
-          ondrop="event.preventDefault();this.style.outline='none';window.dropBWord(${i});"
-          onclick="window.toggleBWord(${x.idx},'${escapeQuote(x.w)}')"
-          title="Arrastra para mover o haz clic para quitar"
-          style="display:inline-flex;align-items:center;gap:6px;background:#3a86ff;color:#fff;padding:8px 14px;border-radius:8px;font-weight:600;cursor:grab;user-select:none;">
-      ⠿ ${x.w}
-    </span>
-  `).join('');
-};
-
-window.dropBWord = function(targetPos) {
-  if (draggedWordPos === null || draggedWordPos === targetPos || !currentSession) return;
-  const arr = currentSession.builderSelected;
-  const [moved] = arr.splice(draggedWordPos, 1);
-  arr.splice(targetPos, 0, moved);
-  draggedWordPos = null;
-  window.renderBuilderAnswerZone();
-};
-// ============================================================================
-// GUARDADO AUTOMÁTICO POR EJERCICIO (REANUDAR LECCIÓN DONDE TE QUEDASTE)
-// ============================================================================
-const _origShowFb = showFb;
-showFb = function(ok, detail) {
-  _origShowFb(ok, detail);
-  const u = appState.users[appState.activeUserId];
-  if (u && currentSession && currentSession.mode === 'unit') {
-    u.savedSession = {
-      unitNumber: currentSession.unitNumber,
-      index: currentSession.index + 1,
-      correctCount: currentSession.correctCount
-    };
-  }
-  pushToCloud();
-};
-
-window.startUnitLesson = function(unitNumber) {
-  const u = appState.users[appState.activeUserId];
-  const exercises = buildSessionExercises(unitNumber);
-  let startIdx = 0, startCorrect = 0;
-
-  if (u && u.savedSession && u.savedSession.unitNumber === unitNumber && u.savedSession.index > 0 && u.savedSession.index < exercises.length) {
-    startIdx = u.savedSession.index;
-    startCorrect = u.savedSession.correctCount || 0;
-  }
-
-  currentSession = {
-    mode: 'unit',
-    unitNumber,
-    title: `Unidad ${unitNumber}: ${UNIT_TITLES[unitNumber - 1] || ''}`,
-    exercises,
-    index: startIdx,
-    correctCount: startCorrect,
-    builderSelected: []
-  };
-  openLessonModal();
-  renderCurrentExercise();
-};
-
-const _origFinishSession = finishSession;
-finishSession = async function() {
-  const u = appState.users[appState.activeUserId];
-  if (u) delete u.savedSession;
-  await _origFinishSession();
-};
-// ============================================================================
-// LECTURA AUTOMÁTICA DEL DIÁLOGO COMPLETO AL RESPONDER CORRECTAMENTE
-// ============================================================================
-window.submitChoice = function(sel, ans) {
-  const ex = currentSession.exercises[currentSession.index];
-  const ok = sel === ans;
-
-  if (ex.type === 'cloze' && ok) {
-    const correctWord = ex.options[ans];
-    const fullDialogueHtml = ex.dialogue.replace(/_{2,}/g, `<strong style="color:#38bdf8;">${correctWord}</strong>`);
-    const cleanSpeechText = ex.dialogue
-      .replace(/_{2,}/g, correctWord)
-      .replace(/<[^>]*>/g, '. ')
-      .replace(/\b[AB]:\s*/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-
-    speakText(cleanSpeechText, 0.95);
-    showFb(true, `
-      <div style="margin-bottom:8px;">${fullDialogueHtml}</div>
-      <button type="button" class="btn btn-outline" style="padding:4px 10px;font-size:0.82rem;" onclick="speakText('${escapeQuote(cleanSpeechText)}', 0.95)">🔊 Escuchar de nuevo</button>
-      <button type="button" class="btn btn-outline" style="padding:4px 10px;font-size:0.82rem;" onclick="speakText('${escapeQuote(cleanSpeechText)}', 0.45)">🐢 Lento</button>
-    `);
-  } else {
-    showFb(ok, ok ? '¡Excelente!' : `Correcta: <strong>${ex.options[ans]}</strong>`);
-  }
-};
-// ============================================================================
-// PILAR PEDAGÓGICO 1: EXPLICACIÓN INTELIGENTE DE ERRORES
-// ============================================================================
-function explainMistake(ex, userAnswer) {
-  if (ex.explanation) return ex.explanation;
-  if (ex.type === 'builder') {
-    return `En inglés el orden sigue la estructura <strong>Sujeto + Verbo + Complemento</strong> (o <em>Palabra interrogativa + Auxiliar + Sujeto</em> en preguntas).<br>• <strong>Tu orden:</strong> "${userAnswer || '(vacío)'}"<br>• <strong>Orden natural:</strong> "${ex.target}" (${ex.translation}).`;
-  }
-  if (ex.type === 'dictation') {
-    return `Escucha de nuevo en modo <strong>🐢 Lento</strong> y fíjate en cómo se unen las palabras al hablar.<br>• <strong>Escribiste:</strong> "${userAnswer || '(nada)'}"<br>• <strong>Frase exacta:</strong> "${ex.en}" (<em>${ex.es}</em>).`;
-  }
-  if (ex.type === 'cloze') {
-    const right = ex.options[ex.ans];
-    return `La opción correcta es <strong>"${right}"</strong> porque concuerda con el tiempo verbal y el contexto del diálogo. Las demás opciones cambian el tiempo o no suenan naturales para un hablante nativo.`;
-  }
-  if (ex.type === 'chunk') {
-    return `Recuerda aprender este bloque completo como una sola idea: <strong>"${ex.chunk}"</strong> significa <em>"${ex.options[ex.ans]}"</em>. Ejemplo: <em>"${ex.example}"</em>.`;
-  }
-  return `Revisa el audio o el texto clave: la respuesta correcta es <strong>"${ex.options ? ex.options[ex.ans] : ''}"</strong>.`;
-}
-
-window.checkBuilder = function() {
-  const ex = currentSession.exercises[currentSession.index];
-  const userStr = currentSession.builderSelected.map(x => x.w).join(' ');
-  const ok = norm(userStr) === norm(ex.target);
-  if (ok) speakText(ex.target, 0.95);
-  const msg = ok
-    ? `✅ <strong>¡Natural y correcto!</strong> "${ex.target}"<br>🇪🇸 <em>${ex.translation}</em>`
-    : explainMistake(ex, userStr);
-  showFb(ok, msg);
-};
-
-window.checkDictation = function() {
-  const ex = currentSession.exercises[currentSession.index], inp = document.getElementById('dict-in'), btn = document.getElementById('dict-btn');
-  if (!inp) return; if (btn) btn.disabled = true;
-  const ok = norm(inp.value) === norm(ex.en);
-  const msg = ok
-    ? `✅ <strong>¡Oído fino!</strong> "${ex.en}"<br>🇪🇸 <em>${ex.es}</em>`
-    : explainMistake(ex, inp.value);
-  showFb(ok, msg);
-};
-
-const _prevSubmitChoice = window.submitChoice;
-window.submitChoice = function(sel, ans) {
-  const ex = currentSession.exercises[currentSession.index];
-  if (sel !== ans) {
-    showFb(false, explainMistake(ex, ex.options ? ex.options[sel] : ''));
-  } else if (typeof _prevSubmitChoice === 'function') {
-    _prevSubmitChoice(sel, ans);
-  }
-};
-// ============================================================================
-// PILAR PEDAGÓGICO 2 Y 3: CONVERSACIÓN LARGA (2+ PÁRRAFOS) Y VIDEO POR UNIDAD
-// ============================================================================
-const UNIT_MEDIA_BANK = {
-  1: {
-    videoId: 'fN1garZ-h1o',
-    videoTitle: 'Greetings & Introductions in Real Life',
-    p1_en: 'Liam: Good morning! I do not think we have met yet. My name is Liam, and I just moved into apartment 4B yesterday. I am originally from Toronto, so everything in this neighborhood is still brand new to me. Nice to meet you!',
-    p1_es: 'Liam: ¡Buenos días! Creo que aún no nos conocemos. Me llamo Liam y me mudé ayer al apartamento 4B. Soy originario de Toronto, así que todo en este vecindario sigue siendo totalmente nuevo para mí. ¡Mucho gusto en conocerte!',
-    p2_en: 'Sofia: Welcome to the building, Liam! I am Sofia, and I live right across the hall in 4A. It is a pleasure to meet you. If you ever need recommendations for good coffee shops, supermarkets, or bus routes around here, please feel free to ask me anytime.',
-    p2_es: 'Sofia: ¡Bienvenido al edificio, Liam! Soy Sofia y vivo justo enfrente, en el 4A. Es un placer conocerte. Si alguna vez necesitas recomendaciones de buenas cafeterías, supermercados o rutas de autobús por aquí, siéntete con toda libertad de preguntarme cuando quieras.'
-  }
-};
-
-const _origBuildEx = buildSessionExercises;
-buildSessionExercises = function(unitNumber) {
-  const title = UNIT_TITLES[unitNumber - 1] || `Unit ${unitNumber}`;
-  const media = UNIT_MEDIA_BANK[unitNumber] || {
-    videoId: '',
-    videoTitle: `Real English Conversation: ${title}`,
-    p1_en: `Alex: Hi there! Today we are focusing on "${title}" in everyday situations. When native speakers talk about this topic, they pay close attention to natural expressions and clear pronunciation rather than memorizing isolated grammar rules.`,
-    p1_es: `Alex: ¡Hola! Hoy nos enfocamos en "${title}" en situaciones cotidianas. Cuando los hablantes nativos conversan sobre este tema, prestan mucha atención a las expresiones naturales y a la pronunciación clara en lugar de memorizar reglas aisladas.`,
-    p2_en: `Maya: That makes complete sense. By reading a full conversation first and listening carefully to how each sentence connects, it becomes much easier to understand real-world English and respond with confidence.`,
-    p2_es: `Maya: Eso tiene todo el sentido. Al leer primero una conversación completa y escuchar con atención cómo se conecta cada oración, se vuelve mucho más fácil comprender el inglés real y responder con confianza.`
-  };
-
-  const baseExercises = _origBuildEx(unitNumber);
-  return [
-    { type: 'reading_long', unitNumber, title, ...media },
-    { type: 'video_lesson', unitNumber, title, ...media },
-    ...baseExercises
-  ];
-};
-
-const _prevRender2 = renderCurrentExercise;
-renderCurrentExercise = function() {
-  if (!currentSession || currentSession.index >= currentSession.exercises.length) { _prevRender2(); return; }
-  const ex = currentSession.exercises[currentSession.index];
-  if (ex.type !== 'reading_long' && ex.type !== 'video_lesson') { _prevRender2(); return; }
-
-  const m = document.getElementById('lesson-modal');
-  const total = currentSession.exercises.length, idx = currentSession.index, pct = Math.round((idx / total) * 100);
-  const fullSpeech = `${ex.p1_en} ${ex.p2_en}`.replace(/\b(Liam|Sofia|Alex|Maya):\s*/g, '');
-
-  let bodyHtml = '';
-  if (ex.type === 'reading_long') {
-    bodyHtml = `
-      <span class="pill">LECTURA Y CONVERSACIÓN EN CONTEXTO</span>
-      <h3 style="margin:10px 0;">${ex.title}</h3>
-      <div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;">
-        <button type="button" class="btn" onclick="speakText('${escapeQuote(fullSpeech)}', 0.92)">🔊 Escuchar Todo</button>
-        <button type="button" class="btn btn-outline" onclick="speakText('${escapeQuote(fullSpeech)}', 0.45)">🐢 Lento (0.45x)</button>
-        <button type="button" class="btn btn-outline" onclick="const t=document.getElementById('tr-box');t.style.display=t.style.display==='none'?'block':'none';">🇪🇸 Ver / Ocultar Traducción</button>
-      </div>
-      <div class="card" style="background:#0f172a;line-height:1.65;font-size:0.98rem;">
-        <p style="margin-top:0;">${ex.p1_en}</p>
-        <p style="margin-bottom:0;">${ex.p2_en}</p>
-      </div>
-      <div id="tr-box" class="card" style="display:none;background:#1e293b;border-color:#38bdf8;line-height:1.6;font-size:0.92rem;color:#cbd5e1;">
-        <p style="margin-top:0;">${ex.p1_es}</p>
-        <p style="margin-bottom:0;">${ex.p2_es}</p>
-      </div>
-      <button type="button" class="btn" style="width:100%;" onclick="currentSession.index++;renderCurrentExercise();">He leído y escuchado la conversación →</button>`;
-  } else {
-    const ytSearch = `https://youtube.com{encodeURIComponent(ex.title)}`;
-    bodyHtml = `
-      <span class="pill">VIDEO NATIVO DEL TEMA</span>
-      <h3 style="margin:10px 0;">${ex.videoTitle}</h3>
-      ${ex.videoId ? `<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;margin-bottom:12px;background:#000;"><iframe src="https://youtube.com{ex.videoId}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allowfullscreen></iframe></div>` : ''}
-      <p style="color:var(--muted);font-size:0.9rem;">Observa cómo los hablantes nativos usan estas expresiones en la vida real. Si deseas explorar más ejemplos en video:</p>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
-        <a href="${ytSearch}" target="_blank" rel="noopener" class="btn btn-outline" style="text-decoration:none;">▶️ Ver videos en YouTube</a>
-      </div>
-      <button type="button" class="btn" style="width:100%;" onclick="currentSession.index++;renderCurrentExercise();">Continuar a los Ejercicios Prácticos →</button>`;
-  }
-
-  m.innerHTML = `<div class="card" style="max-width:680px;width:100%;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><strong>${currentSession.title}</strong><button class="btn btn-outline" style="padding:4px 10px;" onclick="closeLessonModal()">✕</button></div>
-    <div style="background:#0f172a;height:8px;border-radius:99px;margin-bottom:8px;"><div style="background:var(--accent);height:100%;width:${pct}%;border-radius:99px;"></div></div>
-    <small style="color:var(--muted);display:block;text-align:right;margin-bottom:12px;">Paso ${idx + 1} de ${total}</small>${bodyHtml}</div>`;
-};
-// ============================================================================
-// CORRECCIÓN DEL REPRODUCTOR DE VIDEO (URL LIMPIA Y SIN BLOQUEOS)
-// ============================================================================
-const _prevRender3 = renderCurrentExercise;
-renderCurrentExercise = function() {
-  if (!currentSession || currentSession.index >= currentSession.exercises.length) { _prevRender3(); return; }
-  const ex = currentSession.exercises[currentSession.index];
-  if (ex.type !== 'video_lesson') { _prevRender3(); return; }
-
-  const m = document.getElementById('lesson-modal');
-  const total = currentSession.exercises.length, idx = currentSession.index, pct = Math.round((idx / total) * 100);
-  const ytSearch = 'https://youtube.com+' + encodeURIComponent(ex.title);
-  const embedSrc = ex.videoId ? ('https://youtube-nocookie.com' + ex.videoId) : '';
-
-  m.innerHTML = `<div class="card" style="max-width:680px;width:100%;">
-    <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
-      <strong>${currentSession.title}</strong>
-      <button class="btn btn-outline" style="padding:4px 10px;" onclick="closeLessonModal()">✕</button>
-    </div>
-    <div style="background:#0f172a;height:8px;border-radius:99px;margin-bottom:8px;">
-      <div style="background:var(--accent);height:100%;width:${pct}%;border-radius:99px;"></div>
-    </div>
-    <small style="color:var(--muted);display:block;text-align:right;margin-bottom:12px;">Paso ${idx + 1} de ${total}</small>
-    <span class="pill">VIDEO NATIVO DEL TEMA</span>
-    <h3 style="margin:10px 0;">${ex.videoTitle}</h3>
-    ${embedSrc ? `<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;margin-bottom:12px;background:#000;"><iframe src="${embedSrc}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>` : ''}
-    <p style="color:var(--muted);font-size:0.9rem;">Observa cómo los hablantes nativos usan estas expresiones en contexto real:</p>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
-      <a href="${ytSearch}" target="_blank" rel="noopener" class="btn btn-outline" style="text-decoration:none;">▶️ Abrir más videos en YouTube</a>
-    </div>
-    <button type="button" class="btn" style="width:100%;" onclick="currentSession.index++;renderCurrentExercise();">Continuar a los Ejercicios Prácticos →</button>
-  </div>`;
-};
-// ============================================================================
-// PARCHE LECTURA EN CONTEXTO (PEGAR AL FINAL DE APP.JS - TROZO 1 DE 2)
-// ============================================================================
-const _origBuildSessionExercises = buildSessionExercises;
-buildSessionExercises = function(unitNumber) {
-  const data = getUnitData(unitNumber);
-  const readingSteps = [];
-  if (data.reading && data.reading.lines) {
-    readingSteps.push({ type: 'reading_text', unitNumber, ...data.reading });
-    (data.reading.questions || []).forEach(q => {
-      readingSteps.push({ type: 'reading_q', unitNumber, ...q });
-    });
-  }
-  return [...readingSteps, ..._origBuildSessionExercises(unitNumber)];
-};
-// ============================================================================
-// PARCHE LECTURA EN CONTEXTO (PEGAR AL FINAL DE APP.JS - TROZO 2 DE 2)
-// ============================================================================
-const _origRenderCurrentExercise = renderCurrentExercise;
-renderCurrentExercise = function() {
-  const modal = document.getElementById('lesson-modal');
-  const ex = currentSession && currentSession.exercises[currentSession.index];
-  if (!modal || !ex || (ex.type !== 'reading_text' && ex.type !== 'reading_q')) {
-    return _origRenderCurrentExercise();
-  }
-  const total = currentSession.exercises.length, idx = currentSession.index;
-  const progressPct = Math.round((idx / total) * 100);
-  const fullAudio = ex.type === 'reading_text' ? escapeQuote(ex.lines.map(l => l.en).join(' ')) : '';
-  const bodyHtml = ex.type === 'reading_text'
-    ? `<span style="font-size:0.8rem;color:#38bdf8;font-weight:700;">LECTURA EN CONTEXTO · ${ex.title}</span>
-       <div style="background:#0f172a;padding:16px;border-radius:12px;margin:12px 0;border:1px solid #334155;line-height:1.6;">
-         ${ex.lines.map(l => `<p style="margin:0 0 10px;"><strong style="color:#38bdf8;">${l.speaker}:</strong> ${l.en}</p>`).join('')}
-         <button onclick="speakText('${fullAudio}', 0.95)" class="btn-secondary" style="padding:6px 12px;font-size:0.85rem;">🔊 Escuchar Todo</button>
-         <button onclick="speakText('${fullAudio}', 0.45)" class="btn-secondary" style="padding:6px 12px;font-size:0.85rem;">🐢 Lento</button>
-       </div><button onclick="nextExerciseStep()" class="btn-primary" style="width:100%;">He leído el texto · Ir a las Preguntas →</button>`
-    : `<span style="font-size:0.8rem;color:#10b981;font-weight:700;">COMPRENSIÓN DE LECTURA</span>
-       <p style="font-weight:600;margin:12px 0;">${ex.question}</p>
-       <div style="display:flex;flex-direction:column;gap:10px;">${ex.options.map((opt, i) => `<button class="option-btn" onclick="submitChoiceAnswer(${i}, ${ex.answer})">${opt}</button>`).join('')}</div>`;
-  modal.innerHTML = `<div style="background:#1e293b;border:1px solid #334155;border-radius:16px;padding:24px;max-width:680px;width:100%;color:#f8fafc;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><strong>${currentSession.title}</strong><button onclick="closeLessonModal()" class="btn-secondary" style="padding:4px 10px;font-size:0.82rem;">✕ Salir</button></div>
-    <div style="background:#0f172a;height:8px;border-radius:999px;overflow:hidden;margin-bottom:6px;"><div style="background:#38bdf8;height:100%;width:${progressPct}%;"></div></div>
-    <div style="font-size:0.8rem;color:#94a3b8;margin-bottom:16px;text-align:right;">Ejercicio ${idx + 1} de ${total}</div>
-    <div>${bodyHtml}</div><div id="exercise-feedback" style="margin-top:16px;"></div></div>`;
-};
-// ============================================================================
-// PARCHE VOCES NATURALES POR PERSONAJE (PEGAR AL FINAL DE APP.JS - TROZO 1/2)
-// ============================================================================
-function getNaturalFemaleVoices() {
-  const voices = window.speechSynthesis.getVoices();
-  const enVoices = voices.filter(v => v.lang.startsWith('en'));
-  const natural = enVoices.filter(v => /Natural|Neural|Google|Aria|Jenny|Zira|Samantha|Victoria|Karen|Moira|Tessa/i.test(v.name) && !/David|Mark|Guy|Daniel|Alex|Fred/i.test(v.name));
-  const pool = natural.length >= 2 ? natural : (enVoices.length >= 2 ? enVoices : voices);
-  return {
-    voiceA: pool[0] || null,
-    voiceB: pool[1] || pool[0] || null
-  };
-}
-function playDialogueSequence(lines, rate = 0.95) {
-  if (!('speechSynthesis' in window) || !lines || !lines.length) return;
-  window.speechSynthesis.cancel();
-  const { voiceA, voiceB } = getNaturalFemaleVoices();
-  const speakers = [...new Set(lines.map(l => l.speaker))];
-  lines.forEach((line, idx) => {
-    const utter = new SpeechSynthesisUtterance(line.en);
-    const isSecond = speakers.indexOf(line.speaker) === 1;
-    utter.voice = isSecond ? voiceB : voiceA;
-    utter.lang = 'en-US';
-    utter.rate = rate;
-    utter.pitch = isSecond ? 1.02 : 1.15;
-    setTimeout(() => window.speechSynthesis.speak(utter), idx === 0 ? 60 : 0);
-  });
-}
-// ============================================================================
-// PARCHE VOCES NATURALES POR PERSONAJE (PEGAR AL FINAL DE APP.JS - TROZO 2/2)
-// ============================================================================
-const _prevRenderCurrentExercise = renderCurrentExercise;
-renderCurrentExercise = function() {
-  const modal = document.getElementById('lesson-modal');
-  const ex = currentSession && currentSession.exercises[currentSession.index];
-  if (!modal || !ex || ex.type !== 'reading_text') {
-    return _prevRenderCurrentExercise();
-  }
-  const total = currentSession.exercises.length, idx = currentSession.index;
-  const progressPct = Math.round((idx / total) * 100);
-  modal.innerHTML = `<div style="background:#1e293b;border:1px solid #334155;border-radius:16px;padding:24px;max-width:680px;width:100%;color:#f8fafc;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><strong>${currentSession.title}</strong><button onclick="closeLessonModal()" class="btn-secondary" style="padding:4px 10px;font-size:0.82rem;">✕ Salir</button></div>
-    <div style="background:#0f172a;height:8px;border-radius:999px;overflow:hidden;margin-bottom:6px;"><div style="background:#38bdf8;height:100%;width:${progressPct}%;"></div></div>
-    <div style="font-size:0.8rem;color:#94a3b8;margin-bottom:16px;text-align:right;">Ejercicio ${idx + 1} de ${total}</div>
-    <span style="font-size:0.8rem;color:#38bdf8;font-weight:700;">LECTURA EN CONTEXTO · ${ex.title}</span>
-    <div style="background:#0f172a;padding:16px;border-radius:12px;margin:12px 0;border:1px solid #334155;line-height:1.6;">
-      ${ex.lines.map(l => `<p style="margin:0 0 10px;"><strong style="color:${l.speaker === 'Liam' ? '#38bdf8' : '#f472b6'};">${l.speaker}:</strong> ${l.en}</p>`).join('')}
-      <button onclick="playDialogueSequence(currentSession.exercises[currentSession.index].lines, 0.95)" class="btn-secondary" style="padding:6px 12px;font-size:0.85rem;">🔊 Escuchar Diálogo (2 Voces)</button>
-      <button onclick="playDialogueSequence(currentSession.exercises[currentSession.index].lines, 0.45)" class="btn-secondary" style="padding:6px 12px;font-size:0.85rem;">🐢 Lento</button>
-    </div><button onclick="nextExerciseStep()" class="btn-primary" style="width:100%;">He leído el texto · Ir a las Preguntas →</button>
-    <div id="exercise-feedback" style="margin-top:16px;"></div></div>`;
-};
-// ============================================================================
-// ARRANQUE DIRECTO UNIDAD 1 + 2 VOCES FEMENINAS (TROZO 1 DE 2)
-// ============================================================================
-function playDialogueSequence(lines, rate = 0.95) {
-  if (!('speechSynthesis' in window) || !lines || !lines.length) return;
-  window.speechSynthesis.cancel();
-  const voices = window.speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
-  const fem = voices.filter(v => /Natural|Neural|Google|Aria|Jenny|Zira|Samantha|Victoria|Karen|Moira/i.test(v.name) && !/David|Mark|Guy|Daniel|Alex/i.test(v.name));
-  const pool = fem.length ? fem : voices;
-  const voiceA = pool.at(0) || null;
-  const voiceB = pool.at(1) || voiceA;
-  const speakers = [...new Set(lines.map(l => l.speaker))];
-  lines.forEach((line, idx) => {
-    const u = new SpeechSynthesisUtterance(line.en);
-    const isSecond = speakers.indexOf(line.speaker) === 1;
-    if (voiceA) u.voice = isSecond ? voiceB : voiceA;
-    u.lang = 'en-US';
-    u.rate = rate;
-    u.pitch = isSecond ? 1.0 : 1.16;
-    setTimeout(() => window.speechSynthesis.speak(u), idx === 0 ? 60 : 0);
-  });
-}
-// ============================================================================
-// ARRANQUE DIRECTO UNIDAD 1 + LECTURA EN CONTEXTO (TROZO 2 DE 2)
-// ============================================================================
-window.startUnitLesson = function(unitNumber) {
-  const data = (window.UNIT_CONTENT_BANK && window.UNIT_CONTENT_BANK[String(unitNumber)]) || getUnitData(unitNumber);
-  const steps = [];
-  if (data.reading && data.reading.lines) {
-    steps.push({ type: 'reading_text', unitNumber, ...data.reading });
-    (data.reading.questions || []).forEach(q => steps.push({ type: 'reading_q', unitNumber, ...q }));
-  }
-  (data.chunks || []).forEach(c => steps.push({ type: 'chunk', unitNumber, ...c }));
-  (data.builders || []).forEach(b => steps.push({ type: 'builder', unitNumber, ...b }));
-  (data.cloze || []).forEach(cl => steps.push({ type: 'cloze', unitNumber, ...cl }));
-  (data.dictations || []).forEach(d => steps.push({ type: 'dictation', unitNumber, ...d }));
-  (data.pronunciation || []).forEach(p => steps.push({ type: 'speaking', unitNumber, stepLabel: 'Pilar 3 · Pronunciación', target: p.en, translation: p.es }));
-  currentSession = { mode: 'unit', unitNumber, title: `Unidad ${unitNumber}: ${UNIT_TITLES[unitNumber - 1] || ''}`, exercises: steps, index: 0, correctCount: 0, builderSelected: [] };
-  openLessonModal();
-  renderCurrentExercise();
-};
-
-const _baseRenderExercise = renderCurrentExercise;
-renderCurrentExercise = function() {
-  const modal = document.getElementById('lesson-modal');
-  const ex = currentSession && currentSession.exercises[currentSession.index];
-  if (!modal || !ex || (ex.type !== 'reading_text' && ex.type !== 'reading_q')) return _baseRenderExercise();
-  const total = currentSession.exercises.length, idx = currentSession.index, pct = Math.round((idx / total) * 100);
-  const body = ex.type === 'reading_text'
-    ? `<span style="font-size:0.8rem;color:#38bdf8;font-weight:700;">LECTURA EN CONTEXTO · ${ex.title}</span><div style="background:#0f172a;padding:16px;border-radius:12px;margin:12px 0;border:1px solid #334155;line-height:1.6;">${ex.lines.map(l => `<p style="margin:0 0 10px;"><strong style="color:${l.speaker === 'Liam' ? '#38bdf8' : '#f472b6'};">${l.speaker}:</strong> ${l.en}</p>`).join('')}<button onclick="playDialogueSequence(currentSession.exercises[currentSession.index].lines, 0.95)" class="btn-secondary" style="padding:6px 12px;font-size:0.85rem;">🔊 Escuchar (2 Voces)</button> <button onclick="playDialogueSequence(currentSession.exercises[currentSession.index].lines, 0.45)" class="btn-secondary" style="padding:6px 12px;font-size:0.85rem;">🐢 Lento</button></div><button onclick="nextExerciseStep()" class="btn-primary" style="width:100%;">Ir a las Preguntas de Lectura →</button>`
-    : `<span style="font-size:0.8rem;color:#10b981;font-weight:700;">COMPRENSIÓN DE LECTURA</span><p style="font-weight:600;margin:12px 0;">${ex.question}</p><div style="display:flex;flex-direction:column;gap:10px;">${ex.options.map((opt, i) => `<button class="option-btn" onclick="submitChoiceAnswer(${i}, ${ex.answer})">${opt}</button>`).join('')}</div>`;
-  modal.innerHTML = `<div style="background:#1e293b;border:1px solid #334155;border-radius:16px;padding:24px;max-width:680px;width:100%;color:#f8fafc;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><strong>${currentSession.title}</strong><button onclick="closeLessonModal()" class="btn-secondary" style="padding:4px 10px;font-size:0.82rem;">✕ Salir</button></div><div style="background:#0f172a;height:8px;border-radius:999px;margin-bottom:6px;"><div style="background:#38bdf8;height:100%;width:${pct}%;"></div></div><div style="font-size:0.8rem;color:#94a3b8;margin-bottom:16px;text-align:right;">Ejercicio ${idx + 1} de ${total}</div><div>${body}</div><div id="exercise-feedback" style="margin-top:16px;"></div></div>`;
-};
-// ============================================================================
-// PARCHE BOTÓN SIGUIENTE EN LECTURA (PEGAR AL FINAL DE APP.JS)
-// ============================================================================
-window.nextExerciseStep = function() {
-  if (!currentSession) return;
-  window.speechSynthesis && window.speechSynthesis.cancel();
-  currentSession.index += 1;
-  renderCurrentExercise();
-};
-// ============================================================================
-// PARCHE FINAL: CLIC EN PREGUNTAS DE LECTURA Y COMPATIBILIDAD UNIDAD 1
-// ============================================================================
-window.submitChoiceAnswer = function(sel, ans) {
-  if (typeof window.submitChoice === 'function') window.submitChoice(sel, ans);
-};
-
-const _patchRenderReadingQ = renderCurrentExercise;
-renderCurrentExercise = function() {
-  _patchRenderReadingQ();
-  const wrongFb = document.getElementById('exercise-feedback');
-  if (wrongFb && !document.getElementById('ex-fb')) wrongFb.id = 'ex-fb';
-};
-
-const _patchStartLesson = window.startUnitLesson;
-window.startUnitLesson = function(unitNumber) {
-  const bank = window.UNIT_CONTENT_BANK && window.UNIT_CONTENT_BANK[String(unitNumber)];
-  if (bank) {
-    if (bank.dictation && !bank.dictations) {
-      bank.dictations = bank.dictation.map(d => ({ en: d.text || d.en, es: d.translation || d.es }));
-    }
-    if (bank.cloze) {
-      bank.cloze = bank.cloze.map(cl => {
-        if (cl.dialogue !== undefined && typeof cl.answer === 'number') return cl;
-        const idx = Array.isArray(cl.options) ? cl.options.indexOf(cl.answer) : 0;
-        return { dialogue: cl.sentence || cl.dialogue, options: cl.options, answer: idx >= 0 ? idx : 0 };
-      });
-    }
-  }
-  _patchStartLesson(unitNumber);
-};
-// ============================================================================
-// PARCHE DE EMERGENCIA: CORRECCIÓN DE EX.ANS Y CLIC DIRECTO EN READING_Q
-// ============================================================================
-window.submitChoiceAnswer = function(sel, ans) {
-  const ex = currentSession.exercises[currentSession.index];
-  if (ex && ex.ans === undefined) ex.ans = ans;
-  const wrongFb = document.getElementById('exercise-feedback');
-  if (wrongFb && !document.getElementById('ex-fb')) wrongFb.id = 'ex-fb';
-  const ok = Number(sel) === Number(ans);
-  const rightText = ex && ex.options ? ex.options[ans] : '';
-  showFb(ok, ok ? '¡Excelente!' : `Correcta: <strong>${rightText}</strong>`);
-};
-// ============================================================================
-// ATAJO DE TECLADO: AVANZAR Y VERIFICAR CON LA TECLA ENTER
-// ============================================================================
-document.addEventListener('keydown', function(e) {
-  if (e.key !== 'Enter') return;
-  const lessonModal = document.getElementById('lesson-modal');
-  if (!lessonModal || lessonModal.style.display === 'none') return;
-
-  const fbBtn = lessonModal.querySelector('#ex-fb button, #exercise-feedback button');
-  if (fbBtn) { e.preventDefault(); fbBtn.click(); return; }
-
-  const dictInput = document.getElementById('dict-in');
-  if (dictInput && document.activeElement === dictInput) {
-    e.preventDefault();
-    const dictBtn = document.getElementById('dict-btn');
-    if (dictBtn && !dictBtn.disabled) dictBtn.click();
-    return;
-  }
-
-  const nextBtn = lessonModal.querySelector('button.btn-primary, button.btn[onclick*="nextExerciseStep"], button.btn[onclick*="checkBuilder"]');
-  if (nextBtn) { e.preventDefault(); nextBtn.click(); }
-});
-// ============================================================================
-// PARCHE: HABILITAR TODAS LAS LECCIONES (UNIDADES 1 A 84) SIN BLOQUEOS
-// ============================================================================
 function getUnitData(unitNumber) {
   const bank = window.UNIT_CONTENT_BANK || {};
-  if (bank[unitNumber]) return bank[unitNumber];
-  if (bank[String(unitNumber)]) return bank[String(unitNumber)];
+  const raw = bank[unitNumber] || bank[String(unitNumber)];
   const title = UNIT_TITLES[unitNumber - 1] || ('Unit ' + unitNumber);
+  if (raw) {
+    const normalized = { ...raw };
+    if (raw.dictation && !raw.dictations) normalized.dictations = raw.dictation.map(d => ({ en: d.text || d.en, es: d.translation || d.es }));
+    if (raw.cloze) normalized.cloze = raw.cloze.map(cl => (cl.dialogue !== undefined && typeof cl.answer === 'number') ? cl : { dialogue: cl.sentence || cl.dialogue, options: cl.options, answer: Math.max(0, Array.isArray(cl.options) ? cl.options.indexOf(cl.answer) : 0) });
+    return normalized;
+  }
   return {
-    reading: {
-      title: title,
-      lines: [
-        { speaker: 'Alex', en: `Hi! Today we are practicing ${title} in real daily situations.`, es: `¡Hola! Hoy practicamos ${title} en situaciones diarias reales.` },
-        { speaker: 'Maya', en: `Great! Listening and speaking out loud helps us learn ${title} naturally.`, es: `¡Genial! Escuchar y hablar en voz alta nos ayuda a aprender ${title} de forma natural.` }
-      ],
-      questions: [
-        { question: `What is the main topic of this lesson?`, options: [title, 'Cooking recipes', 'Car mechanics'], answer: 0 }
-      ]
-    },
+    reading: { title, lines: [{ speaker: 'Alex', en: `Hi! Today we are practicing ${title} in real daily situations.`, es: `¡Hola! Hoy practicamos ${title} en situaciones diarias reales.` }, { speaker: 'Maya', en: `Great! Listening and speaking out loud helps us learn ${title} naturally.`, es: `¡Genial! Escuchar y hablar en voz alta nos ayuda a aprender ${title} de forma natural.` }], questions: [{ question: `What is the main topic of this lesson?`, options: [title, 'Cooking recipes', 'Car mechanics'], answer: 0 }] },
     chunks: [{ chunk: `Key phrase for ${title}`, meaning: `Expresión clave de ${title}`, example: `We use ${title} every day.`, options: [`Expresión clave de ${title}`, 'Frase sin relación', 'Expresión antigua'], answer: 0 }],
     builders: [{ prompt: 'Ordena la frase de práctica:', target: 'Daily practice builds real fluency', translation: 'La práctica diaria construye fluidez real' }],
     cloze: [{ dialogue: 'A: How do you improve fast?<br>B: I _____ every day.', options: ['practice', 'practicing', 'practiced'], answer: 0 }],
@@ -1196,12 +389,219 @@ function getUnitData(unitNumber) {
   };
 }
 // ============================================================================
-// PARCHE DE ARRANQUE LIMPIO
+// BLOQUE 5A: CONSTRUCCIÓN DE SESIONES Y RENDERIZADO DE EJERCICIOS
 // ============================================================================
-function migrateLegacyProgress() {}
+function buildSessionExercises(unitNumber) {
+  const data = getUnitData(unitNumber), title = UNIT_TITLES[unitNumber - 1] || `Unit ${unitNumber}`, media = UNIT_MEDIA_BANK[unitNumber], steps = [];
+  if (data.reading && data.reading.lines) { steps.push({ type: 'reading_text', unitNumber, ...data.reading }); (data.reading.questions || []).forEach(q => steps.push({ type: 'reading_q', unitNumber, ...q })); }
+  if (media && media.videoId) steps.push({ type: 'video_lesson', unitNumber, title, ...media });
+  (data.chunks || []).forEach(c => steps.push({ type: 'chunk', unitNumber, ...c }));
+  (data.builders || []).forEach(b => steps.push({ type: 'builder', unitNumber, ...b }));
+  (data.cloze || []).forEach(cl => steps.push({ type: 'cloze', unitNumber, ...cl }));
+  (data.dictations || []).forEach(d => steps.push({ type: 'dictation', unitNumber, ...d }));
+  (data.listening || []).forEach(l => steps.push({ type: 'listening', unitNumber, ...l }));
+  if (data.pronunciation && data.pronunciation.length) { data.pronunciation.forEach(p => steps.push({ type: 'speaking', unitNumber, stepLabel: 'Pilar 3 · Pronunciación', target: p.en, translation: p.es })); }
+  else { steps.push({ type: 'speaking', unitNumber, stepLabel: 'Pilar 3 · Chunk Clave', target: data.chunks?.[0]?.chunk || 'I am ready to speak English' }); steps.push({ type: 'speaking', unitNumber, stepLabel: 'Pilar 3 · Oración Completa', target: data.dictations?.[0]?.en || 'Daily practice helps me speak naturally.' }); }
+  return steps;
+}
 
-(function bootAppNow() {
-  loadFromLocal();
-  renderApp();
-  syncFromCloud();
-})();
+function startUnitLesson(unitNumber) {
+  const u = appState.users[appState.activeUserId], exercises = buildSessionExercises(unitNumber);
+  let startIdx = 0, startCorrect = 0;
+  if (u && u.savedSession && u.savedSession.unitNumber === unitNumber && u.savedSession.index > 0 && u.savedSession.index < exercises.length) { startIdx = u.savedSession.index; startCorrect = u.savedSession.correctCount || 0; }
+  currentSession = { mode: 'unit', unitNumber, title: `Unidad ${unitNumber}: ${UNIT_TITLES[unitNumber - 1] || ''}`, exercises, index: startIdx, correctCount: startCorrect, builderSelected: [] };
+  openLessonModal(); renderCurrentExercise();
+}
+
+function startSrsReview() {
+  const user = appState.users[appState.activeUserId];
+  if (!user?.srsQueue?.length) { alert('¡No tienes repasos pendientes en SRS!'); return; }
+  currentSession = { mode: 'srs', unitNumber: null, title: `Repaso SRS (${user.srsQueue.length})`, exercises: [...user.srsQueue], index: 0, correctCount: 0, builderSelected: [] };
+  openLessonModal(); renderCurrentExercise();
+}
+
+function openLessonModal() {
+  let m = document.getElementById('lesson-modal');
+  if (!m) { m = document.createElement('div'); m.id = 'lesson-modal'; m.style.cssText = 'position:fixed;inset:0;background:rgba(11,19,43,0.94);display:flex;align-items:center;justify-content:center;z-index:9998;padding:16px;overflow-y:auto;'; document.body.appendChild(m); }
+  m.style.display = 'flex';
+}
+
+function closeLessonModal() {
+  window.speechSynthesis && window.speechSynthesis.cancel();
+  const m = document.getElementById('lesson-modal');
+  if (m) m.style.display = 'none';
+  currentSession = null; renderApp();
+}
+
+function nextExerciseStep() {
+  if (!currentSession) return;
+  window.speechSynthesis && window.speechSynthesis.cancel();
+  currentSession.index += 1; renderCurrentExercise();
+}
+
+function renderCurrentExercise() {
+  const m = document.getElementById('lesson-modal');
+  if (!m || !currentSession) return;
+  const total = currentSession.exercises.length, idx = currentSession.index;
+  if (idx >= total) { finishSession(); return; }
+  const ex = currentSession.exercises[idx], pct = Math.round((idx / total) * 100);
+  currentSession.builderSelected = [];
+  let html = '';
+
+  if (ex.type === 'reading_text') {
+    const hasEs = ex.lines.some(l => l.es);
+    html = `<span class="pill">LECTURA EN CONTEXTO · ${ex.title}</span>
+      <div class="card" style="background:#0f172a;margin:12px 0;line-height:1.65;">
+        ${ex.lines.map(l => `<p style="margin:0 0 10px;"><strong style="color:${l.speaker === 'Liam' || l.speaker === 'Alex' ? '#38bdf8' : '#f472b6'};">${l.speaker}:</strong> ${l.en}</p>`).join('')}
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+          <button type="button" class="btn btn-outline" style="padding:6px 12px;font-size:0.85rem;" onclick="playDialogueSequence(currentSession.exercises[currentSession.index].lines, 0.95)">🔊 Escuchar Diálogo (2 Voces)</button>
+          <button type="button" class="btn btn-outline" style="padding:6px 12px;font-size:0.85rem;" onclick="playDialogueSequence(currentSession.exercises[currentSession.index].lines, 0.45)">🐢 Lento</button>
+          ${hasEs ? `<button type="button" class="btn btn-outline" style="padding:6px 12px;font-size:0.85rem;" onclick="const t=document.getElementById('tr-box');t.style.display=t.style.display==='none'?'block':'none';">🇪🇸 Traducción</button>` : ''}
+        </div>
+      </div>
+      ${hasEs ? `<div id="tr-box" class="card" style="display:none;background:#1e293b;border-color:#38bdf8;font-size:0.9rem;color:#cbd5e1;">${ex.lines.map(l => `<p style="margin:0 0 8px;"><strong>${l.speaker}:</strong> ${l.es || ''}</p>`).join('')}</div>` : ''}
+      <button type="button" class="btn" style="width:100%;" onclick="nextExerciseStep()">He leído el texto · Continuar →</button>`;
+  } else if (ex.type === 'reading_q') {
+    html = `<span class="pill">COMPRENSIÓN DE LECTURA</span><p style="font-weight:600;margin:12px 0;">${ex.question}</p>${ex.options.map((opt, i) => `<button class="option-btn" onclick="submitChoice(${i}, ${ex.answer})">${opt}</button>`).join('')}`;
+  } else if (ex.type === 'video_lesson') {
+    const ytSearch = 'https://youtube.com' + encodeURIComponent(ex.title + ' english lesson');
+    html = `<span class="pill">VIDEO NATIVO DEL TEMA</span><h3 style="margin:10px 0;">${ex.videoTitle}</h3>
+      <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;margin-bottom:12px;background:#000;"><iframe src="https://youtube-nocookie.com{ex.videoId}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allowfullscreen></iframe></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;"><a href="${ytSearch}" target="_blank" rel="noopener" class="btn btn-outline" style="text-decoration:none;">▶️ Ver más ejemplos en YouTube</a></div>
+      <button type="button" class="btn" style="width:100%;" onclick="nextExerciseStep()">Continuar a los Ejercicios →</button>`;
+  } else if (ex.type === 'chunk') {
+    html = `<span class="pill">CHUNK EN CONTEXTO</span><h3>"${ex.chunk}"</h3><p style="color:var(--muted);font-style:italic;">"${ex.example}"</p>
+      <div style="margin-bottom:12px;"><button class="btn btn-outline" onclick="speakText('${escapeQuote(ex.example)}',0.95)">🔊 Normal</button> <button class="btn btn-outline" onclick="speakText('${escapeQuote(ex.example)}',0.45)">🐢 Lento</button></div>
+      ${ex.options.map((o, i) => `<button class="option-btn" onclick="submitChoice(${i},${ex.answer})">${o}</button>`).join('')}`;
+  } else if (ex.type === 'builder') {
+    const shuf = [...ex.target.split(' ')].sort(() => Math.random() - 0.5);
+    html = `<span class="pill">CONSTRUCTOR DE ORACIONES</span><p>${ex.prompt}</p><div id="b-zone" style="min-height:48px;background:#0f172a;border:2px dashed #475569;border-radius:10px;padding:8px;margin-bottom:12px;display:flex;flex-wrap:wrap;gap:8px;"></div>
+      <div style="margin-bottom:14px;">${shuf.map((w, i) => `<span id="bw-${i}" class="word-chip" onclick="toggleBWord(${i},'${escapeQuote(w)}')">${w}</span>`).join('')}</div>
+      <button class="btn" style="width:100%;" onclick="checkBuilder()">Comprobar</button>`;
+  } else if (ex.type === 'cloze') {
+    html = `<span class="pill">DIÁLOGO EN CONTEXTO</span><div class="card" style="background:#0f172a;">${ex.dialogue}</div>${ex.options.map((o, i) => `<button class="option-btn" onclick="submitChoice(${i},${ex.answer})">${o}</button>`).join('')}`;
+  } else if (ex.type === 'dictation') {
+    html = `<span class="pill">DICTADO NATIVO</span><p>Escribe exactamente lo que escuchas:</p><div style="margin-bottom:10px;"><button class="btn" onclick="speakText('${escapeQuote(ex.en)}',0.95)">🔊 Normal</button> <button class="btn btn-outline" onclick="speakText('${escapeQuote(ex.en)}',0.45)">🐢 Lento</button></div>
+      <input id="dict-in" type="text" placeholder="Escribe en inglés..."><button id="dict-btn" class="btn" style="width:100%;" onclick="checkDictation()">Verificar</button>`;
+  } else if (ex.type === 'listening') {
+    html = `<span class="pill">COMPRENSIÓN AUDITIVA</span><div style="margin:10px 0;"><button class="btn" onclick="speakText('${escapeQuote(ex.audio)}',0.95)">🔊 Audio</button> <button class="btn btn-outline" onclick="speakText('${escapeQuote(ex.audio)}',0.45)">🐢 Lento</button></div>
+      <p><strong>${ex.question}</strong></p>${ex.options.map((o, i) => `<button class="option-btn" onclick="submitChoice(${i},${ex.answer})">${o}</button>`).join('')}`;
+  } else if (ex.type === 'speaking') {
+    html = `<span class="pill">${ex.stepLabel || 'SPEAKING'}</span><h3>"${ex.target}"</h3>${ex.translation ? `<p style="color:var(--muted);font-size:0.9rem;">🇪🇸 ${ex.translation}</p>` : ''}
+      <div style="margin-bottom:12px;"><button class="btn btn-outline" onclick="speakText('${escapeQuote(ex.target)}',0.95)">🔊 Normal</button> <button class="btn btn-outline" onclick="speakText('${escapeQuote(ex.target)}',0.45)">🐢 Lento</button></div>
+---
+
+### 🧩 BLOQUE 5B (Calificación, Constructor Drag & Drop y Arranque Final)
+
+```javascript
+// ============================================================================
+// BLOQUE 5B: CALIFICACIÓN, CONSTRUCTOR DRAG & DROP Y ARRANQUE FINAL
+// ============================================================================
+function renderBuilderAnswerZone() {
+  const z = document.getElementById('b-zone');
+  if (!z || !currentSession) return;
+  z.innerHTML = currentSession.builderSelected.map((x, i) => `
+    <span draggable="true" ondragstart="draggedWordPos=${i};this.style.opacity='0.4';" ondragend="this.style.opacity='1';" ondragover="event.preventDefault();this.style.outline='2px solid #38bdf8';" ondragleave="this.style.outline='none';" ondrop="event.preventDefault();this.style.outline='none';dropBWord(${i});"
+          style="display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:#fff;padding:6px 10px;border-radius:8px;font-weight:600;cursor:grab;user-select:none;">
+      ${i > 0 ? `<button type="button" onclick="moveBWord(${i},-1)" style="background:rgba(0,0,0,0.25);border:none;color:#fff;border-radius:4px;cursor:pointer;padding:2px 6px;">◀</button>` : ''}
+      <span onclick="toggleBWord(${x.idx},'${escapeQuote(x.w)}')" style="cursor:pointer;">${x.w} ✕</span>
+      ${i < currentSession.builderSelected.length - 1 ? `<button type="button" onclick="moveBWord(${i},1)" style="background:rgba(0,0,0,0.25);border:none;color:#fff;border-radius:4px;cursor:pointer;padding:2px 6px;">▶</button>` : ''}
+    </span>`).join('');
+}
+
+function toggleBWord(idx, w) {
+  const el = document.getElementById(`bw-${idx}`);
+  if (!el || !currentSession) return;
+  const pos = currentSession.builderSelected.findIndex(x => x.idx === idx);
+  if (pos >= 0) { currentSession.builderSelected.splice(pos, 1); el.style.opacity = '1'; }
+  else { currentSession.builderSelected.push({ idx, w }); el.style.opacity = '0.35'; }
+  renderBuilderAnswerZone();
+}
+
+function moveBWord(pos, dir) { const arr = currentSession.builderSelected, t = pos + dir; if (t >= 0 && t < arr.length) { [arr[pos], arr[t]] = [arr[t], arr[pos]]; renderBuilderAnswerZone(); } }
+function dropBWord(targetPos) { if (draggedWordPos !== null && draggedWordPos !== targetPos && currentSession) { const arr = currentSession.builderSelected, [m] = arr.splice(draggedWordPos, 1); arr.splice(targetPos, 0, m); draggedWordPos = null; renderBuilderAnswerZone(); } }
+
+function explainMistake(ex, userAnswer) {
+  if (ex.explanation) return ex.explanation;
+  if (ex.type === 'builder') return `Orden natural: <strong>"${ex.target}"</strong> (<em>${ex.translation}</em>). Tu orden: "${userAnswer || '(vacío)'}".`;
+  if (ex.type === 'dictation') return `Frase exacta: <strong>"${ex.en}"</strong> (<em>${ex.es}</em>). Escribiste: "${userAnswer || '(nada)'}".`;
+  if (ex.type === 'cloze') return `La opción correcta es <strong>"${ex.options[ex.answer]}"</strong> por contexto y tiempo verbal.`;
+  if (ex.type === 'chunk') return `<strong>"${ex.chunk}"</strong> significa <em>"${ex.options[ex.answer]}"</em>.`;
+  return `Respuesta correcta: <strong>"${ex.options ? ex.options[ex.answer] : ''}"</strong>.`;
+}
+
+function checkBuilder() {
+  const ex = currentSession.exercises[currentSession.index], userStr = currentSession.builderSelected.map(x => x.w).join(' '), ok = norm(userStr) === norm(ex.target);
+  if (ok) speakText(ex.target, 0.95);
+  showFb(ok, ok ? `✅ <strong>¡Correcto!</strong> "${ex.target}"<br>🇪🇸 <em>${ex.translation}</em>` : explainMistake(ex, userStr));
+}
+
+function submitChoice(sel, ans) {
+  const ex = currentSession.exercises[currentSession.index], ok = Number(sel) === Number(ans);
+  if (ex.type === 'cloze' && ok) {
+    const w = ex.options[ans], fullHtml = ex.dialogue.replace(/_{2,}/g, `<strong style="color:#38bdf8;">${w}</strong>`);
+    const speech = ex.dialogue.replace(/_{2,}/g, w).replace(/<[^>]*>/g, '. ').replace(/\b[AB]:\s*/g, '').replace(/\s+/g, ' ').trim();
+    speakText(speech, 0.95);
+    showFb(true, `<div style="margin-bottom:8px;">${fullHtml}</div><button type="button" class="btn btn-outline" style="padding:4px 10px;font-size:0.82rem;" onclick="speakText('${escapeQuote(speech)}',0.95)">🔊 Repetir</button> <button type="button" class="btn btn-outline" style="padding:4px 10px;font-size:0.82rem;" onclick="speakText('${escapeQuote(speech)}',0.45)">🐢 Lento</button>`);
+  } else { showFb(ok, ok ? '¡Excelente!' : explainMistake(ex, ex.options ? ex.options[sel] : '')); }
+}
+
+function checkDictation() {
+  const ex = currentSession.exercises[currentSession.index], inp = document.getElementById('dict-in'), btn = document.getElementById('dict-btn');
+  if (!inp) return; if (btn) btn.disabled = true;
+  const ok = norm(inp.value) === norm(ex.en);
+  showFb(ok, ok ? `✅ <strong>¡Oído fino!</strong> "${ex.en}"<br>🇪🇸 <em>${ex.es}</em>` : explainMistake(ex, inp.value));
+}
+
+function startSpeech(target) {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition, txt = document.getElementById('sp-txt');
+  if (!SR) { setTimeout(() => showFb(true, 'Práctica oral completada.'), 700); return; }
+  const rec = new SR(); rec.lang = 'en-US';
+  if (txt) txt.textContent = '🎙️ Escuchando...';
+  rec.onresult = (e) => {
+    const sp = e.results[0][0].transcript, tw = norm(target).split(' '), sw = norm(sp).split(' ');
+    const ok = (tw.filter(w => sw.includes(w)).length / Math.max(1, tw.length)) >= 0.6;
+    showFb(ok, ok ? `¡Bien! Dijiste: "${sp}"` : `Intenta: "${target}" (Dijiste: "${sp}")`);
+  };
+  rec.onerror = () => showFb(true, 'Práctica oral completada.');
+  rec.start();
+}
+
+function showFb(ok, detail) {
+  const fb = document.getElementById('ex-fb');
+  if (!fb || fb.dataset.done === '1') return; fb.dataset.done = '1';
+  const u = appState.users[appState.activeUserId], ex = currentSession.exercises[currentSession.index], prev = u.todayExercises;
+  checkDailyReset(u); u.todayExercises += 1; u.lastActiveDate = getTodayStr();
+  if (ok) { currentSession.correctCount += 1; u.xp += 6; u.todayXp += 6; if (currentSession.mode === 'srs') u.srsQueue.splice(currentSession.index, 1); }
+  else if (!u.srsQueue.some(i => JSON.stringify(i) === JSON.stringify(ex))) u.srsQueue.push(ex);
+  if (prev < DAILY_GOAL_EXERCISES && u.todayExercises >= DAILY_GOAL_EXERCISES) u.streak += 1;
+  if (currentSession.mode === 'unit') u.savedSession = { unitNumber: currentSession.unitNumber, index: currentSession.index + 1, correctCount: currentSession.correctCount };
+  pushToCloud();
+  fb.innerHTML = `<div class="card" style="background:${ok ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'};border-color:${ok ? '#10b981' : '#ef4444'};">
+    <strong>${ok ? '✅ ¡Correcto! +6 XP' : '❌ Guardado en SRS'}</strong><p style="margin:6px 0 12px;">${detail}</p>
+    <button class="btn" style="width:100%;" onclick="nextExerciseStep()">Continuar →</button></div>`;
+}
+
+async function finishSession() {
+  const u = appState.users[appState.activeUserId], un = currentSession.unitNumber;
+  delete u.savedSession;
+  if (currentSession.mode === 'unit' && un) {
+    if (!u.completedUnits.includes(un)) { u.completedUnits.push(un); u.xp += 30; u.todayXp += 30; }
+    if (un === u.unlockedUpTo && u.unlockedUpTo < 84) u.unlockedUpTo = un + 1;
+  }
+  await pushToCloud();
+  const m = document.getElementById('lesson-modal');
+  if (m) m.innerHTML = `<div class="card" style="max-width:440px;width:100%;text-align:center;"><h2>🎉 ¡Sesión Completada!</h2><p>Aciertos: ${currentSession.correctCount}/${currentSession.exercises.length}</p><button class="btn" style="width:100%;" onclick="closeLessonModal()">Volver a Mi Ruta</button></div>`;
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Enter') return;
+  const lessonModal = document.getElementById('lesson-modal');
+  if (!lessonModal || lessonModal.style.display === 'none') return;
+  const fbBtn = lessonModal.querySelector('#ex-fb button');
+  if (fbBtn) { e.preventDefault(); fbBtn.click(); return; }
+  const dictInput = document.getElementById('dict-in');
+  if (dictInput && document.activeElement === dictInput) { e.preventDefault(); const b = document.getElementById('dict-btn'); if (b && !b.disabled) b.click(); return; }
+  const nextBtn = lessonModal.querySelector('button.btn[onclick*="nextExerciseStep"], button.btn[onclick*="checkBuilder"]');
+  if (nextBtn) { e.preventDefault(); nextBtn.click(); }
+});
