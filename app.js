@@ -1,7 +1,7 @@
 // ============================================================================
 // FAMILY ENGLISH PRO - APP.JS (BLOQUE 1 DE 4)
 // ============================================================================
-https://console.firebase.google.com/project/ingles-familia/database/ingles-familia-default-rtdb/data?hl=es-419&fb_gclid=CjwKCAiAq5rYBhB-EiwAhj1RdrI_83iIatTQVcBnkr-AEBE4-KrlL353_2FQXijNaWJTCztkJFDIBBoC1Z4QAvD_BwE&fb_utm_campaign=Cloud-SS-DR-Firebase-FY26-global-gsem-1713590&fb_utm_content=text-ad&fb_utm_medium=cpc&fb_utm_source=google&fb_utm_term=KW_firebase%20console
+const FIREBASE_DB_URL = 'https://firebaseio.com';
 const STORAGE_KEY = 'family_english_pro_v3';
 const LEVELS = ['Pre-A1', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 const DAILY_GOAL_EXERCISES = 25;
