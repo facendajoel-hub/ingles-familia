@@ -723,3 +723,62 @@ document.addEventListener('click', function(e) {
     window.open(url, '_blank', 'noopener,noreferrer');
   }
 });
+// ============================================================================
+// ESCENA ANIMADA INTERACTIVA DE CONVERSACIÓN (BLOQUE 1 DE 2)
+// ============================================================================
+window.playAnimatedScene = function(rate = 0.95) {
+  const ex = currentSession && currentSession.exercises[currentSession.index];
+  const data = (window.UNIT_CONTENT_BANK && window.UNIT_CONTENT_BANK[String(ex.unitNumber)]) || {};
+  const lines = (data.reading && data.reading.lines) || [];
+  if (!lines.length || !('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+
+  const voices = window.speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
+  const fem = voices.filter(v => /Natural|Neural|Google|Aria|Jenny|Zira|Samantha|Victoria/i.test(v.name));
+  const pool = fem.length ? fem : voices;
+  const speakers = [...new Set(lines.map(l => l.speaker))];
+
+  lines.forEach((line, idx) => {
+    const u = new SpeechSynthesisUtterance(line.en);
+    const isSecond = speakers.indexOf(line.speaker) === 1;
+    if (pool.length) u.voice = isSecond ? (pool.at(1) || pool.at(0)) : pool.at(0);
+    u.lang = 'en-US'; u.rate = rate; u.pitch = isSecond ? 1.0 : 1.16;
+    u.onstart = () => {
+      document.getElementById('scene-av-1').style.transform = isSecond ? 'scale(0.95)' : 'scale(1.12)';
+      document.getElementById('scene-av-2').style.transform = isSecond ? 'scale(1.12)' : 'scale(0.95)';
+      document.getElementById('scene-sub-en').innerHTML = `<strong style="color:${isSecond ? '#f472b6' : '#38bdf8'};">${line.speaker}:</strong> "${line.en}"`;
+      document.getElementById('scene-sub-es').textContent = line.es || '';
+    };
+    setTimeout(() => window.speechSynthesis.speak(u), idx === 0 ? 60 : 0);
+  });
+};
+// ============================================================================
+// ESCENA ANIMADA INTERACTIVA DE CONVERSACIÓN (BLOQUE 2 DE 2)
+// ============================================================================
+const _scenePrevRender = renderCurrentExercise;
+renderCurrentExercise = function() {
+  const modal = document.getElementById('lesson-modal');
+  const ex = currentSession && currentSession.exercises[currentSession.index];
+  if (!modal || !ex || ex.type !== 'video_step') return _scenePrevRender();
+  const data = (window.UNIT_CONTENT_BANK && window.UNIT_CONTENT_BANK[String(ex.unitNumber)]) || {};
+  const lines = (data.reading && data.reading.lines) || [];
+  const speakers = [...new Set(lines.map(l => l.speaker))];
+  const sp1 = speakers.at(0) || 'Speaker 1', sp2 = speakers.at(1) || 'Speaker 2';
+  const total = currentSession.exercises.length, idx = currentSession.index, pct = Math.round((idx / total) * 100);
+
+  modal.innerHTML = `<div style="background:#1e293b;border:1px solid #334155;border-radius:16px;padding:24px;max-width:680px;width:100%;color:#f8fafc;">
+    <div style="display:flex;justify-content:space-between;margin-bottom:10px;"><strong>${currentSession.title}</strong><button onclick="closeLessonModal()" class="btn-secondary" style="padding:4px 10px;font-size:0.82rem;">✕ Salir</button></div>
+    <div style="background:#0f172a;height:8px;border-radius:999px;margin-bottom:14px;"><div style="background:#38bdf8;height:100%;width:${pct}%;"></div></div>
+    <span style="font-size:0.8rem;color:#38bdf8;font-weight:700;">🎬 ESCENA INTERACTIVA EN VIVO</span>
+    <div style="background:linear-gradient(180deg,#0f172a,#1e293b);padding:20px;border-radius:14px;margin:12px 0;border:1px solid #334155;text-align:center;">
+      <div style="display:flex;justify-content:space-around;align-items:center;margin-bottom:16px;">
+        <div id="scene-av-1" style="transition:transform 0.3s;"><div style="font-size:3rem;background:#0284c7;width:74px;height:74px;line-height:74px;border-radius:50%;margin:0 auto 6px;">👩🏻</div><strong style="color:#38bdf8;">${sp1}</strong></div>
+        <div style="font-size:1.5rem;color:#64748b;">💬</div>
+        <div id="scene-av-2" style="transition:transform 0.3s;"><div style="font-size:3rem;background:#db2777;width:74px;height:74px;line-height:74px;border-radius:50%;margin:0 auto 6px;">👩🏽</div><strong style="color:#f472b6;">${sp2}</strong></div>
+      </div>
+      <div id="scene-sub-en" style="background:#0f172a;padding:12px;border-radius:10px;min-height:48px;font-size:1.05rem;line-height:1.5;margin-bottom:6px;">Pulsa "Reproducir Escena" para ver y escuchar el diálogo animado</div>
+      <div id="scene-sub-es" style="font-size:0.88rem;color:#94a3b8;min-height:22px;margin-bottom:14px;"></div>
+      <button onclick="playAnimatedScene(0.95)" class="btn-primary">▶ Reproducir Escena</button>
+      <button onclick="playAnimatedScene(0.5)" class="btn-secondary">🐢 Modo Lento</button>
+    </div><button onclick="nextExerciseStep()" class="btn-primary" style="width:100%;">Continuar / Finalizar Unidad →</button></div>`;
+};
